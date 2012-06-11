@@ -48,7 +48,7 @@ You can generate documentation with [doxygen](http://www.doxygen.org). Install i
 > cd docs
 > doxygen
 
-Documentation is a work in progress, but the API will be familiar if you have used UIKit.  (TODO: [appledoc](http://www.gentlebytes.com/home/appledocapp/) looks very cool, moving to that might be nice).
+Documentation is a work in progress, but the API will be familiar if you have used UIKit.  (TODO: [appledoc](http://gentlebytes.com/appledoc/) looks very cool, moving to that might be nice).
 
 TwUI has a mailing list, subscribe by sending an email to <twui@librelist.com>.
 
