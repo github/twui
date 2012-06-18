@@ -14,7 +14,9 @@
  limitations under the License.
  */
 
+#import "TUIKit.h"
 #import "TUIProgressBar.h"
+#import "CAAnimation+TUIExtensions.h"
 
 NSString *GHUIProgressBarSetNeedsDisplayObservationContext = @"GHUIProgressBarSetNeedsDisplayObservationContext";
 

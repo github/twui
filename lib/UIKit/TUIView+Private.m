@@ -62,10 +62,8 @@
 		}
 		
 		if([self.layer respondsToSelector:@selector(setContentsScale:)]) {
-			if(fabs(self.layer.contentsScale - scale) > 0.1f) {
-				self.layer.contentsScale = scale;
-				[self.layer setNeedsDisplay];
-			}
+			self.layer.contentsScale = scale;
+			[self setNeedsDisplay];
 		}
 	}
 }

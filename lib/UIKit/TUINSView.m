@@ -203,7 +203,7 @@
 
 - (void)screenProfileOrBackingPropertiesDidChange:(NSNotification *)notification
 {
-	[self _updateLayerScaleFactor];
+	[self performSelector:@selector(_updateLayerScaleFactor) withObject:nil afterDelay:0.0]; // the window's backingScaleFactor doesn't update until after this notification fires (10.8) - so delay it a bit.
 }
 
 - (TUIView *)viewForLocalPoint:(NSPoint)p

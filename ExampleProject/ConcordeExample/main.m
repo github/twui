@@ -31,8 +31,6 @@ int main(int argc, char *argv[])
 	if((major == 10 && minor >= 7) || major >= 11) {
 		AtLeastLion = YES;
 	}
-	
-	Screen_Scale = [[NSScreen mainScreen] userSpaceScaleFactor]; // hidpi is still a work in progress
 
 	return NSApplicationMain(argc, (const char **)argv);
 }

@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#import <TwUI/TUIKit.h>
+#import "TUIView.h"
 
 enum _TUIProgressBarStyle
 {
