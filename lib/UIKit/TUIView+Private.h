@@ -26,3 +26,5 @@
 - (void)_updateLayerScaleFactor;
 
 @end
+
+extern CGFloat TUICurrentContextScaleFactor(void);

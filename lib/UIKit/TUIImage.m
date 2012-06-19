@@ -17,6 +17,78 @@
 #import "TUIImage.h"
 #import "TUIKit.h"
 
+static CGImageRef TUICreateImageRefWithData(NSData *data)
+{
+	if(!data)
+		return nil;
+	
+	CGImageSourceRef imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)data, NULL);
+	if(!imageSource) {
+		return nil;
+	}
+	
+	CGImageRef image = CGImageSourceCreateImageAtIndex(imageSource, 0, NULL);
+	if(!image) {
+		NSLog(@"could not create image at index 0");
+	}
+	
+	CFRelease(imageSource);
+	return image;
+}
+
+static CGImageRef TUICreateImageRefForURL(NSURL *url, BOOL shouldCache)
+{
+	static NSMutableDictionary *cache = nil;
+	if(!cache)
+		cache = [NSMutableDictionary new];
+	
+	if(url) {
+		CGImageRef image;
+		
+		// look up in cache
+		image = (__bridge CGImageRef)[cache objectForKey:url];
+		if(image)
+			return CGImageRetain(image);
+		
+		image = TUICreateImageRefWithData([NSData dataWithContentsOfURL:url]);
+		if(image && shouldCache)
+			[cache setObject:(__bridge id)image forKey:url];
+		
+		return image;
+	}
+	return NULL;
+}
+
+static NSURL *TUIURLForNameAndScaleFactor(NSString *name, CGFloat scaleFactor)
+{
+	// simplest thing that works for now
+	// todo - understand the details of what UIKit does, mimic.
+	NSString *ext = [name pathExtension];
+	NSString *baseName = [name stringByDeletingPathExtension];
+	if(scaleFactor == 2.0) {
+		name = [[baseName stringByAppendingString:@"@2x"] stringByAppendingPathExtension:ext];
+	} else {
+		name = [baseName stringByAppendingPathExtension:ext];
+	}
+	return [[[NSBundle mainBundle] resourceURL] URLByAppendingPathComponent:name];
+}
+
+static CGImageRef TUICreateImageRefForNameAndScaleFactor(NSString *name, CGFloat scaleFactor, BOOL shouldCache)
+{
+	if(name) {
+		CGImageRef i = NULL;
+		if(scaleFactor == 2.0) {
+			i = TUICreateImageRefForURL(TUIURLForNameAndScaleFactor(name, scaleFactor), shouldCache);
+			if(i)
+				return i;
+		}
+		// fallback
+		return TUICreateImageRefForURL(TUIURLForNameAndScaleFactor(name, 1.0), shouldCache);
+	}
+	
+	return NULL;
+}
+
 @interface TUIStretchableImage : TUIImage
 {
 	@public
@@ -32,6 +104,49 @@
 
 
 @implementation TUIImage
+{
+	CGFloat _lastScaleFactor;
+	NSString *_imageName;
+	CGImageRef _imageRef;
+	BOOL _shouldCache;
+}
+
+- (id)init
+{
+	if(self = [super init]) {
+		_lastScaleFactor = 1.0;
+	}
+	return self;
+}
+
+- (id)initWithCGImage:(CGImageRef)imageRef
+{
+	if(self = [self init]) {
+		if(imageRef)
+			_imageRef = CGImageRetain(imageRef);
+	}
+	return self;
+}
+
+- (id)initWithName:(NSString *)name cache:(BOOL)shouldCache
+{
+	if(self = [self init]) {
+		_imageName = name;
+		_shouldCache = shouldCache;
+	}
+	return self;
+}
+
+- (id)initWithData:(NSData *)data
+{
+	CGImageRef i = TUICreateImageRefWithData(data);
+	if(i) {
+		self = [self initWithCGImage:i];
+		CGImageRelease(i);
+		return self;
+	}
+	return nil;
+}
 
 + (TUIImage *)_imageWithABImage:(id)abimage
 {
@@ -40,32 +155,7 @@
 
 + (TUIImage *)imageNamed:(NSString *)name cache:(BOOL)shouldCache
 {
-	if(!name)
-		return nil;
-	
-	static NSMutableDictionary *cache = nil;
-	if(!cache) {
-		cache = [[NSMutableDictionary alloc] init];
-	}
-	
-	TUIImage *image = [cache objectForKey:name];
-	if(image)
-		return image;
-	
-	NSURL *url = [[[NSBundle mainBundle] resourceURL] URLByAppendingPathComponent:name];
-	if(url) {
-		NSData *data = [NSData dataWithContentsOfURL:url];
-		if(data) {
-			image = [self imageWithData:data];
-			if(image) {
-				if(shouldCache) {
-					[cache setObject:image forKey:name];
-				}
-			}
-		}
-	}
-	
-	return image;
+	return [[self alloc] initWithName:name cache:shouldCache];
 }
 
 + (TUIImage *)imageNamed:(NSString *)name
@@ -75,32 +165,7 @@
 
 + (TUIImage *)imageWithData:(NSData *)data
 {
-	CGImageSourceRef imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)data, NULL);
-	if(!imageSource) {
-		return nil;
-	}
-	
-	CGImageRef image = CGImageSourceCreateImageAtIndex(imageSource, 0, NULL);
-	if(!image) {
-		NSLog(@"could not create image at index 0");
-		CFRelease(imageSource);
-		return nil;
-	}
-	
-	TUIImage *i = [TUIImage imageWithCGImage:image];
-	CGImageRelease(image);
-	CFRelease(imageSource);
-	return i;
-}
-
-- (id)initWithCGImage:(CGImageRef)imageRef
-{
-	if((self = [super init]))
-	{
-		if(imageRef)
-			_imageRef = CGImageRetain(imageRef);
-	}
-	return self;
+	return [[self alloc] initWithData:data];
 }
 
 - (void)dealloc
@@ -120,7 +185,7 @@
  * @note Don't use this method in -drawRect: if you use a NSGraphicsContext.  This method may
  * change the current context in order to convert the image and will not restore any previous
  * context.
- * 
+ *
  * @param image an NSImage
  * @return TUIImage
  */
@@ -178,15 +243,35 @@
 
 - (CGSize)size
 {
-	return CGSizeMake(CGImageGetWidth(_imageRef), CGImageGetHeight(_imageRef));
+	CGImageRef cgImage = [self CGImage];
+	CGFloat inv = 1.0f / _lastScaleFactor; // must call -CGImage first (will update _lastScaleFactor)
+	if(cgImage)
+		return CGSizeMake(CGImageGetWidth(cgImage) * inv, CGImageGetHeight(cgImage) * inv);
+	return CGSizeZero;
+}
+
+- (CGFloat)scale
+{
+	[self CGImage]; // update _lastScaleFactor if needed
+	return _lastScaleFactor;
 }
 
 - (CGImageRef)CGImage
 {
+	if(_imageName) { // lazy image
+		CGFloat currentScaleFactor = TUICurrentContextScaleFactor();
+		if(!_imageRef || (_lastScaleFactor != currentScaleFactor)) {
+			// if we haven't loaded an image yet, or the scale factor changed, load a new one
+			if(_imageRef)
+				CGImageRelease(_imageRef);
+			_imageRef = CGImageRetain(TUICreateImageRefForNameAndScaleFactor(_imageName, currentScaleFactor, _shouldCache));
+			_lastScaleFactor = currentScaleFactor;
+		}
+	}
 	return _imageRef;
 }
 
-- (void)drawAtPoint:(CGPoint)point                                                        // mode = kCGBlendModeNormal, alpha = 1.0
+- (void)drawAtPoint:(CGPoint)point // mode = kCGBlendModeNormal, alpha = 1.0
 {
 	[self drawAtPoint:point blendMode:kCGBlendModeNormal alpha:1.0];
 }
@@ -199,19 +284,20 @@
 	[self drawInRect:rect blendMode:blendMode alpha:alpha];
 }
 
-- (void)drawInRect:(CGRect)rect                                                           // mode = kCGBlendModeNormal, alpha = 1.0
+- (void)drawInRect:(CGRect)rect // mode = kCGBlendModeNormal, alpha = 1.0
 {
 	[self drawInRect:rect blendMode:kCGBlendModeNormal alpha:1.0];
 }
 
 - (void)drawInRect:(CGRect)rect blendMode:(CGBlendMode)blendMode alpha:(CGFloat)alpha
 {
-	if(_imageRef) {
+	CGImageRef cgImage = [self CGImage]; // -CGImage will automatically update itself with the correct image
+	if(cgImage) {
 		CGContextRef ctx = TUIGraphicsGetCurrentContext();
 		CGContextSaveGState(ctx);
 		CGContextSetAlpha(ctx, alpha);
 		CGContextSetBlendMode(ctx, blendMode);
-		CGContextDrawImage(ctx, rect, _imageRef);
+		CGContextDrawImage(ctx, rect, cgImage);
 		CGContextRestoreGState(ctx);
 	}
 }
@@ -228,7 +314,7 @@
 
 - (TUIImage *)stretchableImageWithLeftCapWidth:(NSInteger)leftCapWidth topCapHeight:(NSInteger)topCapHeight
 {
-	TUIStretchableImage *i = (TUIStretchableImage *)[TUIStretchableImage imageWithCGImage:_imageRef];
+	TUIStretchableImage *i = (TUIStretchableImage *)[TUIStretchableImage imageWithCGImage:[self CGImage]];
 	i->leftCapWidth = leftCapWidth;
 	i->topCapHeight = topCapHeight;
 	return i;
@@ -236,12 +322,13 @@
 
 - (NSData *)dataRepresentationForType:(NSString *)type compression:(CGFloat)compressionQuality
 {
-	if(_imageRef) {
+	CGImageRef cgImage = [self CGImage];
+	if(cgImage) {
 		NSMutableData *mutableData = [NSMutableData data];
 		CGImageDestinationRef destination = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)mutableData, (__bridge CFStringRef)type, 1, NULL);
 		
 		NSDictionary *properties = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithFloat:compressionQuality], kCGImageDestinationLossyCompressionQuality, nil];
-		CGImageDestinationAddImage(destination, _imageRef, (__bridge CFDictionaryRef)properties);
+		CGImageDestinationAddImage(destination, cgImage, (__bridge CFDictionaryRef)properties);
 		
 		CGImageDestinationFinalize(destination);
 		CFRelease(destination);
@@ -256,12 +343,6 @@
 
 
 @implementation TUIStretchableImage
-
-- (void)dealloc
-{
-	for(int i = 0; i < 9; ++i)
-		;
-}
 
 - (NSInteger)leftCapWidth
 {
@@ -314,14 +395,15 @@
 
 - (void)drawInRect:(CGRect)rect blendMode:(CGBlendMode)blendMode alpha:(CGFloat)alpha
 {
-	CGSize s = self.size;
-	CGFloat t = topCapHeight;
-	CGFloat l = leftCapWidth;
-	
-	if(t*2 > s.height-1) t -= 1;
-	if(l*2 > s.width-1) l -= 1;
-	
-	if(_imageRef) {
+	CGImageRef cgImage = [self CGImage];
+	if(cgImage) {
+		CGSize s = self.size;
+		CGFloat t = topCapHeight;
+		CGFloat l = leftCapWidth;
+		
+		if(t*2 > s.height-1) t -= 1;
+		if(l*2 > s.width-1) l -= 1;
+
 		if(!_flags.haveSlices) {
 			STRETCH_COORDS(0.0, 0.0, s.width, s.height, t, l, t, l)
 			#define X(I) slices[I] = [self upsideDownCrop:r[I]];
