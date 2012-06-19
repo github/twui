@@ -26,3 +26,25 @@
 - (void)_updateLayerScaleFactor;
 
 @end
+
+@interface TUIConstraintNode : NSObject
+
+@property (nonatomic, copy) NSArray *constraints;
+
+@property (nonatomic, retain) NSMutableArray *outgoingEdges;
+@property (nonatomic, retain) NSMutableArray *incomingEdges;
+
++ (id)nodeWithConstraints:(NSArray *)aConstraint;
+- (id)initWithConstraints:(NSArray *)aConstraint;
+
+- (void)addOutgoing:(TUIConstraintNode *)aNode;
+- (void)addIncoming:(TUIConstraintNode *)aNode;
+
+- (void)removeOutgoing:(TUIConstraintNode *)aNode;
+- (void)removeIncoming:(TUIConstraintNode *)aNode;
+
+- (NSArray *)constraints;
+- (NSArray *)outgoingEdges;
+- (NSArray *)incomingEdges;
+
+@end
