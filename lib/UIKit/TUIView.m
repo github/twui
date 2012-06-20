@@ -1070,6 +1070,8 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 
 @implementation TUIView (CoreLayout)
 
+@dynamic constraintIdentifier;
+
 /* My original injection method to "allow" layout constraints. Here for posterity. Remove it when it works?
 
 static void INTERNAL_layoutSubviews(TUIView *self, SEL _cmd) {
@@ -1147,17 +1149,17 @@ static int attribute_to_axis(TUILayoutAttribute attribute) {
     CFMutableDictionaryRef viewConstraintsDict = CFDictionaryCreateMutable(NULL, 0, NULL, &kCFTypeDictionaryValueCallBacks);
     
     for (TUILayoutConstraint *constraint in self.constraints) {
-        NSArray *viewConstraintsAxis = [(id)viewConstraintsDict objectForKey:constraint.firstItem];
+        NSArray *viewConstraintsAxis = [(__bridge id)viewConstraintsDict objectForKey:constraint.firstItem];
         if(!viewConstraintsAxis) {
             viewConstraintsAxis = [NSArray arrayWithObjects:[NSMutableArray array], [NSMutableArray array], nil];
-            CFDictionarySetValue(viewConstraintsDict, constraint.firstItem, viewConstraintsAxis);
+            CFDictionarySetValue(viewConstraintsDict, (__bridge const void *)(constraint.firstItem), (__bridge const void *)(viewConstraintsAxis));
         }
         
         [[viewConstraintsAxis objectAtIndex:attribute_to_axis(constraint.firstAttribute)] addObject:constraint];
     }
     
     [self.nodes removeAllObjects];
-    for (NSArray *axii in [(id)viewConstraintsDict allValues]) {
+    for (NSArray *axii in [(__bridge id)viewConstraintsDict allValues]) {
         if ([[axii objectAtIndex:0] count])
             [self.nodes addObject:[TUIConstraintNode nodeWithConstraints:[axii objectAtIndex:0]]];
         if ([[axii objectAtIndex:1] count])

@@ -31,10 +31,11 @@
 	}
 	
 	self.accessibilityTraits |= TUIAccessibilityTraitButton;
+    self.contentHorizontalAlignment = TUIControlContentHorizontalAlignmentCenter;
+    self.contentVerticalAlignment = TUIControlContentVerticalAlignmentCenter;
 	
 	return self;
 }
-
 
 - (BOOL)isEnabled
 {
@@ -60,7 +61,8 @@
   if(_controlFlags.selected)        actual |= TUIControlStateSelected;
 	if(_controlFlags.tracking)        actual |= TUIControlStateHighlighted;
 	if(_controlFlags.highlighted) actual |= TUIControlStateHighlighted;
-	if(![self.nsView isWindowKey])  actual |= TUIControlStateNotKey;
+	if(![self.nsView isWindowKey] && 
+       !_controlFlags.tracking)  actual |= TUIControlStateNotKey;
 	
 	return actual;
 }
@@ -123,45 +125,101 @@
 	return self.acceptsFirstMouse;
 }
 
-- (void)mouseDown:(NSEvent *)event
-{
-	[super mouseDown:event];
-	
-	// handle state change
-	[self _stateWillChange];
-	_controlFlags.tracking = 1;
-	[self _stateDidChange];
-	
-	// handle touch down
-	if([event clickCount] < 2) {
-		[self sendActionsForControlEvents:TUIControlEventTouchDown];
-	} else {
-		[self sendActionsForControlEvents:TUIControlEventTouchDownRepeat];
-	}
-  
-	// needs display
-	[self setNeedsDisplay];
+- (void)mouseDown:(NSEvent *)event {
+    if(!_controlFlags.disabled) {
+		[super mouseDown:event];
+        
+        BOOL track = [self beginTrackingWithEvent:event];
+        if(track && !_controlFlags.tracking) {
+        	[self _stateWillChange];
+        	_controlFlags.tracking = 1;
+        	[self _stateDidChange];
+        } else if(!track && _controlFlags.tracking) {
+            [self _stateWillChange];
+        	_controlFlags.tracking = 0;
+        	[self _stateDidChange];
+        }
+        
+        if(_controlFlags.tracking) {            
+            TUIControlEvents currentEvents = TUIControlEventMouseDown;
+            if([event clickCount] < 2)
+                currentEvents |= TUIControlEventMouseDownRepeat;
+            
+            [self sendActionsForControlEvents:currentEvents];
+            [self setNeedsDisplay];
+        }
+    }
 }
 
-- (void)mouseUp:(NSEvent *)event
-{
-	[super mouseUp:event];
-	
-	// handle state change
-	[self _stateWillChange];
-	_controlFlags.tracking = 0;
-	[self _stateDidChange];
-	
-	if([self eventInside:event]) {
-		if(![self didDrag]) {
-			[self sendActionsForControlEvents:TUIControlEventTouchUpInside];
-		}
-	} else {
-		[self sendActionsForControlEvents:TUIControlEventTouchUpOutside];
-	}
-	
-	// needs display
-	[self setNeedsDisplay];
+- (void)mouseDragged:(NSEvent *)event {
+    if(!_controlFlags.disabled) {
+        [super mouseDragged:event];
+        
+        if(_controlFlags.tracking) {
+            BOOL track = [self continueTrackingWithEvent:event];
+            if(track && !_controlFlags.tracking) {
+                [self _stateWillChange];
+                _controlFlags.tracking = 1;
+                [self _stateDidChange];
+            } else if(!track && _controlFlags.tracking) {
+                [self _stateWillChange];
+                _controlFlags.tracking = 0;
+                [self _stateDidChange];
+            }
+            
+            if(_controlFlags.tracking) {
+                TUIControlEvents currentEvents = (([self eventInside:event])? 
+                                                 TUIControlEventMouseDragInside : 
+                                                 TUIControlEventMouseDragOutside);
+                
+                [self sendActionsForControlEvents:currentEvents];
+                [self setNeedsDisplay];
+            }
+        }
+    }
+}
+
+- (void)mouseUp:(NSEvent *)event {
+    if(!_controlFlags.disabled) {
+        [super mouseUp:event];
+        
+        if(_controlFlags.tracking) {
+            [self endTrackingWithEvent:event];
+            
+            TUIControlEvents currentEvents = (([self eventInside:event])? 
+                                             TUIControlEventMouseUpInside : 
+                                             TUIControlEventMouseUpOutside);
+            
+            [self sendActionsForControlEvents:currentEvents];
+            [self setNeedsDisplay];
+            
+            [self _stateWillChange];
+            _controlFlags.tracking = 0;
+            [self _stateDidChange];
+        }
+    }
+}
+
+- (void)willMoveToSuperview:(TUIView *)newSuperview {
+    if(!_controlFlags.disabled && _controlFlags.tracking) {
+        [self _stateWillChange];
+        _controlFlags.tracking = 0;
+        [self _stateDidChange];
+        
+        [self cancelTrackingWithEvent:nil];
+        [self setNeedsDisplay];
+    }
+}
+
+- (void)willMoveToWindow:(NSWindow *)newWindow {
+    if(!_controlFlags.disabled && _controlFlags.tracking) {
+    	[self _stateWillChange];
+        _controlFlags.tracking = 0;
+        [self _stateDidChange];
+        
+        [self cancelTrackingWithEvent:nil];
+        [self setNeedsDisplay];
+    }
 }
 
 @end

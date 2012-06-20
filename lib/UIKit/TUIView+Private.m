@@ -77,23 +77,15 @@
 @synthesize outgoingEdges = _outgoingEdges;
 
 + (id)nodeWithConstraints:(NSArray *)theConstraints {
-    return [[[TUIConstraintNode alloc] initWithConstraints:theConstraints] autorelease];
+    return [[TUIConstraintNode alloc] initWithConstraints:theConstraints];
 }
 
 - (id)initWithConstraints:(NSArray *)theConstraints {
     if((self = [super init])) {
-        _constraints = [theConstraints retain];
-        _outgoingEdges = [[NSMutableArray array] retain];
-        _incomingEdges = [[NSMutableArray array] retain];
+        _constraints = theConstraints;
+        _outgoingEdges = [NSMutableArray array];
+        _incomingEdges = [NSMutableArray array];
     } return self;
-}
-
-- (void)dealloc {
-    _constraints = nil;
-    _outgoingEdges = nil;
-    _incomingEdges = nil;
-    
-    [super dealloc];
 }
 
 - (void)addIncoming:(TUIConstraintNode *)aNode {

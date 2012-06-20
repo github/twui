@@ -12,7 +12,10 @@
         if(CGColorSpaceGetModel(CGColorGetColorSpace(color.CGColor)) == kCGColorSpaceModelMonochrome) {
             const CGFloat *oldComponents = CGColorGetComponents(color.CGColor);
             CGFloat components[4] = {oldComponents[0], oldComponents[0], oldComponents[0], oldComponents[1]};
-            return [TUIColor colorWithCGColor:CGColorCreate(colorSpaceRGB, components)];
+            CGColorRef _output = CGColorCreate(colorSpaceRGB, components);
+            TUIColor *output = [TUIColor colorWithCGColor:_output];
+            CGColorRelease(_output);
+            return output;
         } else
             return color;
     };
@@ -79,7 +82,7 @@
 			nil];
 }
 
-// Return YES if it matches UXColor.
+// Return YES if it matches TUIColor.
 - (BOOL)red:(CGFloat *)red green:(CGFloat *)green blue:(CGFloat *)blue alpha:(CGFloat *)alpha {
 	const CGFloat *components = CGColorGetComponents(self.CGColor);
 	
@@ -160,7 +163,7 @@
 	if (![self red:&r green:&g blue:&b alpha:&a]) return nil;
 	
 	// Y = 0.2126 R + 0.7152 G + 0.0722 B
-	return [UXColor colorWithWhite:(r * 0.2126f) + (g * 0.7152f) + (b * 0.0722f)
+	return [TUIColor colorWithWhite:(r * 0.2126f) + (g * 0.7152f) + (b * 0.0722f)
 							 alpha:a];
 	
 }
@@ -171,7 +174,7 @@
 	CGFloat r,g,b,a;
 	if (![self red:&r green:&g blue:&b alpha:&a]) return nil;
 		
-	return [UXColor colorWithRed:MAX(0.0, MIN(1.0, r * red))
+	return [TUIColor colorWithRed:MAX(0.0, MIN(1.0, r * red))
 						   green:MAX(0.0, MIN(1.0, g * green)) 
 							blue:MAX(0.0, MIN(1.0, b * blue))
 						   alpha:MAX(0.0, MIN(1.0, a * alpha))];
@@ -183,7 +186,7 @@
 	CGFloat r,g,b,a;
 	if (![self red:&r green:&g blue:&b alpha:&a]) return nil;
 	
-	return [UXColor colorWithRed:MAX(0.0, MIN(1.0, r + red))
+	return [TUIColor colorWithRed:MAX(0.0, MIN(1.0, r + red))
 						   green:MAX(0.0, MIN(1.0, g + green)) 
 							blue:MAX(0.0, MIN(1.0, b + blue))
 						   alpha:MAX(0.0, MIN(1.0, a + alpha))];
@@ -195,7 +198,7 @@
 	CGFloat r,g,b,a;
 	if (![self red:&r green:&g blue:&b alpha:&a]) return nil;
 		
-	return [UXColor colorWithRed:MAX(r, red)
+	return [TUIColor colorWithRed:MAX(r, red)
 						   green:MAX(g, green)
 							blue:MAX(b, blue)
 						   alpha:MAX(a, alpha)];
@@ -207,7 +210,7 @@
 	CGFloat r,g,b,a;
 	if (![self red:&r green:&g blue:&b alpha:&a]) return nil;
 	
-	return [UXColor colorWithRed:MIN(r, red)
+	return [TUIColor colorWithRed:MIN(r, red)
 						   green:MIN(g, green)
 							blue:MIN(b, blue)
 						   alpha:MIN(a, alpha)];
@@ -303,13 +306,13 @@
 		}
 	}
 	if (![scanner isAtEnd]) return nil;
-	UXColor *color;
+	TUIColor *color;
 	switch (i) {
 		case 2: // Grayscale.
-			color = [UXColor colorWithWhite:c[0] alpha:c[1]];
+			color = [TUIColor colorWithWhite:c[0] alpha:c[1]];
 			break;
 		case 4: // RGBA.
-			color = [UXColor colorWithRed:c[0] green:c[1] blue:c[2] alpha:c[3]];
+			color = [TUIColor colorWithRed:c[0] green:c[1] blue:c[2] alpha:c[3]];
 			break;
 		default: // Error.
 			color = nil;
@@ -318,7 +321,7 @@
 }
 
 + (TUIColor *)randomColor {
-	return [UXColor colorWithRed:(CGFloat)(arc4random() % 255)
+	return [TUIColor colorWithRed:(CGFloat)(arc4random() % 255)
 						   green:(CGFloat)(arc4random() % 255)
 							blue:(CGFloat)(arc4random() % 255)
 						   alpha:1.0f];
@@ -329,19 +332,19 @@
 	int g = (hex >> 8) & 0xFF;
 	int b = (hex) & 0xFF;
 	
-	return [UXColor colorWithRed:r / 255.0f
+	return [TUIColor colorWithRed:r / 255.0f
 						   green:g / 255.0f
 							blue:b / 255.0f
 						   alpha:1.0f];
 }
 
-// Returns a UXColor by scanning the string for a hex number and passing that to +[UXColor colorWithRGBHex:].
+// Returns a TUIColor by scanning the string for a hex number and passing that to +[TUIColor colorWithRGBHex:].
 + (TUIColor *)colorWithHexString:(NSString *)stringToConvert {
 	NSScanner *scanner = [NSScanner scannerWithString:stringToConvert];
 	unsigned hexNum;
     
 	if (![scanner scanHexInt:&hexNum]) return nil;
-	return [UXColor colorWithRGBHex:hexNum];
+	return [TUIColor colorWithRGBHex:hexNum];
 }
 
 - (TUIColor *)colorByDarkeningColorBy:(CGFloat)factor {
@@ -370,7 +373,7 @@
     CGColorRef newColor = CGColorCreate(colorSpace, newComponents);
     CGColorSpaceRelease(colorSpace);
     
-    UXColor *retColor = [UXColor colorWithCGColor:newColor];
+    TUIColor *retColor = [TUIColor colorWithCGColor:newColor];
     CGColorRelease(newColor);
     
     return retColor;
@@ -402,7 +405,7 @@
     CGColorRef newColor = CGColorCreate(colorSpace, newComponents);
     CGColorSpaceRelease(colorSpace);
     
-    UXColor *retColor = [UXColor colorWithCGColor:newColor];
+    TUIColor *retColor = [TUIColor colorWithCGColor:newColor];
     CGColorRelease(newColor);
     
     return retColor;

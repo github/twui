@@ -177,7 +177,17 @@ static CGRect ButtonRectVerticalCenteredInRect(CGRect a, CGRect b)
 {
 	CGRect r;
 	r.size = a.size;
+    r.origin.x = 0.0f; // silences the static analyzer?
 	r.origin.y = b.origin.y + (b.size.height - a.size.height) * 0.5;
+	return r;
+}
+
+static CGRect ButtonRectHorizontalCenteredInRect(CGRect a, CGRect b)
+{
+	CGRect r;
+	r.size = a.size;
+	r.origin.x = b.origin.x + (b.size.width - a.size.width) * 0.5;
+    r.origin.y = 0.0f; // silences the static analyzer?
 	return r;
 }
 
