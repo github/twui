@@ -32,6 +32,7 @@
 @property (nonatomic, strong) TUIColor *shadowColor;
 @property (nonatomic, strong) TUIImage *image;
 @property (nonatomic, strong) TUIImage *backgroundImage;
+@property (nonatomic, retain) TUIColor *backgroundColor;
 
 @end
 
@@ -42,7 +43,7 @@
 @synthesize shadowColor;
 @synthesize image;
 @synthesize backgroundImage;
-
+@synthesize backgroundColor;
 
 @end
 
@@ -100,6 +101,13 @@
 	[self _stateDidChange];
 }
 
+- (void)setBackgroundColor:(TUIColor *)color forState:(TUIControlState)state {
+	[self _stateWillChange];
+	[[self _contentForState:state] setBackgroundColor:color];
+	[self setNeedsDisplay];
+	[self _stateDidChange];
+}
+
 - (NSString *)titleForState:(TUIControlState)state
 {
 	return [[self _contentForState:state] title];
@@ -123,6 +131,10 @@
 - (TUIImage *)backgroundImageForState:(TUIControlState)state
 {
 	return [[self _contentForState:state] backgroundImage];
+}
+
+- (TUIColor *)backgroundColorForState:(TUIControlState)state {
+	return [[self _contentForState:state] backgroundColor];
 }
 
 - (NSString *)currentTitle
@@ -173,6 +185,16 @@
 	}
 	
 	return image;
+}
+
+- (TUIColor *)currentBackgroundColor {
+	TUIColor *color = [self backgroundColorForState:self.state];
+	
+    if(color == nil) {
+		color = [self backgroundColorForState:TUIControlStateNormal];
+    }
+	
+	return color;
 }
 
 @end

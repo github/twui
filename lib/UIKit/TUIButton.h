@@ -33,8 +33,6 @@ typedef enum {
 @interface TUIButton : TUIControl
 {
 	NSMutableDictionary		*_contentLookup;
-	TUIEdgeInsets           _titleEdgeInsets;
-    TUIEdgeInsets           _imageEdgeInsets;
 
 	TUIImageView           *_imageView;
 	TUILabel               *_titleView;
@@ -43,6 +41,7 @@ typedef enum {
 	
     struct {
 		unsigned int dimsInBackground:1;
+        unsigned int dimsWhenHighlighted:1;
         unsigned int buttonType:8;
 		unsigned int firstDraw:1;
 		unsigned int reversesTitleShadowWhenHighlighted:1;
@@ -54,7 +53,7 @@ typedef enum {
 
 @property(nonatomic,assign)        TUIEdgeInsets    titleEdgeInsets;
 @property(nonatomic,assign)        TUIEdgeInsets    imageEdgeInsets;
-@property(nonatomic,assign) BOOL dimsInBackground;
+
 
 @property(nonatomic,readonly) TUIButtonType buttonType;
 
@@ -62,8 +61,12 @@ typedef enum {
 
 @property(nonatomic,readonly,strong) TUILabel     *titleLabel;
 @property(nonatomic,readonly,strong) TUIImageView *imageView;
+@property (nonatomic, readonly, retain) TUIImageView *backgroundImageView;
 
+@property (nonatomic, assign) BOOL dimsInBackground;
+@property (nonatomic, assign) BOOL dimsWhenHighlighted;
 @property (nonatomic, assign) BOOL reversesTitleShadowWhenHighlighted;
+@property (nonatomic, assign) CGFloat interactionSpeed;
 
 - (CGRect)backgroundRectForBounds:(CGRect)bounds;
 - (CGRect)contentRectForBounds:(CGRect)bounds;
@@ -79,17 +82,20 @@ typedef enum {
 - (void)setTitleShadowColor:(TUIColor *)color forState:(TUIControlState)state;
 - (void)setImage:(TUIImage *)image forState:(TUIControlState)state;
 - (void)setBackgroundImage:(TUIImage *)image forState:(TUIControlState)state;
+- (void)setBackgroundColor:(TUIColor *)image forState:(TUIControlState)state;
 
 - (NSString *)titleForState:(TUIControlState)state;
 - (TUIColor *)titleColorForState:(TUIControlState)state;
 - (TUIColor *)titleShadowColorForState:(TUIControlState)state;
 - (TUIImage *)imageForState:(TUIControlState)state;
 - (TUIImage *)backgroundImageForState:(TUIControlState)state;
+- (TUIColor *)backgroundColorForState:(TUIControlState)state;
 
 @property(nonatomic,readonly,retain) NSString *currentTitle;
 @property(nonatomic,readonly,retain) TUIColor  *currentTitleColor;
 @property(nonatomic,readonly,retain) TUIColor  *currentTitleShadowColor;
 @property(nonatomic,readonly,retain) TUIImage  *currentImage;
 @property(nonatomic,readonly,retain) TUIImage  *currentBackgroundImage;
+@property(nonatomic, readonly, retain) TUIColor *currentBackgroundColor;
 
 @end

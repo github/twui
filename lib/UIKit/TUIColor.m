@@ -171,6 +171,19 @@ CACHED_COLOR(brownColor,		[self colorWithRed:0.6 green:0.4 blue:0.2 alpha:1.0])
 CACHED_COLOR(selectedGradientBottomBlue,		[self colorWithRed:0.0 green:0.38 blue:0.92 alpha:1.0])
 CACHED_COLOR(graphiteColor,		[self colorWithRed:0.45 green:0.49 blue:0.58 alpha:1.0])
 
+CACHED_COLOR(coolBlueColor, 	[self colorWithRed:51.0f/255.0f green:181.0f/255.0f blue:229.0f/255.0f alpha:1.0f])
+CACHED_COLOR(warmBlueColor, 	[self colorWithRed:0.0f/255.0f green:153.0f/255.0f blue:204.0f/255.0f alpha:1.0f])
+CACHED_COLOR(coolPurpleColor, 	[self colorWithRed:170.0f/255.0f green:102.0f/255.0f blue:204.0f/255.0f alpha:1.0f])
+CACHED_COLOR(warmPurpleColor, 	[self colorWithRed:153.0f/255.0f green:51.0f/255.0f blue:204.0f/255.0f alpha:1.0f])
+CACHED_COLOR(coolGreenColor, 	[self colorWithRed:153.0f/255.0f green:204.0f/255.0f blue:0.0f/255.0f alpha:1.0f])
+CACHED_COLOR(warmGreenColor, 	[self colorWithRed:102.0f/255.0f green:153.0f/255.0f blue:0.0f/255.0f alpha:1.0f])
+CACHED_COLOR(coolYellowColor, 	[self colorWithRed:255.0f/255.0f green:187.0f/255.0f blue:51.0f/255.0f alpha:1.0f])
+CACHED_COLOR(warmYellowColor, 	[self colorWithRed:255.0f/255.0f green:136.0f/255.0f blue:0.0f/255.0f alpha:1.0f])
+CACHED_COLOR(coolRedColor, 		[self colorWithRed:0.90f green:0.16f blue:0.12f alpha:1.0f])
+CACHED_COLOR(warmRedColor,	 	[self colorWithRed:204.0f/255.0f green:0.0f blue:0.0f alpha:1.0f])
+CACHED_COLOR(coolGrayColor, 	[self colorWithWhite:0.32 alpha:1.0])
+CACHED_COLOR(warmGrayColor, 	[self colorWithWhite:0.15 alpha:1.0])
+
 + (TUIColor *)linkColor
 {
 	return [TUIColor colorWithRed:13.0f/255.0f green:140.0f/255.0f blue:231.0f/255.0f alpha:1.0f];

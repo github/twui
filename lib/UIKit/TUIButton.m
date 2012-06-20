@@ -29,19 +29,32 @@
 @implementation TUIButton
 
 @synthesize popUpMenu;
+@synthesize interactionSpeed;
+@synthesize imageView = _imageView;
+@synthesize backgroundImageView = _backgroundImageView;
+@synthesize titleEdgeInsets = _titleEdgeInsets;
+@synthesize imageEdgeInsets = _imageEdgeInsets;
 
 - (id)initWithFrame:(CGRect)frame
 {
 	if((self = [super initWithFrame:frame]))
 	{
+        
 		_contentLookup = [[NSMutableDictionary alloc] init];
-		self.opaque = NO; // won't matter unless image is set
+		self.opaque = NO;
 		_buttonFlags.buttonType = TUIButtonTypeCustom;
 		_buttonFlags.dimsInBackground = 1;
+        _buttonFlags.dimsWhenHighlighted = 1;
 		_buttonFlags.firstDraw = 1;
+        
+        self.interactionSpeed = 0.5;
 		self.backgroundColor = [TUIColor clearColor];
-		self.needsDisplayWhenWindowsKeyednessChanges = YES;
-		self.reversesTitleShadowWhenHighlighted = NO;
+        self.needsDisplayWhenWindowsKeyednessChanges = YES;
+        self.reversesTitleShadowWhenHighlighted = NO;
+        
+        [self addSubview:self.backgroundImageView];
+        [self addSubview:self.imageView];
+        [self addSubview:self.titleLabel];
 	}
 	return self;
 }
@@ -54,33 +67,12 @@
 
 + (id)buttonWithType:(TUIButtonType)buttonType
 {
-	TUIButton *b = [[self alloc] initWithFrame:CGRectZero];
-	return b;
+	return [[self alloc] initWithFrame:CGRectZero];
 }
 
 - (BOOL)acceptsFirstResponder
 {
 	return NO;
-}
-
-- (void)setImageEdgeInsets:(TUIEdgeInsets)i
-{
-	_imageEdgeInsets = i;
-}
-
-- (TUIEdgeInsets)imageEdgeInsets
-{
-	return _imageEdgeInsets;
-}
-
-- (void)setTitleEdgeInsets:(TUIEdgeInsets)i
-{
-	_titleEdgeInsets = i;
-}
-
-- (TUIEdgeInsets)titleEdgeInsets
-{
-	return _titleEdgeInsets;
 }
 
 - (TUIButtonType)buttonType
@@ -110,14 +102,39 @@
 	return _imageView;
 }
 
-- (BOOL)dimsInBackground
-{
+- (TUIImageView *)backgroundImageView {
+	if(!_backgroundImageView) {
+		_backgroundImageView = [[TUIImageView alloc] initWithFrame:CGRectZero];
+		_backgroundImageView.backgroundColor = [TUIColor clearColor];
+        [_backgroundImageView setUserInteractionEnabled:NO];
+	} return _backgroundImageView;
+}
+
+- (BOOL)dimsInBackground {
 	return _buttonFlags.dimsInBackground;
 }
 
-- (void)setDimsInBackground:(BOOL)b
-{
+- (void)setDimsInBackground:(BOOL)b {
 	_buttonFlags.dimsInBackground = b;
+    [self setNeedsDisplay];
+}
+
+- (BOOL)dimsWhenHighlighted {
+	return _buttonFlags.dimsWhenHighlighted;
+}
+
+- (void)setDimsWhenHighlighted:(BOOL)b {
+	_buttonFlags.dimsWhenHighlighted = b;
+    [self setNeedsDisplay];
+}
+
+- (BOOL)reversesTitleShadowWhenHighlighted {
+	return _buttonFlags.reversesTitleShadowWhenHighlighted;
+}
+
+- (void)setReversesTitleShadowWhenHighlighted:(BOOL)reversesTitleShadowWhenHighlighted {
+	_buttonFlags.reversesTitleShadowWhenHighlighted = reversesTitleShadowWhenHighlighted;
+    [self setNeedsDisplay];
 }
 
 - (CGRect)backgroundRectForBounds:(CGRect)bounds
@@ -156,81 +173,109 @@ static CGRect ButtonRectCenteredInRect(CGRect a, CGRect b)
 	return r;
 }
 
+static CGRect ButtonRectVerticalCenteredInRect(CGRect a, CGRect b)
+{
+	CGRect r;
+	r.size = a.size;
+	r.origin.y = b.origin.y + (b.size.height - a.size.height) * 0.5;
+	return r;
+}
+
 - (CGSize)sizeThatFits:(CGSize)size {
 	return self.currentImage.size;
 }
 
-
 - (void)drawRect:(CGRect)r
 {
 	if(_buttonFlags.firstDraw) {
-		[self _update];
 		_buttonFlags.firstDraw = 0;
 	}
 	
+    // Set the alpha status.
 	CGRect bounds = self.bounds;
-
-	BOOL key = [self.nsView isWindowKey];
-	BOOL down = self.state == TUIControlStateHighlighted;
-	CGFloat alpha = (self.buttonType == TUIButtonTypeCustom ? 1.0 : down?0.7:1.0);
-	if(_buttonFlags.dimsInBackground)
-		alpha = key?alpha:0.5;
+	CGFloat alpha = (_buttonFlags.dimsWhenHighlighted && self.state == TUIControlStateHighlighted) ? 1.0 : 0.65;
+    if(_buttonFlags.dimsInBackground)
+		alpha = [self.nsWindow isKeyWindow] ? alpha : 0.5;
+    
+    // Fluidly animate the title view alpha changes.
+	[TUIView animateWithDuration:(interactionSpeed / 2) animations:^{
+        _titleView.alpha = alpha;
+    }];
+    
+    // Fluidly animate the color changes.
+	[TUIView animateWithDuration:interactionSpeed animations:^{
+        if(self.currentBackgroundColor)
+            self.backgroundColor = self.currentBackgroundColor;
+        else self.backgroundColor = [TUIColor clearColor];
+    }];
 	
-	if(self.backgroundColor != nil) {
-		[self.backgroundColor setFill];
-		CGContextFillRect(TUIGraphicsGetCurrentContext(), self.bounds);
-	}
+    // Assign background image to button.
+	self.backgroundImageView.alpha = 1.0f;//0.0f;
+    self.backgroundImageView.image = self.currentBackgroundImage;
+    self.backgroundImageView.frame = [self backgroundRectForBounds:bounds];
+    [TUIView animateWithDuration:(interactionSpeed / 2) animations:^{
+        //self.backgroundImageView.alpha = alpha;
+    }];
+    
+    // Don't directly draw the background image.
+    //UXImage *backgroundImage = self.currentBackgroundImage;
+	//[backgroundImage drawInRect:[self backgroundRectForBounds:bounds] blendMode:kCGBlendModeNormal alpha:1.0];
 	
-	TUIImage *backgroundImage = self.currentBackgroundImage;
+    // Assign an available image to button.
+    // If none, don't worry about capping it.
 	TUIImage *image = self.currentImage;
-	
-	[backgroundImage drawInRect:[self backgroundRectForBounds:bounds] blendMode:kCGBlendModeNormal alpha:1.0];
-	
 	if(image) {
 		CGRect imageRect;
 		if(image.leftCapWidth || image.topCapHeight) {
-			// stretchable
+			// If there are caps, it's a stretchable image.
 			imageRect = self.bounds;
 		} else {
-			// normal centered + insets
+			// No caps, so it's a standard image.
 			imageRect.origin = CGPointZero;
 			imageRect.size = [image size];
+            
+            // Adjust the inset rect.
 			CGRect b = self.bounds;
 			b.origin.x += _imageEdgeInsets.left;
 			b.origin.y += _imageEdgeInsets.bottom;
 			b.size.width -= _imageEdgeInsets.left + _imageEdgeInsets.right;
 			b.size.height -= _imageEdgeInsets.bottom + _imageEdgeInsets.top;
-			imageRect = ButtonRectRoundOrigin(ButtonRectCenteredInRect(imageRect, b));
+            
+			imageRect = ButtonRectRoundOrigin(ButtonRectVerticalCenteredInRect(imageRect, b));
 		}
-		[image drawInRect:imageRect blendMode:kCGBlendModeNormal alpha:alpha];
+        
+        self.imageView.alpha = 0.0f;
+        self.imageView.image = image;
+        self.imageView.frame = imageRect;
+        [TUIView animateWithDuration:(interactionSpeed / 2) animations:^{
+            self.imageView.alpha = alpha;
+        }];
+        
+        // Don't directly draw the image.
+        //[image drawInRect:imageRect blendMode:kCGBlendModeNormal alpha:alpha];
 	}
 	
-	NSString *title = self.currentTitle;
-	if(title != nil) {
-		_titleView.text = title;
-	}
-	
-	TUIColor *color = self.currentTitleColor;
-	if(color != nil) {
-		_titleView.textColor = color;
-	}
-	
+    if(self.currentTitle) _titleView.text = self.currentTitle;
+    if(self.currentTitleColor) _titleView.textColor = self.currentTitleColor;
+    
 	TUIColor *shadowColor = self.currentTitleShadowColor;
 	// they may have manually set the renderer's shadow color, in which case we 
 	// don't want to reset it to nothing
 	if(shadowColor != nil) {
 		_titleView.renderer.shadowColor = shadowColor;
 	}
-	
+    
+    // Draw our new bounds and frame
+    // based on the "new" insets.
 	CGContextRef ctx = TUIGraphicsGetCurrentContext();
 	CGContextSaveGState(ctx);
 	CGContextTranslateCTM(ctx, _titleEdgeInsets.left, _titleEdgeInsets.bottom);
-	if(!key)
-		CGContextSetAlpha(ctx, 0.5);
-	CGRect titleFrame = self.bounds;
-	titleFrame.size.width -= (_titleEdgeInsets.left + _titleEdgeInsets.right);
-	_titleView.frame = titleFrame;
-	[_titleView drawRect:_titleView.bounds];
+    
+    _titleView.bounds = bounds;
+    _titleView.frame = CGRectMake(_titleEdgeInsets.left, 
+                                  _titleEdgeInsets.top, 
+                                  bounds.size.width - _titleEdgeInsets.left - _titleEdgeInsets.right,
+                                  bounds.size.height - _titleEdgeInsets.top - _titleEdgeInsets.bottom);
 	CGContextRestoreGState(ctx);
 }
 
@@ -257,15 +302,8 @@ static CGRect ButtonRectCenteredInRect(CGRect a, CGRect b)
 	}
 }
 
-- (void)_update {
-	
-}
-
 - (void)_stateDidChange {
 	[super _stateDidChange];
-	
-	[self _update];
-	
 	[self setNeedsDisplay];
 }
 
@@ -275,14 +313,6 @@ static CGRect ButtonRectCenteredInRect(CGRect a, CGRect b)
 	}
 	
 	[super setHighlighted:highlighted];
-}
-
-- (BOOL)reversesTitleShadowWhenHighlighted {
-	return _buttonFlags.reversesTitleShadowWhenHighlighted;
-}
-
-- (void)setReversesTitleShadowWhenHighlighted:(BOOL)reversesTitleShadowWhenHighlighted {
-	_buttonFlags.reversesTitleShadowWhenHighlighted = reversesTitleShadowWhenHighlighted;
 }
 
 @end
