@@ -48,3 +48,5 @@
 - (NSArray *)incomingEdges;
 
 @end
+
+extern CGFloat TUICurrentContextScaleFactor(void);

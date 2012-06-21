@@ -720,8 +720,8 @@ static float clampBounce(float x) {
 		
 		CGPoint F = CGPointZero;
 		
-		float tightness = 2.5;
-		float dampiness = 0.3;
+		float tightness = 2.5f;
+		float dampiness = 0.35f;
 		
 		// spring
 		F.x = -_bounce.x * tightness;

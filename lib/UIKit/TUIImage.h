@@ -17,9 +17,6 @@
 #import <Foundation/Foundation.h>
 
 @interface TUIImage : NSObject
-{
-  CGImageRef  _imageRef;
-}
 
 + (TUIImage *)imageNamed:(NSString *)name;
 + (TUIImage *)imageNamed:(NSString *)name cache:(BOOL)shouldCache;
@@ -33,6 +30,7 @@
 - (id)initWithCGImage:(CGImageRef)imageRef;
 
 @property (nonatomic, readonly) CGSize size;
+@property (nonatomic, readonly) CGFloat scale;
 @property (nonatomic, readonly) CGImageRef CGImage;
 
 - (void)drawAtPoint:(CGPoint)point;                                                        // mode = kCGBlendModeNormal, alpha = 1.0

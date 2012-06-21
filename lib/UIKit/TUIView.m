@@ -19,6 +19,7 @@
 #import "TUIView+Private.h"
 #import "TUIViewController.h"
 #import "TUILayoutConstraint.h"
+#import <pthread.h>
 
 typedef enum {
     TUIConstraintMin = 1 << 0,
@@ -108,9 +109,13 @@ CGRect(^TUIViewCenteredLayout)(TUIView*) = nil;
 	}
 }
 
+static pthread_key_t TUICurrentContextScaleFactorTLSKey;
+
 + (void)initialize
 {
 	if(self == [TUIView class]) {
+		pthread_key_create(&TUICurrentContextScaleFactorTLSKey, free);
+
 		TUIViewCenteredLayout = [^(TUIView *v) {
 			TUIView *superview = v.superview;
 			CGRect b = superview.frame;
@@ -314,6 +319,28 @@ CGRect(^TUIViewCenteredLayout)(TUIView*) = nil;
 	return _context.context;
 }
 
+static CGFloat TUICurrentContextScaleFactor(void)
+{
+	/*
+	 Key is set up in +initialize
+	 Use TLS rather than a simple global so drawsInBackground should continue to work (views in the same process may be drawing destined for different windows on different screens with different scale factors).
+	 */
+	CGFloat *v = pthread_getspecific(TUICurrentContextScaleFactorTLSKey);
+	if(v)
+		return *v;
+	return 1.0;
+}
+
+static void TUISetCurrentContextScaleFactor(CGFloat s)
+{
+	CGFloat *v = pthread_getspecific(TUICurrentContextScaleFactorTLSKey);
+	if(!v) {
+		v = malloc(sizeof(CGFloat));
+		pthread_setspecific(TUICurrentContextScaleFactorTLSKey, v);
+	}
+	*v = s;
+}
+
 - (void)displayLayer:(CALayer *)layer
 {
 	if(_viewFlags.delegateWillDisplayLayer)
@@ -339,6 +366,7 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 	if(_viewFlags.clearsContextBeforeDrawing) \
 		CGContextClearRect(context, b); \
 	CGFloat scale = [self.layer respondsToSelector:@selector(contentsScale)] ? self.layer.contentsScale : 1.0f; \
+	TUISetCurrentContextScaleFactor(scale); \
 	CGContextScaleCTM(context, scale, scale); \
 	CGContextSetAllowsAntialiasing(context, true); \
 	CGContextSetShouldAntialias(context, true); \
