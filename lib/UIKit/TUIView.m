@@ -319,7 +319,7 @@ static pthread_key_t TUICurrentContextScaleFactorTLSKey;
 	return _context.context;
 }
 
-static CGFloat TUICurrentContextScaleFactor(void)
+CGFloat TUICurrentContextScaleFactor(void)
 {
 	/*
 	 Key is set up in +initialize
