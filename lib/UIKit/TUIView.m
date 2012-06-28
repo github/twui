@@ -68,8 +68,8 @@ CGRect(^TUIViewCenteredLayout)(TUIView*) = nil;
 
 @property (nonatomic, strong) NSMutableArray *subviews;
 
-@property (nonatomic, retain) NSMutableArray *liveConstraints;
-@property (nonatomic, retain) NSMutableArray *nodes;
+@property (nonatomic, strong) NSMutableArray *liveConstraints;
+@property (nonatomic, strong) NSMutableArray *nodes;
 @property (nonatomic, assign) BOOL queuedConstraintUpdate;
 
 @end
@@ -1099,38 +1099,6 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 @implementation TUIView (CoreLayout)
 
 @dynamic constraintIdentifier;
-
-/* My original injection method to "allow" layout constraints. Here for posterity. Remove it when it works?
-
-static void INTERNAL_layoutSubviews(TUIView *self, SEL _cmd) {
-    Class superclass = class_getSuperclass([self class]);
-    IMP superLayout = class_getMethodImplementation(superclass, _cmd);
-    
-    [self layoutSubviewsOfView:self];
-    superLayout(self, _cmd);
-}
-
-- (void)initializeInternal {
-    static BOOL configured = NO;
-    if(configured) return;
-    
-    if(![NSStringFromClass(self.class) hasPrefix:@"TUILayoutConstraint_"]) {
-        NSString *subclassName = [NSString stringWithFormat:@"TUILayoutConstraint_%@", NSStringFromClass(self.class)];
-        Class subclass = NSClassFromString(subclassName);
-        
-        if(subclass == nil) {
-            subclass = objc_allocateClassPair(self.class, [subclassName UTF8String], 0);
-            Method layoutSubviews = class_getInstanceMethod(self.class, @selector(layoutSubviews));
-            class_addMethod(subclass, @selector(layoutSubviews), (IMP)INTERNAL_layoutSubviews, method_getTypeEncoding(layoutSubviews));
-            objc_registerClassPair(subclass);
-        }
-        
-        object_setClass(self, subclass);
-        configured = YES;
-    }
-}
-
-*/
 
 - (void)layoutSubviewsOfView:(TUIView *)view {
     if(self.queuedConstraintUpdate)
