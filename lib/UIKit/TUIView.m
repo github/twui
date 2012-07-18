@@ -18,7 +18,15 @@
 #import "TUIKit.h"
 #import "TUIView+Private.h"
 #import "TUIViewController.h"
+#import "TUILayoutConstraint.h"
 #import <pthread.h>
+
+typedef enum {
+    TUIConstraintMin = 1 << 0,
+    TUIConstraintMid = 1 << 1,
+    TUIConstraintMax = 1 << 2,
+    TUIConstraintSize = 1 << 3,
+} TUIConstraintAxis;
 
 NSString * const TUIViewWillMoveToWindowNotification = @"TUIViewWillMoveToWindowNotification";
 NSString * const TUIViewDidMoveToWindowNotification = @"TUIViewDidMoveToWindowNotification";
@@ -57,7 +65,25 @@ CGRect(^TUIViewCenteredLayout)(TUIView*) = nil;
 
 
 @interface TUIView ()
+
 @property (nonatomic, strong) NSMutableArray *subviews;
+
+@property (nonatomic, strong) NSMutableArray *liveConstraints;
+@property (nonatomic, strong) NSMutableArray *nodes;
+@property (nonatomic, assign) BOOL queuedConstraintUpdate;
+
+@end
+
+@interface TUIView (CoreLayout_Private)
+
+- (void)updateConstraintsGraph;
+- (void)layoutSubviewsOfView:(TUIView *)view;
+- (void)solveConstraintsInView:(TUIView *)view;
+- (void)solveAxis:(NSArray *)axis inView:(TUIView *)view;
+- (CGFloat)axisAttributeValue:(TUIConstraintAxis)axisVal
+                      inFrame:(CGRect)frame
+                      isYAxis:(BOOL)isYAxis;
+
 @end
 
 @implementation TUIView
@@ -123,6 +149,8 @@ static pthread_key_t TUICurrentContextScaleFactorTLSKey;
 	{
 		_viewFlags.clearsContextBeforeDrawing = 1;
 		self.frame = frame;
+        self.nodes = [NSMutableArray array];
+        self.liveConstraints = [NSMutableArray array];
 		toolTipDelay = 1.5;
 		self.isAccessibilityElement = YES;
 		accessibilityFrame = CGRectNull; // null rect means we'll just get the view's frame and use that
@@ -405,6 +433,7 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 
 - (void)layoutSublayersOfLayer:(CALayer *)layer
 {
+    [self layoutSubviewsOfView:self];
 	[self layoutSubviews];
 	[self _blockLayout];
 }
@@ -1063,6 +1092,267 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 - (BOOL)eventInside:(NSEvent *)event
 {
 	return [self pointInside:[self localPointForEvent:event] withEvent:event];
+}
+
+@end
+
+@implementation TUIView (CoreLayout)
+
+@dynamic constraintIdentifier;
+
+- (void)layoutSubviewsOfView:(TUIView *)view {
+    if(self.queuedConstraintUpdate)
+        [self updateConstraintsGraph];
+    [self solveConstraintsInView:view];
+}
+
+- (void)setNeedsUpdateConstraints {
+    self.queuedConstraintUpdate = YES;
+}
+
+- (NSArray *)constraints {
+    return [NSArray arrayWithArray:self.liveConstraints];
+}
+
+- (void)addConstraint:(TUILayoutConstraint *)constraint {
+    [self.liveConstraints addObject:constraint];
+    [self setNeedsUpdateConstraints];
+}
+
+- (void)removeConstraint:(TUILayoutConstraint *)constraint {
+    [self.liveConstraints removeObject:constraint];
+    [self setNeedsUpdateConstraints];
+}
+
+- (void)addConstraints:(NSArray *)constraintList {
+    for(TUILayoutConstraint *constraint in constraintList)
+        [self addConstraint:constraint];
+}
+
+- (void)removeConstraints:(NSArray *)constraintList {
+    for(TUILayoutConstraint *constraint in constraintList)
+        [self removeConstraint:constraint];
+}
+
+static int attribute_to_axis(TUILayoutAttribute attribute) {
+    return ((attribute == TUILayoutAttributeLeft) ||
+            (attribute == TUILayoutAttributeCenterX) || 
+            (attribute == TUILayoutAttributeRight) || 
+            (attribute == TUILayoutAttributeWidth)) ? 0 : 1;
+}
+
+- (void)updateConstraintsGraph {
+    CFMutableDictionaryRef viewConstraintsDict = CFDictionaryCreateMutable(NULL, 0, NULL, &kCFTypeDictionaryValueCallBacks);
+    
+    for (TUILayoutConstraint *constraint in self.constraints) {
+        NSArray *viewConstraintsAxis = [(__bridge id)viewConstraintsDict objectForKey:constraint.firstItem];
+        if(!viewConstraintsAxis) {
+            viewConstraintsAxis = [NSArray arrayWithObjects:[NSMutableArray array], [NSMutableArray array], nil];
+            CFDictionarySetValue(viewConstraintsDict, (__bridge const void *)(constraint.firstItem), (__bridge const void *)(viewConstraintsAxis));
+        }
+        
+        [[viewConstraintsAxis objectAtIndex:attribute_to_axis(constraint.firstAttribute)] addObject:constraint];
+    }
+    
+    [self.nodes removeAllObjects];
+    for (NSArray *axii in [(__bridge id)viewConstraintsDict allValues]) {
+        if ([[axii objectAtIndex:0] count])
+            [self.nodes addObject:[TUIConstraintNode nodeWithConstraints:[axii objectAtIndex:0]]];
+        if ([[axii objectAtIndex:1] count])
+            [self.nodes addObject:[TUIConstraintNode nodeWithConstraints:[axii objectAtIndex:1]]];
+    }
+    
+    CFRelease(viewConstraintsDict);
+    
+    for (TUIConstraintNode *node in self.nodes) {
+        for (TUILayoutConstraint * constraint in [node constraints]) {
+            for (TUIConstraintNode *otherNode in self.nodes) {
+                if(otherNode == node)
+                    continue;
+                
+                for(TUILayoutConstraint *constraint2 in [otherNode constraints]) {
+                    if (constraint.secondItem == constraint2.firstItem && 
+                        attribute_to_axis(constraint.secondAttribute) == attribute_to_axis(constraint2.firstAttribute)) {
+                        [
+                         node addOutgoing:otherNode];
+                        [otherNode addIncoming:node];
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
+    NSMutableArray *queue = [NSMutableArray array];
+    for (TUIConstraintNode *n in self.nodes) {
+        if ([[n incomingEdges] count] == 0)
+            [queue addObject:n];
+    }
+    
+    NSMutableArray *allNodes = [NSArray arrayWithArray:self.nodes];
+    [self.nodes removeAllObjects];
+    
+    while ([queue count]) {
+        TUIConstraintNode *node = [queue objectAtIndex:0];
+        [queue removeObjectAtIndex:0];
+        [self.nodes insertObject:node atIndex:0];
+        
+        for (TUIConstraintNode *outgoing in [node outgoingEdges]) {
+            [node removeOutgoing:outgoing];
+            [outgoing removeIncoming:node];
+            if([[outgoing incomingEdges] count] == 0)
+                [queue addObject:outgoing];
+        }
+    }
+    
+    for (TUIConstraintNode *node in allNodes) {
+        if ([[node outgoingEdges] count] || [[node incomingEdges] count])
+            [[NSException exceptionWithName:@"TUIInvalidConstraint"
+                                     reason:@"There is a cycle in the specified constraints"
+                                   userInfo:nil] raise];
+    }
+    
+    self.queuedConstraintUpdate = NO;
+}
+
+- (void)solveConstraintsInView:(TUIView *)view; {
+    for(TUIConstraintNode *node in self.nodes)
+        [self solveAxis:[node constraints] inView:view];
+}
+
+- (CGFloat)axisAttributeValue:(TUIConstraintAxis)axisVal inFrame:(CGRect)frame isYAxis:(BOOL)isYAxis {
+    CGFloat val = 0.0f;
+    
+    TUILayoutAttribute attribute = axisVal << (isYAxis ? 4 : 0);
+    switch (attribute) {
+        case TUILayoutAttributeLeft:
+            return CGRectGetMinX(frame);
+        case TUILayoutAttributeCenterX:
+            return CGRectGetMidX(frame);
+        case TUILayoutAttributeRight:
+            return CGRectGetMaxX(frame);
+        case TUILayoutAttributeWidth:
+            return CGRectGetWidth(frame);
+        case TUILayoutAttributeBottom:
+            return CGRectGetMinY(frame);
+        case TUILayoutAttributeCenterY:
+            return CGRectGetMidY(frame);
+        case TUILayoutAttributeTop:
+            return CGRectGetMaxY(frame);
+        case TUILayoutAttributeHeight:
+            return CGRectGetHeight(frame);
+    } return val;
+}
+
+- (void)solveAxis:(NSArray *)axis inView:(TUIView *)superview {
+    uint8_t combined = 0x00;
+    
+    TUIView *view = [superview subviewWithConstraintIdentifier:[[axis objectAtIndex:0] firstItem]];
+    CGRect rect = [view frame];
+    
+    CGFloat minR = CGFLOAT_MAX;
+    CGFloat midR = CGFLOAT_MAX;
+    CGFloat maxR = CGFLOAT_MAX;
+    CGFloat sizeR = CGFLOAT_MAX;
+    
+    for(TUILayoutConstraint *constraint in axis) {
+        combined |= constraint.firstAttribute;
+        
+        CGFloat rel = [constraint relativeValueInView:superview];
+        switch (constraint.firstAttribute >= 1 << 4 ? constraint.firstAttribute >> 4 : constraint.firstAttribute) {
+            case TUIConstraintMin:
+                minR = rel;
+                break;
+            case TUIConstraintMid:
+                midR = rel;
+                break;
+            case TUIConstraintMax:
+                maxR = rel;
+                break;
+            case TUIConstraintSize:
+                sizeR = rel;
+                break;
+        }
+    }
+    
+    BOOL isYAxis = combined >= 1 << 4;
+    if(isYAxis) combined >>= 4;
+    CGFloat min = [self axisAttributeValue:TUIConstraintMin inFrame:rect isYAxis:isYAxis];
+    CGFloat mid = [self axisAttributeValue:TUIConstraintMid inFrame:rect isYAxis:isYAxis];
+    CGFloat max = [self axisAttributeValue:TUIConstraintMax inFrame:rect isYAxis:isYAxis];
+    CGFloat size = [self axisAttributeValue:TUIConstraintSize inFrame:rect isYAxis:isYAxis];
+    
+    switch (combined) {
+        case TUIConstraintMin: {
+            CGFloat minDiff = minR - min;
+            min += minDiff;
+        }
+            break;
+        case TUIConstraintMid: {
+            CGFloat midDiff = midR - mid;
+            min += midDiff;
+        }
+            break;
+        case TUIConstraintMax: {
+            CGFloat maxDiff = maxR - max;
+            min += maxDiff;
+        }
+            break;
+        case TUIConstraintSize:
+            size = sizeR;
+            break;
+        case TUIConstraintMin | TUIConstraintMid:
+            min = minR;
+            mid = midR;
+            max = mid + (mid - min);
+            size = max - min;
+            break;
+        case TUIConstraintMin | TUIConstraintMax:
+            min = minR;
+            size = maxR - minR;
+            break;
+        case TUIConstraintMin | TUIConstraintSize:
+            min = minR;
+            size = sizeR;
+            break;
+        case TUIConstraintMid | TUIConstraintMax:
+            mid = midR;
+            max = maxR;
+            min = mid - (max - mid);
+            size = max - min;
+            break;
+        case TUIConstraintMid | TUIConstraintSize:
+            mid = midR;
+            size = sizeR;
+            CGFloat hSize = size / 2.0;
+            min = mid - hSize;
+            break;
+        case TUIConstraintMax | TUIConstraintSize:
+            max = maxR;
+            size = sizeR;
+            min = max - size;
+            break;
+        default:
+            NSAssert(NO, @"Invalid axis, constraint building failed");
+            break;
+    }
+    
+    if (isYAxis) {
+        rect.origin.y = min;
+        rect.size.height = size;
+    } else {
+        rect.origin.x = min;
+        rect.size.width = size;
+    }
+    
+    [view setFrame:rect];
+}
+
+- (TUIView *)subviewWithConstraintIdentifier:(NSString *)identifier {
+    for (TUIView *subview in [self subviews])
+        if([[subview constraintIdentifier] isEqualToString:identifier])
+            return subview;
+    return nil;
 }
 
 @end

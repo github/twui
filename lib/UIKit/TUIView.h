@@ -18,6 +18,8 @@
 #import "TUIColor.h"
 #import "TUIAccessibility.h"
 
+@class TUILayoutConstraint;
+
 extern NSString * const TUIViewWillMoveToWindowNotification; // both notification's userInfo will contain the new window under the key TUIViewWindow
 extern NSString * const TUIViewDidMoveToWindowNotification;
 extern NSString * const TUIViewWindow;
@@ -476,6 +478,22 @@ extern CGRect(^TUIViewCenteredLayout)(TUIView*);
  @returns whether mouse event occured within the bounds of reciever
  */
 - (BOOL)eventInside:(NSEvent *)event;
+
+@end
+
+@interface TUIView (CoreLayout)
+
+@property (nonatomic, copy) NSString *constraintIdentifier;
+@property (nonatomic, readonly, retain) NSArray *constraints;
+
+- (void)addConstraint:(TUILayoutConstraint *)constraint;
+- (void)removeConstraint:(TUILayoutConstraint *)constraint;
+
+- (void)addConstraints:(NSArray *)constraints;
+- (void)removeConstraints:(NSArray *)constraints;
+
+- (void)setNeedsUpdateConstraints;
+- (TUIView *)subviewWithConstraintIdentifier:(NSString *)identifier;
 
 @end
 

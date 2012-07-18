@@ -69,3 +69,47 @@
 }
 
 @end
+
+@implementation TUIConstraintNode
+
+@synthesize constraints = _constraints;
+@synthesize incomingEdges = _incomingEdges;
+@synthesize outgoingEdges = _outgoingEdges;
+
++ (id)nodeWithConstraints:(NSArray *)theConstraints {
+    return [[TUIConstraintNode alloc] initWithConstraints:theConstraints];
+}
+
+- (id)initWithConstraints:(NSArray *)theConstraints {
+    if((self = [super init])) {
+        _constraints = theConstraints;
+        _outgoingEdges = [NSMutableArray array];
+        _incomingEdges = [NSMutableArray array];
+    } return self;
+}
+
+- (void)addIncoming:(TUIConstraintNode *)aNode {
+    if(![self.incomingEdges containsObject:aNode])
+        [(NSMutableArray *)self.incomingEdges addObject:aNode];
+}
+
+- (void)addOutgoing:(TUIConstraintNode *)aNode {
+    if(![self.outgoingEdges containsObject:aNode])
+        [(NSMutableArray *)self.outgoingEdges addObject:aNode];
+}
+
+- (void)removeOutgoing:(TUIConstraintNode *)aNode {
+    if([self.outgoingEdges containsObject:aNode])
+        [(NSMutableArray *)self.outgoingEdges removeObject:aNode];
+}
+
+- (void)removeIncoming:(TUIConstraintNode *)aNode {
+    if([self.incomingEdges containsObject:aNode])
+        [(NSMutableArray *)self.incomingEdges removeObject:aNode];
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"Node %p constrains: %@", self, self.constraints];
+}
+
+@end

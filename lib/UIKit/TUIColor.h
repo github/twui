@@ -59,6 +59,20 @@
 
 + (TUIColor *)linkColor;
 
+// Vibrant base colors.
++ (TUIColor *)coolBlueColor;
++ (TUIColor *)warmBlueColor;
++ (TUIColor *)coolPurpleColor;
++ (TUIColor *)warmPurpleColor;
++ (TUIColor *)coolGreenColor;
++ (TUIColor *)warmGreenColor;
++ (TUIColor *)coolYellowColor;
++ (TUIColor *)warmYellowColor;
++ (TUIColor *)coolRedColor;
++ (TUIColor *)warmRedColor;
++ (TUIColor *)coolGrayColor;
++ (TUIColor *)warmGrayColor;
+
 /**
  Sets fill and stroke for the current context
  */
@@ -66,6 +80,11 @@
 
 - (void)setFill;
 - (void)setStroke;
+
+// Sets fill and stroke for selected context.
+- (void)setInContext:(CGContextRef)context;
+- (void)setFillInContext:(CGContextRef)context;
+- (void)setStrokeInContext:(CGContextRef)context;
 
 - (TUIColor *)colorWithAlphaComponent:(CGFloat)alpha;
 
@@ -87,5 +106,69 @@
  Not cached
  */
 @property (strong, nonatomic, readonly) NSColor *nsColor;
+
+@end
+
+@interface TUIColor (Expanded)
+
+// Set color space models and RGB provisions.
+@property (nonatomic, readonly) CGColorSpaceModel colorSpaceModel;
+@property (nonatomic, readonly) BOOL canProvideRGBComponents;
+
+// Only valid if canProvideRGBComponents is YES.
+@property (nonatomic, readonly) CGFloat red;
+@property (nonatomic, readonly) CGFloat green;
+@property (nonatomic, readonly) CGFloat blue;
+
+// Only valid if colorSpaceModel == kCGColorSpaceModelMonochrome
+@property (nonatomic, readonly) CGFloat white;
+
+// Get hex and hex alpha from UXColor.
+@property (nonatomic, readonly) CGFloat alpha;
+@property (nonatomic, readonly) UInt32 rgbHex;
+
+// Returns a string for selected color space model.
+- (NSString *)colorSpaceString;
+
+// Creates an array with RGBA components.
+- (NSArray *)arrayFromRGBAComponents;
+
+// Returns YES if components match UXColor.
+- (BOOL)red:(CGFloat *)r green:(CGFloat *)g blue:(CGFloat *)b alpha:(CGFloat *)a;
+
+// Color modification methods.
+- (TUIColor *)colorByLuminanceMapping;
+- (TUIColor *)colorByLighteningColorBy:(CGFloat)factor;
+- (TUIColor *) colorByDarkeningColorBy:(CGFloat)factor;
+
+- (TUIColor *)colorByMultiplyingByRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
+- (TUIColor *)       colorByAddingRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
+- (TUIColor *) colorByLighteningToRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
+- (TUIColor *)  colorByDarkeningToRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
+
+- (TUIColor *)colorByMultiplyingBy:(CGFloat)f;
+- (TUIColor *)       colorByAdding:(CGFloat)f;
+- (TUIColor *) colorByLighteningTo:(CGFloat)f;
+- (TUIColor *)  colorByDarkeningTo:(CGFloat)f;
+
+- (TUIColor *)colorByMultiplyingByColor:(TUIColor *)color;
+- (TUIColor *)       colorByAddingColor:(TUIColor *)color;
+- (TUIColor *) colorByLighteningToColor:(TUIColor *)color;
+- (TUIColor *)  colorByDarkeningToColor:(TUIColor *)color;
+
+// Gets a string (optionally hex) from UXColor.
+- (NSString *)stringFromColor;
+- (NSString *)hexStringFromColor;
+
+// Factory to return a random color.
++ (TUIColor *)randomColor;
+
+// Factory to create a UXColor in other ways.
++ (TUIColor *)colorWithString:(NSString *)stringToConvert;
++ (TUIColor *)colorWithRGBHex:(UInt32)hex;
++ (TUIColor *)colorWithHexString:(NSString *)stringToConvert;
+
+// Check color equality on a per-component basis.
+- (BOOL)isEqualToColor:(TUIColor *)otherColor;
 
 @end
