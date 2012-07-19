@@ -1,4 +1,4 @@
-# TwUI 0.2.0
+# TwUI 0.2.0r1
 
 TwUI is a hardware accelerated UI framework for Mac, inspired by UIKit.  It enables:
 
@@ -11,6 +11,7 @@ It differs from UIKit in a few ways:
 * Block-based layout and drawRect
 * A consistent coordinate system (bottom left origin)
 * Sub-pixel text rendering
+* Layout Constraints (ala Cocoa Auto-Layout)
 
 # Setup
 
@@ -26,7 +27,7 @@ An included example project shows off the basic construction of a pure TwUI-base
 
 # Status
 
-TwUI should be considered an alpha project.  It is current shipping in Twitter for Mac, in use 24/7 by many, many users and has proven itself very stable.  The code still has a few Twitter-for-Mac-isms that should be refactored and cleaned up.
+TwUI should be considered an alpha project.  It is current shipping in Twitter for Mac and Github for Mac, in use 24/7 by many, many users and has proven itself very stable.
 
 This project follows the [SemVer](http://semver.org/) standard. The API may change in backwards-incompatible ways before the 1.0 release.
 
@@ -39,8 +40,6 @@ There are many places where TwUI could be improved:
 * Accessibility.  It would be great to bridge the AppKit accessibility APIs to something simpler, again, inspired by UIKit.
 
 * Text editing.  TUITextEditor is a simple text editor (built on TUITextRenderer).  It provides basic editing support and handles a number of standard keybindings.  Fleshing this out to be indistinguishable from NSTextView (read: spellchecking, autocorrect) would be useful.  If the logic around this were self-contained it would even be great as a standalone project, useful for anyone looking to build a custom text editor for the Mac.
-
-* Reverse-hosting.  Right now TUIViews may be hosted inside of an existing NSView hierarchy.  It would be useful if the reverse were possible, adding NSViews inside of TUIViews.  Doing so in a robust way so event routing, the responder chain, and CAAnimations all just work is a challenge.
 
 # Documentation
 

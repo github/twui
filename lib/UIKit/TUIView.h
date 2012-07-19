@@ -21,6 +21,7 @@
 extern NSString * const TUIViewWillMoveToWindowNotification; // both notification's userInfo will contain the new window under the key TUIViewWindow
 extern NSString * const TUIViewDidMoveToWindowNotification;
 extern NSString * const TUIViewWindow;
+extern NSString * const TUIViewFrameDidChangeNotification;
 
 enum {
 	TUIViewAutoresizingNone                 = 0,
@@ -489,6 +490,7 @@ extern CGRect(^TUIViewCenteredLayout)(TUIView*);
 
 @end
 
+#import "TUIView+Layout.h"
 #import "TUIView+Private.h"
 #import "TUIView+Event.h"
 #import "TUIView+PasteboardDragging.h"

@@ -14,15 +14,17 @@
  limitations under the License.
  */
 
+#import <pthread.h>
 #import "TUIView.h"
 #import "TUIKit.h"
 #import "TUIView+Private.h"
 #import "TUIViewController.h"
-#import <pthread.h>
+#import "TUILayoutManager.h"
 
 NSString * const TUIViewWillMoveToWindowNotification = @"TUIViewWillMoveToWindowNotification";
 NSString * const TUIViewDidMoveToWindowNotification = @"TUIViewDidMoveToWindowNotification";
 NSString * const TUIViewWindow = @"TUIViewWindow";
+NSString * const TUIViewFrameDidChangeNotification = @"TUIViewFrameDidChangeNotification";
 
 CGRect(^TUIViewCenteredLayout)(TUIView*) = nil;
 
@@ -109,6 +111,9 @@ static pthread_key_t TUICurrentContextScaleFactorTLSKey;
 
 - (void)dealloc
 {
+    [[TUILayoutManager sharedLayoutManager] removeLayoutConstraintsFromView:self];
+    [[TUILayoutManager sharedLayoutManager] setLayoutName:nil forView:self];
+    
 	[self setTextRenderers:nil];
 	_layer.delegate = nil;
 	if(_context.context) {
@@ -499,6 +504,7 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 - (void)setFrame:(CGRect)f
 {
 	self.layer.frame = f;
+    [[NSNotificationCenter defaultCenter] postNotificationName:TUIViewFrameDidChangeNotification object:self];
 }
 
 - (CGRect)bounds
