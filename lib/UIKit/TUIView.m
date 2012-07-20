@@ -17,6 +17,8 @@
 #import <pthread.h>
 #import "TUIView.h"
 #import "TUIKit.h"
+#import "TUINSWindow.h"
+#import "TUITextRenderer.h"
 #import "TUIView+Private.h"
 #import "TUIViewController.h"
 #import "TUILayoutManager.h"
@@ -412,6 +414,7 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 {
 	[self layoutSubviews];
 	[self _blockLayout];
+	[self.subviews makeObjectsPerformSelector:@selector(ancestorDidLayout)];
 }
 
 - (BOOL)drawInBackground
@@ -491,6 +494,54 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 	}
 }
 
+- (NSArray *)textRenderers
+{
+	return _textRenderers;
+}
+
+- (void)setTextRenderers:(NSArray *)renderers
+{
+	_currentTextRenderer = nil;
+	
+	for(TUITextRenderer *renderer in _textRenderers) {
+		renderer.view = nil;
+		[renderer setNextResponder:nil];
+	}
+	
+	_textRenderers = renderers;
+
+	for(TUITextRenderer *renderer in _textRenderers) {
+		[renderer setNextResponder:self];
+		renderer.view = self;
+	}
+}
+
+- (TUITextRenderer *)textRendererAtPoint:(CGPoint)point
+{
+	for(TUITextRenderer *r in _textRenderers) {
+		if(CGRectContainsPoint(r.frame, point))
+			return r;
+	}
+	return nil;
+}
+
+- (void)_updateLayerScaleFactor
+{
+	if([self nsWindow] != nil) {
+		[self.subviews makeObjectsPerformSelector:_cmd];
+		
+		CGFloat scale = 1.0f;
+		if([[self nsWindow] respondsToSelector:@selector(backingScaleFactor)]) {
+			scale = [[self nsWindow] backingScaleFactor];
+		}
+		
+		if([self.layer respondsToSelector:@selector(setContentsScale:)]) {
+			self.layer.contentsScale = scale;
+			[self setNeedsDisplay];
+		}
+	}
+}
+
 @end
 
 
@@ -504,6 +555,7 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 - (void)setFrame:(CGRect)f
 {
 	self.layer.frame = f;
+	[self.subviews makeObjectsPerformSelector:@selector(ancestorDidLayout)];
     [[NSNotificationCenter defaultCenter] postNotificationName:TUIViewFrameDidChangeNotification object:self];
 }
 
@@ -515,6 +567,7 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 - (void)setBounds:(CGRect)b
 {
 	self.layer.bounds = b;
+	[self.subviews makeObjectsPerformSelector:@selector(ancestorDidLayout)];
 }
 
 - (void)setCenter:(CGPoint)c
@@ -523,6 +576,7 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 	f.origin.x = c.x - f.size.width / 2;
 	f.origin.y = c.y - f.size.height / 2;
 	self.frame = f;
+	[self.subviews makeObjectsPerformSelector:@selector(ancestorDidLayout)];
 }
 
 - (CGPoint)center
@@ -655,6 +709,9 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 	
 	TUIView *superview = [self superview];
 	if(superview) {
+		TUINSView *nsView = self.ancestorTUINSView;
+		[self willMoveToTUINSView:nil];
+
 		[superview willRemoveSubview:self];
 		[self willMoveToSuperview:nil];
 
@@ -663,6 +720,8 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 		self.nsView = nil;
 
 		[self didMoveToSuperview];
+		[self didMoveFromTUINSView:nsView];
+		[self viewHierarchyDidChange];
 	}
 }
 
@@ -720,6 +779,7 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 	}
 }
 
+// TODO: get rid of these macros, and just always go through a single method
 #define PRE_ADDSUBVIEW(index) \
 	if (!_subviews) \
 		_subviews = [[NSMutableArray alloc] init]; \
@@ -729,13 +789,18 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 	} else {\
 		[self.subviews insertObject:view atIndex:index];\
 	}\
- 	[view removeFromSuperview]; /* will call willAdd:nil and didAdd (nil) */ \
+	[view removeFromSuperview]; /* will call willAdd:nil and didAdd (nil) */ \
+	\
+	TUINSView *originalNSView_ = view.ancestorTUINSView; \
+	[view willMoveToTUINSView:_nsView]; \
+	\
 	[view willMoveToSuperview:self]; \
 	view.nsView = _nsView;
 
 #define POST_ADDSUBVIEW \
 	[self didAddSubview:view]; \
 	[view didMoveToSuperview]; \
+	[view didMoveFromTUINSView:originalNSView_]; \
 	[view setNextResponder:self]; \
 	[self _blockLayout];
 
@@ -840,6 +905,20 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 	if(!SUBVIEW_VAR) continue;
 
 #define END_EACH_SUBVIEW }
+
+- (TUIView *)ancestorSharedWithView:(TUIView *)view
+{
+	TUIView *parentView = self;
+
+	do {
+		if ([view isDescendantOfView:parentView])
+			return parentView;
+
+		parentView = parentView.superview;
+	} while (parentView);
+
+	return nil;
+}
 
 - (BOOL)isDescendantOfView:(TUIView *)view
 {

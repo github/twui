@@ -48,12 +48,12 @@ typedef enum : NSUInteger {
 	TUILayoutConstraintAttributeMaxXMidY = 108,
 	TUILayoutConstraintAttributeMaxXMaxY = 109,
 	
-    /*
-     BoundsCenter is the center of the view bounds.
-     Frame is the frame of the view.
-     Bounds is the bounds of the view.
-     */
-    
+	/*
+	 BoundsCenter is the center of the view bounds.
+	 Frame is the frame of the view.
+	 Bounds is the bounds of the view.
+	 */
+	
 	TUILayoutConstraintAttributeBoundsCenter = 110,
 	
 	TUILayoutConstraintAttributeFrame   = 1000,

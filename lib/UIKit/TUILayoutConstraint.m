@@ -95,9 +95,9 @@
 		_attribute = attr;
 		_sourceAttribute = srcAttr;
 		_sourceName = [srcLayer copy];
-        
-        _scale = scale;
-        _offset = offset;
+		
+		_scale = scale;
+		_offset = offset;
 		_valueTransformer = nil;
 	}
 	return self;
@@ -113,25 +113,25 @@
 	
 	NSAssert(fabs(attributeRange - sourceAttributeRange) < 0.001, @"Invalid source and target attributes: %f, %f.", sourceAttributeRange, attributeRange);
 	NSAssert(transformer != nil, @"Cannot have a nil transformer.", sourceAttributeRange, attributeRange);
-    
+	
 	if((self = [super init])) {
 		_attribute = attr;
 		_sourceAttribute = srcAttr;
 		_sourceName = [srcLayer copy];
-        
-        _scale = 0.0f;
-        _offset = 0.0f;
+		
+		_scale = 0.0f;
+		_offset = 0.0f;
 		_valueTransformer = transformer;
 	}
 	return self;
 }
 
 - (CGFloat)transformValue:(CGFloat)source {
-    if(self.valueTransformer) {
-        id transformed = [self.valueTransformer transformedValue:[NSNumber numberWithFloat:source]];
-        return [transformed floatValue];
-    } else
-        return (source * self.scale) + self.offset;
+	if(self.valueTransformer) {
+		id transformed = [self.valueTransformer transformedValue:[NSNumber numberWithFloat:source]];
+		return [transformed floatValue];
+	} else
+		return (source * self.scale) + self.offset;
 }
 
 - (void)applyToTargetView:(TUIView *)target {
