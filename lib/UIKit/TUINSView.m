@@ -14,13 +14,95 @@
  limitations under the License.
  */
 
+//	Portions of this code were taken from Velvet,
+//	which is copyright (c) 2012 Bitswift, Inc.
+//	See LICENSE.txt for more information.
+
 #import "TUINSView.h"
+#import "CALayer+TUIExtensions.h"
+#import "TUIBridgedScrollView.h"
+#import "TUINSHostView.h"
+#import "TUINSView+Private.h"
+#import "TUIViewNSViewContainer.h"
 #import "TUIView+Private.h"
+#import "TUIView+TUIBridgedView.h"
 #import "TUITextRenderer+Event.h"
 #import "TUITooltipWindow.h"
 #import <CoreFoundation/CoreFoundation.h>
 
+static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, void *context) {
+	TUIViewNSViewContainer *hostA = viewA.hostView;
+	TUIViewNSViewContainer *hostB = viewB.hostView;
+
+	// hosted NSViews should be on top of everything else
+	if (!hostA) {
+		if (!hostB) {
+			return NSOrderedSame;
+		} else {
+			return NSOrderedAscending;
+		}
+	} else if (!hostB) {
+		return NSOrderedDescending;
+	}
+
+	TUIView *ancestor = [hostA ancestorSharedWithView:(TUIView *)hostB];
+	NSCAssert2(ancestor, @"TwUI-hosted NSViews in the same TUINSView should share a TwUI ancestor: %@, %@", viewA, viewB);
+
+	__block NSInteger orderA = -1;
+	__block NSInteger orderB = -1;
+
+	[ancestor.subviews enumerateObjectsUsingBlock:^(TUIView *subview, NSUInteger index, BOOL *stop){
+		if ([hostA isDescendantOfView:subview]) {
+			orderA = (NSInteger)index;
+		} else if ([hostB isDescendantOfView:subview]) {
+			orderB = (NSInteger)index;
+		}
+
+		if (orderA >= 0 && orderB >= 0) {
+			*stop = YES;
+		}
+	}];
+
+	if (orderA < orderB) {
+		return NSOrderedAscending;
+	} else if (orderA > orderB) {
+		return NSOrderedDescending;
+	} else {
+		return NSOrderedSame;
+	}
+}
+
 @interface TUINSView ()
+
+/*
+ * The layer-hosted view which actually holds the TwUI hierarchy.
+ */
+@property (nonatomic, readonly, strong) TUINSHostView *tuiHostView;
+
+- (void)recalculateNSViewClipping;
+- (void)recalculateNSViewOrdering;
+
+/*
+ * A layer used to mask the rendering of NSView-owned layers added to the
+ * receiver.
+ *
+ * This masking will keep the rendering of a given NSView consistent with the
+ * clipping its TUIViewNSViewContainer would have in the TwUI hierarchy.
+ */
+@property (nonatomic, strong) CAShapeLayer *maskLayer;
+
+/*
+ * Returns any existing AppKit-created focus ring layer for the given view, or
+ * nil if one could not be found.
+ */
+- (CALayer *)focusRingLayerForView:(NSView *)view;
+
+/*
+ * Configures all the necessary properties on the receiver. This is outside of
+ * an initializer because NSView has no true designated initializer.
+ */
+- (void)setUp;
+
 - (void)windowDidResignKey:(NSNotification *)notification;
 - (void)windowDidBecomeKey:(NSNotification *)notification;
 - (void)screenProfileOrBackingPropertiesDidChange:(NSNotification *)notification;
@@ -29,25 +111,41 @@
 
 @implementation TUINSView
 
-@synthesize rootView;
+// implemented by TUIView
+@dynamic layer;
+
+// these cannot be implicitly synthesized because they're from protocols/categories
+@synthesize hostView = _hostView;
+@synthesize appKitHostView = _appKitHostView;
+
+- (id)initWithCoder:(NSCoder *)coder
+{
+	self = [super initWithCoder:coder];
+	if (self == nil)
+		return nil;
+	
+	[self setUp];
+	return self;
+}
 
 - (id)initWithFrame:(NSRect)frameRect
 {
-	if((self = [super initWithFrame:frameRect])) {
-		opaque = YES;
-	}
+	self = [super initWithFrame:frameRect];
+	if (self == nil)
+		return nil;
+	
+	[self setUp];
 	return self;
 }
 
 - (void)dealloc
 {
-	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowDidResignKeyNotification object:nil];
-	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowDidBecomeKeyNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	
-	rootView.nsView = nil;
-	[rootView removeFromSuperview];
+	_rootView.nsView = nil;
+	[_rootView removeFromSuperview];
 	
-	rootView = nil;
+	_rootView = nil;
 	_hoverView = nil;
 	_trackingView = nil;
 	_trackingArea = nil;
@@ -99,7 +197,7 @@
 {
 	[super viewWillStartLiveResize];
 	inLiveResize = YES;
-	[rootView viewWillStartLiveResize];
+	[_rootView viewWillStartLiveResize];
 }
 
 - (BOOL)inLiveResize
@@ -111,7 +209,7 @@
 {
 	[super viewDidEndLiveResize];
 	inLiveResize = NO;
-	[rootView viewDidEndLiveResize]; // will send to all subviews
+	[_rootView viewDidEndLiveResize]; // will send to all subviews
 	
 	if([[self window] respondsToSelector:@selector(ensureWindowRectIsOnScreen)])
 		[[self window] performSelector:@selector(ensureWindowRectIsOnScreen)];
@@ -121,19 +219,17 @@
 {
 	v.autoresizingMask = TUIViewAutoresizingFlexibleSize;
 
-	rootView.nsView = nil;
-	rootView = v;
-	rootView.nsView = self;
+	_rootView.nsView = nil;
+	_rootView.hostView = nil;
+	_rootView = v;
+	_rootView.nsView = self;
+	_rootView.hostView = self;
 	
-	[rootView setNextResponder:self];
+	[_rootView setNextResponder:self];
 	
 	CGSize s = [self frame].size;
 	v.frame = CGRectMake(0, 0, s.width, s.height);
-	
-	[self setWantsLayer:YES];
-	CALayer *layer = [self layer];
-	[layer setDelegate:self];
-	[layer addSublayer:rootView.layer];
+	[self.tuiHostView.layer addSublayer:_rootView.layer];
 	
 	[self _updateLayerScaleFactor];
 }
@@ -156,15 +252,16 @@
 		[[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowDidChangeScreenProfileNotification object:self.window];
 	}
 	
-	if(newWindow != nil && rootView.layer.superlayer != [self layer]) {
-		rootView.layer.frame = self.layer.bounds;
-		[[self layer] addSublayer:rootView.layer];
+	CALayer *hostLayer = self.tuiHostView.layer;
+	if(newWindow != nil && _rootView.layer.superlayer != hostLayer) {
+		_rootView.layer.frame = hostLayer.bounds;
+		[hostLayer addSublayer:_rootView.layer];
 	}
 	
 	[self.rootView willMoveToWindow:(TUINSWindow *) newWindow];
 	
 	if(newWindow == nil) {
-		[rootView removeFromSuperview];
+		[_rootView removeFromSuperview];
 	}
 }
 
@@ -191,9 +288,9 @@
 			scale = [[self window] backingScaleFactor];
 		}
 		
-		if([self.layer respondsToSelector:@selector(setContentsScale:)]) {
-			if(fabs(self.layer.contentsScale - scale) > 0.1f) {
-				self.layer.contentsScale = scale;
+		if([self.tuiHostView.layer respondsToSelector:@selector(setContentsScale:)]) {
+			if(fabs(self.tuiHostView.layer.contentsScale - scale) > 0.1f) {
+				self.tuiHostView.layer.contentsScale = scale;
 			}
 		}
 		
@@ -208,7 +305,7 @@
 
 - (TUIView *)viewForLocalPoint:(NSPoint)p
 {
-	return [rootView hitTest:p withEvent:nil];
+	return [_rootView hitTest:p withEvent:nil];
 }
 
 - (NSPoint)localPointForLocationInWindow:(NSPoint)locationInWindow
@@ -435,12 +532,12 @@
 
 - (BOOL)performKeyEquivalent:(NSEvent *)event
 {
-	return [rootView performKeyEquivalent:event];
+	return [_rootView performKeyEquivalent:event];
 }
 
 - (void)setEverythingNeedsDisplay
 {
-	[rootView setEverythingNeedsDisplay];
+	[_rootView setEverythingNeedsDisplay];
 }
 
 - (BOOL)isTrackingSubviewOfView:(TUIView *)v
@@ -523,8 +620,212 @@
 	return nil;
 }
 
+- (void)setUp {
+	opaque = YES;
+
+	_maskLayer = [CAShapeLayer layer];
+
+	// enable layer-backing for this view
+	self.wantsLayer = YES;
+	self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawNever;
+
+	_tuiHostView = [[TUINSHostView alloc] initWithFrame:self.bounds];
+	_tuiHostView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+	[self addSubview:_tuiHostView];
+
+	_appKitHostView = [[NSView alloc] initWithFrame:self.bounds];
+	_appKitHostView.autoresizesSubviews = NO;
+	_appKitHostView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+	_appKitHostView.wantsLayer = YES;
+	_appKitHostView.layerContentsRedrawPolicy = NSViewLayerContentsRedrawNever;
+	[self addSubview:_appKitHostView];
+
+	// set up masking on the AppKit host view, and make ourselves the layout
+	// manager, so that we'll know when new sublayers are added
+	self.appKitHostView.layer.mask = self.maskLayer;
+	self.appKitHostView.layer.layoutManager = self;
+	[self recalculateNSViewClipping];
+}
+
+- (void)didAddSubview:(NSView *)view {
+	NSAssert(view == self.tuiHostView || view == self.appKitHostView, @"Subviews should not be added to TUINSView %@: %@", self, view);
+	[super didAddSubview:view];
+}
+
 #define ENABLE_NSTEXT_INPUT_CLIENT
 #import "TUINSView+NSTextInputClient.m"
 #undef ENABLE_NSTEXT_INPUT_CLIENT
+
+#pragma mark AppKit bridging
+
+- (NSView *)hitTest:(NSPoint)point {
+	// convert point into our coordinate system, so it's ready to go for all
+	// subviews (which expect it in their superview's coordinate system)
+	point = [self convertPoint:point fromView:self.superview];
+
+	if (!CGRectContainsPoint(self.bounds, point))
+		return nil;
+
+	__block NSView *result = self;
+
+	// we need to avoid hitting any NSViews that are clipped by their
+	// corresponding TwUI views
+	[self.appKitHostView.subviews enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(NSView *view, NSUInteger index, BOOL *stop){
+		id<TUIBridgedView> hostView = view.hostView;
+		if (hostView) {
+			CGRect bounds = hostView.layer.bounds;
+			CGRect clippedBounds = [hostView.layer tui_convertAndClipRect:bounds toLayer:self.layer];
+
+			if (!CGRectContainsPoint(clippedBounds, point)) {
+				// skip this view
+				return;
+			}
+		}
+
+		NSView *hitTestedView = [view hitTest:point];
+		if (hitTestedView) {
+			result = hitTestedView;
+			*stop = YES;
+		}
+	}];
+
+	return result;
+}
+
+- (void)recalculateNSViewOrdering; {
+	[self.appKitHostView sortSubviewsUsingFunction:&compareNSViewOrdering context:NULL];
+}
+
+- (void)recalculateNSViewClipping; {
+	CGMutablePathRef path = CGPathCreateMutable();
+
+	for (NSView *view in self.appKitHostView.subviews) {
+		id<TUIBridgedView> hostView = view.hostView;
+		if (!hostView)
+			continue;
+
+		CALayer *focusRingLayer = [self focusRingLayerForView:view];
+		if (focusRingLayer) {
+			id<TUIBridgedScrollView> clippingView = [hostView ancestorScrollView];
+
+			if (clippingView) {
+				// set up a mask on the focus ring that clips to any ancestor scroll views
+				CAShapeLayer *maskLayer = (id)focusRingLayer.mask;
+				if (![maskLayer isKindOfClass:[CAShapeLayer class]]) {
+					maskLayer = [CAShapeLayer layer];
+
+					focusRingLayer.mask = maskLayer;
+				}
+
+				CGRect rect = [clippingView.layer tui_convertAndClipRect:clippingView.layer.visibleRect toLayer:focusRingLayer];
+				if (CGRectIsNull(rect) || CGRectIsInfinite(rect)) {
+					rect = CGRectZero;
+				}
+
+				CGPathRef focusRingPath = CGPathCreateWithRect(rect, NULL);
+				maskLayer.path = focusRingPath;
+				CGPathRelease(focusRingPath);
+
+				CGPathAddRect(path, NULL, [focusRingLayer tui_convertAndClipRect:rect toLayer:self.layer]);
+			} else {
+				focusRingLayer.mask = nil;
+
+				CGPathAddRect(path, NULL, [focusRingLayer tui_convertAndClipRect:focusRingLayer.bounds toLayer:self.layer]);
+			}
+		}
+
+		// clip the frame of each NSView using the TwUI hierarchy
+		CGRect rect = [hostView.layer tui_convertAndClipRect:hostView.layer.visibleRect toLayer:self.layer];
+		if (CGRectIsNull(rect) || CGRectIsInfinite(rect))
+			continue;
+
+		CGPathAddRect(path, NULL, rect);
+	}
+
+	// mask them all at once (so fast!)
+	self.maskLayer.path = path;
+	CGPathRelease(path);
+}
+
+#pragma mark CALayer delegate
+
+- (void)layoutSublayersOfLayer:(CALayer *)layer {
+	if (layer == self.layer) {
+		// TUINSView.layer is being laid out
+		return;
+	}
+
+	// appKitHostView.layer is being laid out
+	//
+	// this often happens in response to AppKit adding a focus ring layer, so
+	// recalculate our clipping paths to take it into account
+	[self recalculateNSViewClipping];
+}
+
+- (CALayer *)focusRingLayerForView:(NSView *)view; {
+	CALayer *resultSoFar = nil;
+
+	for (CALayer *layer in self.appKitHostView.layer.sublayers) {
+		// don't return the layer of the view itself
+		if (layer == view.layer) {
+			continue;
+		}
+
+		// if the layer doesn't wrap around this view, it's not the focus ring
+		if (!CGRectContainsRect(layer.frame, view.frame)) {
+			continue;
+		}
+
+		// if resultSoFar matched more tightly than this layer, consider the
+		// former to be the focus ring
+		if (resultSoFar && !CGRectContainsRect(resultSoFar.frame, layer.frame)) {
+			continue;
+		}
+
+		resultSoFar = layer;
+	}
+
+	return resultSoFar;
+}
+
+#pragma mark TUIHostView
+
+- (void)ancestorDidLayout; {
+	[super ancestorDidLayout];
+	[self.rootView ancestorDidLayout];
+}
+
+- (id<TUIBridgedView>)descendantViewAtPoint:(CGPoint)point {
+	if (!CGRectContainsPoint(self.bounds, point))
+		return nil;
+
+	return [self.rootView descendantViewAtPoint:point] ?: self;
+}
+
+- (id<TUIHostView>)hostView {
+    if (_hostView)
+        return _hostView;
+    else
+        return self.superview.hostView;
+}
+
+- (void)viewHierarchyDidChange {
+	[super viewHierarchyDidChange];
+	[self.rootView viewHierarchyDidChange];
+}
+
+- (void)willMoveToTUINSView:(TUINSView *)view; {
+	// despite the TUIBridgedView contract that says we should forward this
+	// message onto all subviews and our rootView, doing so could result in
+	// crazy behavior, since the TUINSView of those views is and will remain
+	// 'self' by definition
+}
+
+- (void)didMoveFromTUINSView:(TUINSView *)view; {
+	// despite the TUIBridgedView contract that says we should forward this
+	// message onto all subviews and our rootView, doing so could result in
+	// crazy behavior, since the TUINSView of those views is and will remain
+	// 'self' by definition
+}
 
 @end
