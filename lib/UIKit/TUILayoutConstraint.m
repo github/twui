@@ -47,14 +47,14 @@
 + (id)constraintWithAttribute:(TUILayoutConstraintAttribute)attr
                    relativeTo:(NSString *)srcLayer
                     attribute:(TUILayoutConstraintAttribute)srcAttr {
-	return [self constraintWithAttribute:attr relativeTo:srcLayer attribute:srcAttr scale:1.0 offset:0.0];
+	return [self constraintWithAttribute:attr relativeTo:srcLayer attribute:srcAttr scale:1.0f offset:0.0f];
 }
 
 + (id)constraintWithAttribute:(TUILayoutConstraintAttribute)attr
                    relativeTo:(NSString *)srcLayer
                     attribute:(TUILayoutConstraintAttribute)srcAttr
                        offset:(CGFloat)offset {
-	return [self constraintWithAttribute:attr relativeTo:srcLayer attribute:srcAttr scale:1.0 offset:offset];
+	return [self constraintWithAttribute:attr relativeTo:srcLayer attribute:srcAttr scale:1.0f offset:offset];
 }
 
 + (id)constraintWithAttribute:(TUILayoutConstraintAttribute)attr
@@ -90,7 +90,6 @@
 	double sourceAttributeRange = floor(log10(srcAttr));
 	
 	NSAssert(fabs(attributeRange - sourceAttributeRange) < 0.001, @"Invalid source and target attributes: %f, %f.", sourceAttributeRange, attributeRange);
-	NSAssert(scale > 0.0f && offset > 0.0f, @"Invalid scale and offset: %f, %f", scale, offset);
 	
 	if((self = [super init])) {
 		_attribute = attr;

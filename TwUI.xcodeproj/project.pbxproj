@@ -9,6 +9,24 @@
 /* Begin PBXBuildFile section */
 		30D399C9156D8ADD006ECDAE /* TUIProgressBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 30D399C7156D8ADD006ECDAE /* TUIProgressBar.m */; };
 		30D39A0D156D8F71006ECDAE /* TUIProgressBar.h in Headers */ = {isa = PBXBuildFile; fileRef = 30D399C6156D8ADD006ECDAE /* TUIProgressBar.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		483E431815B942E40049A8FF /* TUIPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = 483E431615B942E40049A8FF /* TUIPanel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		483E431915B942E40049A8FF /* TUIPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = 483E431615B942E40049A8FF /* TUIPanel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		483E431A15B942E40049A8FF /* TUIPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = 483E431615B942E40049A8FF /* TUIPanel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		483E431B15B942E40049A8FF /* TUIPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 483E431715B942E40049A8FF /* TUIPanel.m */; };
+		483E431C15B942E40049A8FF /* TUIPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 483E431715B942E40049A8FF /* TUIPanel.m */; };
+		483E431D15B942E40049A8FF /* TUIPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 483E431715B942E40049A8FF /* TUIPanel.m */; };
+		483E432115B946080049A8FF /* TUIAnimationManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 483E431F15B946080049A8FF /* TUIAnimationManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		483E432215B946080049A8FF /* TUIAnimationManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 483E431F15B946080049A8FF /* TUIAnimationManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		483E432315B946080049A8FF /* TUIAnimationManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 483E431F15B946080049A8FF /* TUIAnimationManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		483E432415B946080049A8FF /* TUIAnimationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 483E432015B946080049A8FF /* TUIAnimationManager.m */; };
+		483E432515B946080049A8FF /* TUIAnimationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 483E432015B946080049A8FF /* TUIAnimationManager.m */; };
+		483E432615B946080049A8FF /* TUIAnimationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 483E432015B946080049A8FF /* TUIAnimationManager.m */; };
+		483E432815B9473F0049A8FF /* TUIView+AnimationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 483E432715B9473F0049A8FF /* TUIView+AnimationManager.m */; };
+		483E432915B9473F0049A8FF /* TUIView+AnimationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 483E432715B9473F0049A8FF /* TUIView+AnimationManager.m */; };
+		483E432A15B9473F0049A8FF /* TUIView+AnimationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 483E432715B9473F0049A8FF /* TUIView+AnimationManager.m */; };
+		483E432D15B949FF0049A8FF /* TUIView+AnimationManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 483E432B15B949FE0049A8FF /* TUIView+AnimationManager.h */; };
+		483E432E15B949FF0049A8FF /* TUIView+AnimationManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 483E432B15B949FE0049A8FF /* TUIView+AnimationManager.h */; };
+		483E432F15B949FF0049A8FF /* TUIView+AnimationManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 483E432B15B949FE0049A8FF /* TUIView+AnimationManager.h */; };
 		48A10E8115B7769A007F9EE3 /* TUILayoutConstraint.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E7D15B7769A007F9EE3 /* TUILayoutConstraint.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		48A10E8215B7769A007F9EE3 /* TUILayoutConstraint.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E7E15B7769A007F9EE3 /* TUILayoutConstraint.m */; };
 		48A10E8315B7769A007F9EE3 /* TUILayoutManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E7F15B7769A007F9EE3 /* TUILayoutManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -79,8 +97,8 @@
 		8819795013E26E5800AA39EB /* TUINSView+Accessibility.m in Sources */ = {isa = PBXBuildFile; fileRef = 8819794B13E26E5800AA39EB /* TUINSView+Accessibility.m */; };
 		8819795113E26E5800AA39EB /* TUINSView+Accessibility.m in Sources */ = {isa = PBXBuildFile; fileRef = 8819794B13E26E5800AA39EB /* TUINSView+Accessibility.m */; };
 		884E8F5215387E11000F7A8D /* TUIPopover.h in Headers */ = {isa = PBXBuildFile; fileRef = 884E8F5015387E11000F7A8D /* TUIPopover.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		884E8F5315387E11000F7A8D /* TUIPopover.h in Headers */ = {isa = PBXBuildFile; fileRef = 884E8F5015387E11000F7A8D /* TUIPopover.h */; };
-		884E8F5415387E11000F7A8D /* TUIPopover.h in Headers */ = {isa = PBXBuildFile; fileRef = 884E8F5015387E11000F7A8D /* TUIPopover.h */; };
+		884E8F5315387E11000F7A8D /* TUIPopover.h in Headers */ = {isa = PBXBuildFile; fileRef = 884E8F5015387E11000F7A8D /* TUIPopover.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		884E8F5415387E11000F7A8D /* TUIPopover.h in Headers */ = {isa = PBXBuildFile; fileRef = 884E8F5015387E11000F7A8D /* TUIPopover.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		884E8F5515387E11000F7A8D /* TUIPopover.m in Sources */ = {isa = PBXBuildFile; fileRef = 884E8F5115387E11000F7A8D /* TUIPopover.m */; };
 		884E8F5615387E11000F7A8D /* TUIPopover.m in Sources */ = {isa = PBXBuildFile; fileRef = 884E8F5115387E11000F7A8D /* TUIPopover.m */; };
 		884E8F5715387E11000F7A8D /* TUIPopover.m in Sources */ = {isa = PBXBuildFile; fileRef = 884E8F5115387E11000F7A8D /* TUIPopover.m */; };
@@ -356,6 +374,12 @@
 /* Begin PBXFileReference section */
 		30D399C6156D8ADD006ECDAE /* TUIProgressBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TUIProgressBar.h; sourceTree = "<group>"; };
 		30D399C7156D8ADD006ECDAE /* TUIProgressBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TUIProgressBar.m; sourceTree = "<group>"; };
+		483E431615B942E40049A8FF /* TUIPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TUIPanel.h; sourceTree = "<group>"; };
+		483E431715B942E40049A8FF /* TUIPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TUIPanel.m; sourceTree = "<group>"; };
+		483E431F15B946080049A8FF /* TUIAnimationManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TUIAnimationManager.h; sourceTree = "<group>"; };
+		483E432015B946080049A8FF /* TUIAnimationManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TUIAnimationManager.m; sourceTree = "<group>"; };
+		483E432715B9473F0049A8FF /* TUIView+AnimationManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "TUIView+AnimationManager.m"; sourceTree = "<group>"; };
+		483E432B15B949FE0049A8FF /* TUIView+AnimationManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TUIView+AnimationManager.h"; sourceTree = "<group>"; };
 		48A10E7D15B7769A007F9EE3 /* TUILayoutConstraint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TUILayoutConstraint.h; sourceTree = "<group>"; };
 		48A10E7E15B7769A007F9EE3 /* TUILayoutConstraint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TUILayoutConstraint.m; sourceTree = "<group>"; };
 		48A10E7F15B7769A007F9EE3 /* TUILayoutManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TUILayoutManager.h; sourceTree = "<group>"; };
@@ -691,6 +715,8 @@
 				CBB74C3F13BE6E1900C85CB5 /* TUIAccessibility.m */,
 				CBB74C4013BE6E1900C85CB5 /* TUIActivityIndicatorView.h */,
 				CBB74C4113BE6E1900C85CB5 /* TUIActivityIndicatorView.m */,
+				483E431F15B946080049A8FF /* TUIAnimationManager.h */,
+				483E432015B946080049A8FF /* TUIAnimationManager.m */,
 				CBB74C4213BE6E1900C85CB5 /* TUIAttributedString.h */,
 				CBB74C4313BE6E1900C85CB5 /* TUIAttributedString.m */,
 				D0C7651515B61E5900E7AC2C /* TUIBridgedScrollView.h */,
@@ -743,6 +769,8 @@
 				CBB74C6213BE6E1900C85CB5 /* TUINSView.m */,
 				CBB74C6313BE6E1900C85CB5 /* TUINSWindow.h */,
 				CBB74C6413BE6E1900C85CB5 /* TUINSWindow.m */,
+				483E431615B942E40049A8FF /* TUIPanel.h */,
+				483E431715B942E40049A8FF /* TUIPanel.m */,
 				884E8F5015387E11000F7A8D /* TUIPopover.h */,
 				884E8F5115387E11000F7A8D /* TUIPopover.m */,
 				30D399C6156D8ADD006ECDAE /* TUIProgressBar.h */,
@@ -791,6 +819,8 @@
 				8819794213E26E0200AA39EB /* TUIView+Accessibility.h */,
 				8819794313E26E0200AA39EB /* TUIView+Accessibility.m */,
 				CBB74C8213BE6E1900C85CB5 /* TUIView+Animation.m */,
+				483E432B15B949FE0049A8FF /* TUIView+AnimationManager.h */,
+				483E432715B9473F0049A8FF /* TUIView+AnimationManager.m */,
 				CBB74C8313BE6E1900C85CB5 /* TUIView+Event.h */,
 				CBB74C8413BE6E1900C85CB5 /* TUIView+Event.m */,
 				48A10E8A15B77A46007F9EE3 /* TUIView+Layout.h */,
@@ -842,6 +872,9 @@
 				D039724715B7D7D70092CD26 /* TUIView+Layout.h in Headers */,
 				D039724915B7D7DC0092CD26 /* TUILayoutManager.h in Headers */,
 				D039724B15B7D7DE0092CD26 /* TUILayoutConstraint.h in Headers */,
+				483E431A15B942E40049A8FF /* TUIPanel.h in Headers */,
+				483E432315B946080049A8FF /* TUIAnimationManager.h in Headers */,
+				483E432F15B949FF0049A8FF /* TUIView+AnimationManager.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -914,6 +947,9 @@
 				48A10E8115B7769A007F9EE3 /* TUILayoutConstraint.h in Headers */,
 				48A10E8315B7769A007F9EE3 /* TUILayoutManager.h in Headers */,
 				48A10E8B15B77A46007F9EE3 /* TUIView+Layout.h in Headers */,
+				483E431815B942E40049A8FF /* TUIPanel.h in Headers */,
+				483E432115B946080049A8FF /* TUIAnimationManager.h in Headers */,
+				483E432D15B949FF0049A8FF /* TUIView+AnimationManager.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -942,6 +978,9 @@
 				D039724615B7D7D60092CD26 /* TUIView+Layout.h in Headers */,
 				D039724815B7D7DB0092CD26 /* TUILayoutManager.h in Headers */,
 				D039724A15B7D7DE0092CD26 /* TUILayoutConstraint.h in Headers */,
+				483E431915B942E40049A8FF /* TUIPanel.h in Headers */,
+				483E432215B946080049A8FF /* TUIAnimationManager.h in Headers */,
+				483E432E15B949FF0049A8FF /* TUIView+AnimationManager.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1157,6 +1196,9 @@
 				D039724115B7D7CC0092CD26 /* TUILayoutConstraint.m in Sources */,
 				D039724315B7D7CE0092CD26 /* TUILayoutManager.m in Sources */,
 				D039724515B7D7D40092CD26 /* TUIView+Layout.m in Sources */,
+				483E431D15B942E40049A8FF /* TUIPanel.m in Sources */,
+				483E432615B946080049A8FF /* TUIAnimationManager.m in Sources */,
+				483E432A15B9473F0049A8FF /* TUIView+AnimationManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1236,6 +1278,9 @@
 				48A10E8215B7769A007F9EE3 /* TUILayoutConstraint.m in Sources */,
 				48A10E8415B7769A007F9EE3 /* TUILayoutManager.m in Sources */,
 				48A10E8915B778E8007F9EE3 /* TUIView+Layout.m in Sources */,
+				483E431B15B942E40049A8FF /* TUIPanel.m in Sources */,
+				483E432415B946080049A8FF /* TUIAnimationManager.m in Sources */,
+				483E432815B9473F0049A8FF /* TUIView+AnimationManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1321,6 +1366,9 @@
 				D039723F15B7D7CB0092CD26 /* TUILayoutConstraint.m in Sources */,
 				D039724215B7D7CE0092CD26 /* TUILayoutManager.m in Sources */,
 				D039724415B7D7D40092CD26 /* TUIView+Layout.m in Sources */,
+				483E431C15B942E40049A8FF /* TUIPanel.m in Sources */,
+				483E432515B946080049A8FF /* TUIAnimationManager.m in Sources */,
+				483E432915B9473F0049A8FF /* TUIView+AnimationManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
