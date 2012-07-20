@@ -8,10 +8,17 @@
 
 @end
 
-
 @interface TUILayoutConstraint ()
 
+@property (nonatomic, assign) CGFloat scale;
+@property (nonatomic, assign) CGFloat offset;
 @property (nonatomic, copy) NSValueTransformer *valueTransformer;
+
+- (id)initWithAttribute:(TUILayoutConstraintAttribute)attr
+             relativeTo:(NSString *)srcLayer
+              attribute:(TUILayoutConstraintAttribute)srcAttr
+                  scale:(CGFloat)scale
+                 offset:(CGFloat)offset;
 
 - (CGFloat)transformValue:(CGFloat)original;
 - (void)applyToTargetView:(TUIView *)target;
@@ -33,6 +40,8 @@
 @synthesize attribute = _attribute;
 @synthesize sourceAttribute = _sourceAttribute;
 @synthesize sourceName = _sourceName;
+@synthesize scale = _scale;
+@synthesize offset = _offset;
 @synthesize valueTransformer = _valueTransformer;
 
 + (id)constraintWithAttribute:(TUILayoutConstraintAttribute)attr
@@ -53,7 +62,7 @@
                     attribute:(TUILayoutConstraintAttribute)srcAttr
                         scale:(CGFloat)scale
                        offset:(CGFloat)offset {
-	return [[self alloc] initWithAttribute:attr relativeTo:source attribute:srcAttr scale:scale offset:offset];
+	return [[TUILayoutConstraint alloc] initWithAttribute:attr relativeTo:source attribute:srcAttr scale:scale offset:offset];
 }
 
 + (id)constraintWithAttribute:(TUILayoutConstraintAttribute)attr
@@ -74,26 +83,56 @@
 - (id)initWithAttribute:(TUILayoutConstraintAttribute)attr
              relativeTo:(NSString *)srcLayer
               attribute:(TUILayoutConstraintAttribute)srcAttr
+                  scale:(CGFloat)scale
+                 offset:(CGFloat)offset {
+    
+	double attributeRange = floor(log10(attr));
+	double sourceAttributeRange = floor(log10(srcAttr));
+	
+	NSAssert(fabs(attributeRange - sourceAttributeRange) < 0.001, @"Invalid source and target attributes: %f, %f.", sourceAttributeRange, attributeRange);
+	NSAssert(scale > 0.0f && offset > 0.0f, @"Invalid scale and offset: %f, %f", scale, offset);
+	
+	if((self = [super init])) {
+		_attribute = attr;
+		_sourceAttribute = srcAttr;
+		_sourceName = [srcLayer copy];
+        
+        _scale = scale;
+        _offset = offset;
+		_valueTransformer = nil;
+	}
+	return self;
+}
+
+- (id)initWithAttribute:(TUILayoutConstraintAttribute)attr
+             relativeTo:(NSString *)srcLayer
+              attribute:(TUILayoutConstraintAttribute)srcAttr
        valueTransformer:(NSValueTransformer *)transformer {
     
 	double attributeRange = floor(log10(attr));
 	double sourceAttributeRange = floor(log10(srcAttr));
 	
-	NSAssert(fabs(attributeRange - sourceAttributeRange) < 0.001, @"Invalid source and target attributes: %f, %f", sourceAttributeRange, attributeRange);
-	
+	NSAssert(fabs(attributeRange - sourceAttributeRange) < 0.001, @"Invalid source and target attributes: %f, %f.", sourceAttributeRange, attributeRange);
+	NSAssert(transformer != nil, @"Cannot have a nil transformer.", sourceAttributeRange, attributeRange);
+    
 	if((self = [super init])) {
 		_attribute = attr;
 		_sourceAttribute = srcAttr;
-				
 		_sourceName = [srcLayer copy];
+        
+        _scale = 0.0f;
+        _offset = 0.0f;
 		_valueTransformer = transformer;
 	}
 	return self;
 }
 
-- (CGFloat)transformValue:(CGFloat)original {
-	id transformed = [self.valueTransformer transformedValue:[NSNumber numberWithFloat:original]];
-	return [transformed floatValue];
+- (CGFloat)transformValue:(CGFloat)source {
+    if(self.valueTransformer) {
+        id transformed = [self.valueTransformer transformedValue:[NSNumber numberWithFloat:source]];
+        return [transformed floatValue];
+    } else
+        return (source * self.scale) + self.offset;
 }
 
 - (void)applyToTargetView:(TUIView *)target {
@@ -106,7 +145,7 @@
 	if(source == nil) return;
 	if([self sourceAttribute] == 0) return;
 	
-	NSRect sourceValue = [source valueForLayoutAttribute:[self sourceAttribute]];
+	NSRect sourceValue = [source valueForLayoutAttribute:self.sourceAttribute];
 	NSRect targetValue = sourceValue;
 	
 	if(self.attribute >= TUILayoutConstraintAttributeMinY && self.attribute <= TUILayoutConstraintAttributeMidX)

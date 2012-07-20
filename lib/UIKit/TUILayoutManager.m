@@ -37,7 +37,6 @@
 
 @end
 
-
 @interface TUILayoutManager ()
 
 @property (nonatomic, assign, getter = isProcessingChanges) BOOL processingChanges;
