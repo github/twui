@@ -1,47 +1,69 @@
-/*
- Copyright 2012 Twitter, Inc.
- 
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this work except in compliance with the License.
- You may obtain a copy of the License in the LICENSE file, or at:
- 
- http://www.apache.org/licenses/LICENSE-2.0
- 
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
-
 #import "TUIView.h"
+#import "TUINSWindow.h"
+#import "TUIViewController.h"
+#import "CAAnimation+TUIExtensions.h"
+
+#define CGRectNoEdge (CGRectEdge)-1
 
 @class TUIPopover;
-@class TUIViewController;
-@class TUIColor;
+@class TUIPopoverWindow;
 
-enum _TUIPopoverViewControllerBehaviour
-{
-    TUIPopoverViewControllerBehaviourApplicationDefined = 0,
-    TUIPopoverViewControllerBehaviourTransient = 1,
-    TUIPopoverViewControllerBehaviourSemiTransient = 2 //Currently not supported, here for forwards compatibility purposes
-};
+typedef enum {
+    TUIPopoverBehaviorApplicationDefined = 0,
+    TUIPopoverBehaviorTransient = 1,
+    
+    // Currently not supported, here for forwards compatibility purposes.
+    TUIPopoverBehaviorSemiTransient = 2
+} TUIPopoverBehavior;
 
-typedef NSUInteger TUIPopoverViewControllerBehaviour;
+typedef enum {
+    TUIPopoverAppearanceMinimal = 0,
+    TUIPopoverAppearanceHUD = 1
+} TUIPopoverAppearance;
 
 typedef void (^TUIPopoverDelegateBlock)(TUIPopover *popover);
 
-@interface TUIPopover : NSResponder
+extern NSString *const TUIPopoverCloseReasonKey;
+extern NSString *const TUIPopoverCloseReasonStandard;
+extern NSString *const TUIPopoverCloseReasonDetachToWindow;
 
-@property (nonatomic, strong) TUIViewController *contentViewController;
-@property (nonatomic, unsafe_unretained) Class backgroundViewClass; //Must be a subclass of TUIPopoverBackgroundView
-@property (nonatomic, unsafe_unretained) CGSize contentSize; //CGSizeZero uses the size of the view on contentViewController
-@property (nonatomic, unsafe_unretained) BOOL animates;
-@property (nonatomic, unsafe_unretained) TUIPopoverViewControllerBehaviour behaviour;
-@property (nonatomic, readonly) BOOL shown;
+// Notes:
+//
+// - Window Blurring using CGSPrivate.
+// Hmm, doesn't seem to be working for some odd reason. Also need to add a define
+// macro to disable this if the application is a Mac App Store applicant.
+//
+// - Pop In Animation.
+// There has to be a better and simpler way, using CAKeyframeAnimations to
+// somehow animate the window's transform/scale to create the NSPopover's
+// usual "pop in" effect. This is all I could think of for now.
+//
+// - Content Inset.
+// There's some odd wonky behavior with the content inset for the container view.
+// Not sure why, or how to fix it yet. I assume it's with an NSInsetRect()?
+//
+// - Tracking View frame changes.
+// Right now, the popover doesn't move with the view. i.e, if I launch a popover
+// from a table view cell, and then scroll, the popover remains in the same place.
+// I assume we could make the views KVO compliant and observe changes to do this.
+//
+// - HUD Appearance.
+// Does NOT look the same as the standard NSPopover... I wish I knew how to get it to
+// look the same. Looks more like the Dock stacks popups.
+
+@interface TUIPopover : TUIResponder
+
+@property (nonatomic, retain) IBOutlet TUIViewController *contentViewController;
+
+// CGSizeZero uses the size of the view on contentViewController.
+@property (nonatomic, assign) CGSize contentSize;
+
+@property (nonatomic, assign) BOOL animates;
+@property (nonatomic, assign) TUIPopoverAppearance appearance;
+@property (nonatomic, assign) TUIPopoverBehavior behavior;
+@property (nonatomic, readonly, getter = isShown) BOOL shown;
 @property (nonatomic, readonly) CGRect positioningRect;
 
-//Block callbacks
 @property (nonatomic, copy) TUIPopoverDelegateBlock willCloseBlock;
 @property (nonatomic, copy) TUIPopoverDelegateBlock didCloseBlock;
 
@@ -49,6 +71,7 @@ typedef void (^TUIPopoverDelegateBlock)(TUIPopover *popover);
 @property (nonatomic, copy) TUIPopoverDelegateBlock didShowBlock;
 
 - (id)initWithContentViewController:(TUIViewController *)viewController;
+- (id)initWithContentView:(TUIView *)view;
 
 - (void)showRelativeToRect:(CGRect)positioningRect ofView:(TUIView *)positioningView preferredEdge:(CGRectEdge)preferredEdge;
 
@@ -56,19 +79,4 @@ typedef void (^TUIPopoverDelegateBlock)(TUIPopover *popover);
 - (void)closeWithFadeoutDuration:(NSTimeInterval)duration;
 - (IBAction)performClose:(id)sender;
 
-@end
-
-@interface TUIPopoverBackgroundView : TUIView
-
-+ (CGSize)sizeForBackgroundViewWithContentSize:(CGSize)contentSize popoverEdge:(CGRectEdge)popoverEdge;
-+ (CGRect)contentViewFrameForBackgroundFrame:(CGRect)frame popoverEdge:(CGRectEdge)popoverEdge;
-+ (TUIPopoverBackgroundView *)backgroundViewForContentSize:(CGSize)contentSize popoverEdge:(CGRectEdge)popoverEdge originScreenRect:(CGRect)originScreenRect;
-
-- (id)initWithFrame:(CGRect)frame popoverEdge:(CGRectEdge)popoverEdge originScreenRect:(CGRect)originScreenRect;
-- (CGPathRef)newPopoverPathForEdge:(CGRectEdge)popoverEdge inFrame:(CGRect)frame; //override in subclasses to change the shape of the popover, but still use the default drawing.
-
-//Used in the default implementation
-@property (nonatomic, strong) TUIColor *strokeColor;
-@property (nonatomic, strong) TUIColor *fillColor;
-    
 @end
