@@ -92,7 +92,24 @@ typedef CGFloat (^TUILayoutTransformer)(CGFloat);
  resized or moved, declineButton will be automatically moved to have its right edge 
  positioned 10 pixels to the left of acceptButton left edge.
  This is only a simple example, a more complex example could use block transformers
- and a fabs(sin()) to constrict a tranformation to a |sin(x)| curve. And more!
+ and a fabs(sinf()) to constrict a tranformation to a |sin(x)| curve, like below.
+ 
+ ```
+ TUIButton *helpButton = [TUIButton buttonWithType:TUIButtonTypeCustom];
+ [self setUpButton:helpButton];
+ [helpButton setLayoutName:@"help"];
+ 
+ [helpButton addConstraint:[TUILayoutConstraint constraintWithAttribute:CHLayoutConstraintAttributeMinY
+                                                             relativeTo:@"accept"
+                                                              attribute:CHLayoutConstraintAttributeMinY
+                                                       blockTransformer:^(CGFloat source) {
+     return fabs((50 * sinf(source))) + 20;
+ ]];
+ 
+ [helpButton addConstraint:[TUILayoutConstraint constraintWithAttribute:CHLayoutConstraintAttributeCenter
+                                                             relativeTo:@"superview"
+                                                              attribute:CHLayoutConstraintAttributeFrame]];
+ ```
  
  Along with simple scale and offset constraints, you can specify a block
  value transformer to use more complex transformations. You can also bind
