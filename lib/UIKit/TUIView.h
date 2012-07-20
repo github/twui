@@ -497,6 +497,7 @@ extern CGRect(^TUIViewCenteredLayout)(TUIView*);
 
 @end
 
+#import "TUIView+AnimationAssembly.h"
 #import "TUIView+Layout.h"
 #import "TUIView+Private.h"
 #import "TUIView+Event.h"
