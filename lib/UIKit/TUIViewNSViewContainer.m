@@ -82,6 +82,16 @@
 	return [self convertRect:self.bounds toView:self.ancestorTUINSView.rootView];
 }
 
+- (void)setFrame:(CGRect)frame {
+	[super setFrame:frame];
+	[self synchronizeNSViewGeometry];
+}
+
+- (void)setBounds:(CGRect)bounds {
+	[super setBounds:bounds];
+	[self synchronizeNSViewGeometry];
+}
+
 - (void)setCenter:(CGPoint)center {
 	[super setCenter:center];
 	[self synchronizeNSViewGeometry];
@@ -98,8 +108,8 @@
 
 #pragma mark Lifecycle
 
-- (id)init {
-	self = [super init];
+- (id)initWithFrame:(CGRect)frame {
+	self = [super initWithFrame:frame];
 	if (!self)
 		return nil;
 
@@ -114,12 +124,11 @@
 - (id)initWithNSView:(NSView *)view; {
 	NSAssert1([NSThread isMainThread], @"%s should only be called from the main thread", __func__);
 
-	self = [self init];
+	self = [self initWithFrame:view.frame];
 	if (!self)
 		return nil;
 
 	self.rootView = view;
-	self.frame = view.frame;
 	return self;
 }
 
@@ -267,6 +276,16 @@
 	}
 
 	return cellSize;
+}
+
+- (void)sizeToFit {
+	if ([self.rootView respondsToSelector:@selector(sizeToFit)]) {
+		[self.rootView performSelector:@selector(sizeToFit)];
+
+		self.bounds = self.rootView.bounds;
+	} else {
+		[super sizeToFit];
+	}
 }
 
 #pragma mark NSObject overrides

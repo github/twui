@@ -30,6 +30,12 @@
 #import "TUITooltipWindow.h"
 #import <CoreFoundation/CoreFoundation.h>
 
+// If enabled, NSViews contained within TUIViewNSViewContainers will be clipped
+// by any TwUI ancestors that enable clipping to bounds.
+//
+// This should really only be disabled for debugging.
+#define ENABLE_NSVIEW_CLIPPING 1
+
 static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, void *context) {
 	TUIViewNSViewContainer *hostA = viewA.hostView;
 	TUIViewNSViewContainer *hostB = viewB.hostView;
@@ -624,6 +630,8 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	opaque = YES;
 
 	_maskLayer = [CAShapeLayer layer];
+	_maskLayer.frame = self.bounds;
+	_maskLayer.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
 
 	// enable layer-backing for this view
 	self.wantsLayer = YES;
@@ -642,9 +650,12 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 
 	// set up masking on the AppKit host view, and make ourselves the layout
 	// manager, so that we'll know when new sublayers are added
-	self.appKitHostView.layer.mask = self.maskLayer;
 	self.appKitHostView.layer.layoutManager = self;
+
+	#if ENABLE_NSVIEW_CLIPPING
+	self.appKitHostView.layer.mask = self.maskLayer;
 	[self recalculateNSViewClipping];
+	#endif
 }
 
 - (void)didAddSubview:(NSView *)view {
@@ -693,11 +704,18 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 }
 
 - (void)recalculateNSViewOrdering; {
+	NSAssert([NSThread isMainThread], @"");
 	[self.appKitHostView sortSubviewsUsingFunction:&compareNSViewOrdering context:NULL];
 }
 
 - (void)recalculateNSViewClipping; {
-	CGMutablePathRef path = CGPathCreateMutable();
+	NSAssert([NSThread isMainThread], @"");
+
+	#if !ENABLE_NSVIEW_CLIPPING
+	return;
+	#endif
+
+	CGMutablePathRef clippingPath = CGPathCreateMutable();
 
 	for (NSView *view in self.appKitHostView.subviews) {
 		id<TUIBridgedView> hostView = view.hostView;
@@ -706,9 +724,24 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 
 		CALayer *focusRingLayer = [self focusRingLayerForView:view];
 		if (focusRingLayer) {
-			id<TUIBridgedScrollView> clippingView = [hostView ancestorScrollView];
+			id<TUIBridgedScrollView> clippingView = hostView.ancestorScrollView;
+			CGRect clippedFocusRingBounds = CGRectNull;
 
-			if (clippingView) {
+			if (clippingView && self.ancestorScrollView != clippingView) {
+				CGRect rect = [clippingView.layer tui_convertAndClipRect:clippingView.layer.visibleRect toLayer:focusRingLayer];
+				if (!CGRectIsNull(rect) && !CGRectIsInfinite(rect) && !CGRectContainsRect(rect, clippedFocusRingBounds)) {
+					clippedFocusRingBounds = CGRectIntersection(rect, focusRingLayer.bounds);
+				}
+			}
+
+			// the frame of the focus ring, represented in the TUINSView's
+			// coordinate system
+			CGRect focusRingFrame;
+
+			if (CGRectIsNull(clippedFocusRingBounds)) {
+				focusRingLayer.mask = nil;
+				focusRingFrame = [focusRingLayer tui_convertAndClipRect:focusRingLayer.bounds toLayer:self.layer];
+			} else {
 				// set up a mask on the focus ring that clips to any ancestor scroll views
 				CAShapeLayer *maskLayer = (id)focusRingLayer.mask;
 				if (![maskLayer isKindOfClass:[CAShapeLayer class]]) {
@@ -717,21 +750,14 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 					focusRingLayer.mask = maskLayer;
 				}
 
-				CGRect rect = [clippingView.layer tui_convertAndClipRect:clippingView.layer.visibleRect toLayer:focusRingLayer];
-				if (CGRectIsNull(rect) || CGRectIsInfinite(rect)) {
-					rect = CGRectZero;
-				}
-
-				CGPathRef focusRingPath = CGPathCreateWithRect(rect, NULL);
+				CGPathRef focusRingPath = CGPathCreateWithRect(clippedFocusRingBounds, NULL);
 				maskLayer.path = focusRingPath;
 				CGPathRelease(focusRingPath);
-
-				CGPathAddRect(path, NULL, [focusRingLayer tui_convertAndClipRect:rect toLayer:self.layer]);
-			} else {
-				focusRingLayer.mask = nil;
-
-				CGPathAddRect(path, NULL, [focusRingLayer tui_convertAndClipRect:focusRingLayer.bounds toLayer:self.layer]);
+				
+				focusRingFrame = [focusRingLayer tui_convertAndClipRect:clippedFocusRingBounds toLayer:self.layer];
 			}
+
+			CGPathAddRect(clippingPath, NULL, focusRingFrame);
 		}
 
 		// clip the frame of each NSView using the TwUI hierarchy
@@ -739,17 +765,19 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 		if (CGRectIsNull(rect) || CGRectIsInfinite(rect))
 			continue;
 
-		CGPathAddRect(path, NULL, rect);
+		CGPathAddRect(clippingPath, NULL, rect);
 	}
 
 	// mask them all at once (so fast!)
-	self.maskLayer.path = path;
-	CGPathRelease(path);
+	self.maskLayer.path = clippingPath;
+	CGPathRelease(clippingPath);
 }
 
 #pragma mark CALayer delegate
 
 - (void)layoutSublayersOfLayer:(CALayer *)layer {
+	NSAssert([NSThread isMainThread], @"");
+
 	if (layer == self.layer) {
 		// TUINSView.layer is being laid out
 		return;
