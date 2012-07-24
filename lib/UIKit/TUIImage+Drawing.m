@@ -14,8 +14,9 @@
  limitations under the License.
  */
 
-#import "TUIKit.h"
 #import "TUIImage+Drawing.h"
+#import "TUICGAdditions.h"
+#import "TUIColor.h"
 
 @implementation TUIImage (Drawing)
 

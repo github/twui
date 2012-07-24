@@ -15,12 +15,12 @@
  */
 
 #import "TUIResponder.h"
-#import "ABActiveRange.h"
 #import "CoreText+Additions.h"
 
 @class TUIColor;
 @class TUIFont;
 @class TUIView;
+@protocol ABActiveTextRange;
 
 typedef enum {
 	TUITextSelectionAffinityCharacter = 0,

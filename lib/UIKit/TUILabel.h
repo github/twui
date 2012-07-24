@@ -15,7 +15,6 @@
  */
 
 #import "TUIView.h"
-#import "TUIStringDrawing.h"
 #import "TUIAttributedString.h"
 
 /*

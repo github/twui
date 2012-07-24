@@ -15,7 +15,8 @@
  */
 
 #import "TUIView.h"
-#import "TUIFastIndexPath.h"
+
+@class TUIFastIndexPath;
 
 typedef enum {
 	TUITableViewCellStyleDefault,

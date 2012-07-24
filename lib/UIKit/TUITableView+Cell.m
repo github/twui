@@ -15,6 +15,7 @@
  */
 
 #import "TUITableView+Cell.h"
+#import "TUIFastIndexPath.h"
 
 // Dragged cells should be just above pinned headers
 #define kTUITableViewDraggedCellZPosition 1001

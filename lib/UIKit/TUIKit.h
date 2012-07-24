@@ -36,6 +36,8 @@
 #import "TUILabel.h"
 #import "TUILayoutConstraint.h"
 #import "TUINSView.h"
+#import "TUINSView+Hyperfocus.h"
+#import "TUINSView+NSTextInputClient.h"
 #import "TUINSWindow.h"
 #import "TUIPopover.h"
 #import "TUIProgressBar.h"
@@ -56,27 +58,5 @@
 #import "TUIView+TUIBridgedView.h"
 #import "TUIViewController.h"
 #import "TUIViewNSViewContainer.h"
-
-extern CGContextRef TUIGraphicsGetCurrentContext(void);
-extern void TUIGraphicsPushContext(CGContextRef context);
-extern void TUIGraphicsPopContext(void);
-
-extern TUIImage *TUIGraphicsContextGetImage(CGContextRef ctx);
-
-extern void TUIGraphicsBeginImageContext(CGSize size);
-extern void TUIGraphicsBeginImageContextWithOptions(CGSize size, BOOL opaque, CGFloat scale);
-extern TUIImage *TUIGraphicsGetImageFromCurrentImageContext(void);
-extern void TUIGraphicsEndImageContext(void); 
-
-extern TUIImage *TUIGraphicsGetImageForView(TUIView *view);
-
-extern TUIImage *TUIGraphicsDrawAsImage(CGSize size, void(^draw)(void));
-
-/**
- Draw drawing as a PDF
- @param optionalMediaBox may be NULL
- @returns NSData encapsulating the PDF drawing, suitable for writing to a file or the pasteboard
- */
-extern NSData *TUIGraphicsDrawAsPDF(CGRect *optionalMediaBox, void(^draw)(CGContextRef));
 
 extern BOOL AtLeastLion; // set at launch

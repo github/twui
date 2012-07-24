@@ -34,4 +34,7 @@
  */
 - (void)recalculateNSViewOrdering;
 
+- (TUIView *)viewForLocalPoint:(NSPoint)p;
+- (NSPoint)localPointForLocationInWindow:(NSPoint)locationInWindow;
+
 @end

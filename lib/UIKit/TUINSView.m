@@ -22,10 +22,11 @@
 #import "CALayer+TUIExtensions.h"
 #import "TUIBridgedScrollView.h"
 #import "TUINSHostView.h"
+#import "TUINSView+Hyperfocus.h"
 #import "TUINSView+Private.h"
 #import "TUIViewNSViewContainer.h"
+#import "TUIView.h"
 #import "TUIView+Private.h"
-#import "TUIView+TUIBridgedView.h"
 #import "TUITextRenderer+Event.h"
 #import "TUITooltipWindow.h"
 #import <CoreFoundation/CoreFoundation.h>
@@ -662,10 +663,6 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	NSAssert(view == self.tuiHostView || view == self.appKitHostView, @"Subviews should not be added to TUINSView %@: %@", self, view);
 	[super didAddSubview:view];
 }
-
-#define ENABLE_NSTEXT_INPUT_CLIENT
-#import "TUINSView+NSTextInputClient.m"
-#undef ENABLE_NSTEXT_INPUT_CLIENT
 
 #pragma mark AppKit bridging
 

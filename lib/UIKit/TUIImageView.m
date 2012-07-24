@@ -14,7 +14,6 @@
  limitations under the License.
  */
 
-#import "TUIKit.h"
 #import "TUIImageView.h"
 #import "TUIImage.h"
 

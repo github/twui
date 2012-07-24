@@ -15,9 +15,10 @@
  */
 
 #import "TUITableViewCell.h"
-#import "TUITableView.h"
-#import "TUITableView+Cell.h"
+#import "TUIFastIndexPath.h"
 #import "TUINSWindow.h"
+#import "TUITableView+Cell.h"
+#import "TUITableView.h"
 
 @implementation TUITableViewCell
 

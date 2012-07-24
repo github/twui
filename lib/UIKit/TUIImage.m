@@ -15,7 +15,8 @@
  */
 
 #import "TUIImage.h"
-#import "TUIKit.h"
+#import "TUICGAdditions.h"
+#import "TUIView+Private.h"
 
 static CGImageRef TUICreateImageRefWithData(NSData *data)
 {

@@ -15,11 +15,11 @@
  */
 
 #import "TUIAttributedString.h"
-#import "TUIStringDrawing.h"
-#import "TUITextRenderer.h"
+#import "TUICGAdditions.h"
 #import "TUIColor.h"
 #import "TUIFont.h"
-#import "TUIKit.h"
+#import "TUIStringDrawing.h"
+#import "TUITextRenderer.h"
 
 @implementation NSAttributedString (TUIStringDrawing)
 

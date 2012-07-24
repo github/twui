@@ -14,16 +14,7 @@
  limitations under the License.
  */
 
-#import "TUIView.h"
+#import "TUINSView.h"
 
-@class TUITextRenderer;
-
-@interface TUIView ()
-@property (nonatomic, retain) NSArray *textRenderers;
-
-- (TUITextRenderer *)textRendererAtPoint:(CGPoint)point;
-- (void)_updateLayerScaleFactor;
-
+@interface TUINSView (NSTextInputClient) <NSTextInputClient>
 @end
-
-extern CGFloat TUICurrentContextScaleFactor(void);

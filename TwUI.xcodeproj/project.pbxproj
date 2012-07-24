@@ -39,7 +39,6 @@
 		5EE983CE13BE7834005F430D /* TUIImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C5913BE6E1900C85CB5 /* TUIImageView.m */; };
 		5EE983CF13BE7834005F430D /* TUILabel.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C5D13BE6E1900C85CB5 /* TUILabel.m */; };
 		5EE983D013BE7834005F430D /* TUINSView+Hyperfocus.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C5F13BE6E1900C85CB5 /* TUINSView+Hyperfocus.m */; };
-		5EE983D113BE7834005F430D /* TUINSView+NSTextInputClient.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C6013BE6E1900C85CB5 /* TUINSView+NSTextInputClient.m */; };
 		5EE983D213BE7834005F430D /* TUINSView.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C6213BE6E1900C85CB5 /* TUINSView.m */; };
 		5EE983D313BE7834005F430D /* TUINSWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C6413BE6E1900C85CB5 /* TUINSWindow.m */; };
 		5EE983D413BE7834005F430D /* TUIResponder.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C6613BE6E1900C85CB5 /* TUIResponder.m */; };
@@ -157,7 +156,6 @@
 		CB5E323913BE70CA004B7899 /* TUIKit.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C5B13BE6E1900C85CB5 /* TUIKit.m */; };
 		CB5E323B13BE70CA004B7899 /* TUILabel.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C5D13BE6E1900C85CB5 /* TUILabel.m */; };
 		CB5E323D13BE70CA004B7899 /* TUINSView+Hyperfocus.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C5F13BE6E1900C85CB5 /* TUINSView+Hyperfocus.m */; };
-		CB5E323E13BE70CA004B7899 /* TUINSView+NSTextInputClient.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C6013BE6E1900C85CB5 /* TUINSView+NSTextInputClient.m */; };
 		CB5E324013BE70CA004B7899 /* TUINSView.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C6213BE6E1900C85CB5 /* TUINSView.m */; };
 		CB5E324213BE70CA004B7899 /* TUINSWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C6413BE6E1900C85CB5 /* TUINSWindow.m */; };
 		CB5E324413BE70CA004B7899 /* TUIResponder.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C6613BE6E1900C85CB5 /* TUIResponder.m */; };
@@ -224,7 +222,6 @@
 		CBB74CB413BE6E1900C85CB5 /* TUILabel.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C5D13BE6E1900C85CB5 /* TUILabel.m */; };
 		CBB74CB513BE6E1900C85CB5 /* TUINSView+Hyperfocus.h in Headers */ = {isa = PBXBuildFile; fileRef = CBB74C5E13BE6E1900C85CB5 /* TUINSView+Hyperfocus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CBB74CB613BE6E1900C85CB5 /* TUINSView+Hyperfocus.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C5F13BE6E1900C85CB5 /* TUINSView+Hyperfocus.m */; };
-		CBB74CB713BE6E1900C85CB5 /* TUINSView+NSTextInputClient.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C6013BE6E1900C85CB5 /* TUINSView+NSTextInputClient.m */; };
 		CBB74CB813BE6E1900C85CB5 /* TUINSView.h in Headers */ = {isa = PBXBuildFile; fileRef = CBB74C6113BE6E1900C85CB5 /* TUINSView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CBB74CB913BE6E1900C85CB5 /* TUINSView.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C6213BE6E1900C85CB5 /* TUINSView.m */; };
 		CBB74CBA13BE6E1900C85CB5 /* TUINSWindow.h in Headers */ = {isa = PBXBuildFile; fileRef = CBB74C6313BE6E1900C85CB5 /* TUINSWindow.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -272,12 +269,32 @@
 		CBB74CE513BE6E1900C85CB5 /* TUIViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C8E13BE6E1900C85CB5 /* TUIViewController.m */; };
 		CBB74CE613BE6E1900C85CB5 /* TUIViewNSViewContainer.h in Headers */ = {isa = PBXBuildFile; fileRef = CBB74C8F13BE6E1900C85CB5 /* TUIViewNSViewContainer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CBB74CE713BE6E1900C85CB5 /* TUIViewNSViewContainer.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C9013BE6E1900C85CB5 /* TUIViewNSViewContainer.m */; };
+		D039723F15B7D7CB0092CD26 /* TUILayoutConstraint.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E7E15B7769A007F9EE3 /* TUILayoutConstraint.m */; };
+		D039724115B7D7CC0092CD26 /* TUILayoutConstraint.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E7E15B7769A007F9EE3 /* TUILayoutConstraint.m */; };
+		D039724215B7D7CE0092CD26 /* TUILayoutManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E8015B7769A007F9EE3 /* TUILayoutManager.m */; };
+		D039724315B7D7CE0092CD26 /* TUILayoutManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E8015B7769A007F9EE3 /* TUILayoutManager.m */; };
+		D039724415B7D7D40092CD26 /* TUIView+Layout.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E8715B778E8007F9EE3 /* TUIView+Layout.m */; };
+		D039724515B7D7D40092CD26 /* TUIView+Layout.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E8715B778E8007F9EE3 /* TUIView+Layout.m */; };
+		D039724615B7D7D60092CD26 /* TUIView+Layout.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E8A15B77A46007F9EE3 /* TUIView+Layout.h */; };
+		D039724715B7D7D70092CD26 /* TUIView+Layout.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E8A15B77A46007F9EE3 /* TUIView+Layout.h */; };
+		D039724815B7D7DB0092CD26 /* TUILayoutManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E7F15B7769A007F9EE3 /* TUILayoutManager.h */; };
+		D039724915B7D7DC0092CD26 /* TUILayoutManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E7F15B7769A007F9EE3 /* TUILayoutManager.h */; };
+		D039724A15B7D7DE0092CD26 /* TUILayoutConstraint.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E7D15B7769A007F9EE3 /* TUILayoutConstraint.h */; };
+		D039724B15B7D7DE0092CD26 /* TUILayoutConstraint.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E7D15B7769A007F9EE3 /* TUILayoutConstraint.h */; };
 		D040610D15B6A77500F753ED /* TUIAnimationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D040610915B6A77500F753ED /* TUIAnimationManager.m */; };
 		D040610E15B6A77500F753ED /* TUIAnimationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D040610915B6A77500F753ED /* TUIAnimationManager.m */; };
 		D040610F15B6A77500F753ED /* TUIAnimationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D040610915B6A77500F753ED /* TUIAnimationManager.m */; };
 		D040611615B6A7CD00F753ED /* NSTextView+TUIExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = D040611215B6A7CC00F753ED /* NSTextView+TUIExtensions.m */; };
 		D040611715B6A7CD00F753ED /* NSTextView+TUIExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = D040611215B6A7CC00F753ED /* NSTextView+TUIExtensions.m */; };
 		D040611815B6A7CD00F753ED /* NSTextView+TUIExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = D040611215B6A7CC00F753ED /* NSTextView+TUIExtensions.m */; };
+		D07AA82315BDD6B600F736C0 /* TUINSView+Hyperfocus.h in Headers */ = {isa = PBXBuildFile; fileRef = CBB74C5E13BE6E1900C85CB5 /* TUINSView+Hyperfocus.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D07AA82415BDD6B700F736C0 /* TUINSView+Hyperfocus.h in Headers */ = {isa = PBXBuildFile; fileRef = CBB74C5E13BE6E1900C85CB5 /* TUINSView+Hyperfocus.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D07AA82615BDD72F00F736C0 /* TUINSView+NSTextInputClient.h in Headers */ = {isa = PBXBuildFile; fileRef = D07AA82515BDD72D00F736C0 /* TUINSView+NSTextInputClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D07AA82715BDD72F00F736C0 /* TUINSView+NSTextInputClient.h in Headers */ = {isa = PBXBuildFile; fileRef = D07AA82515BDD72D00F736C0 /* TUINSView+NSTextInputClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D07AA82815BDD72F00F736C0 /* TUINSView+NSTextInputClient.h in Headers */ = {isa = PBXBuildFile; fileRef = D07AA82515BDD72D00F736C0 /* TUINSView+NSTextInputClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D07AA82915BDD79900F736C0 /* TUINSView+NSTextInputClient.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C6013BE6E1900C85CB5 /* TUINSView+NSTextInputClient.m */; };
+		D07AA82A15BDD79A00F736C0 /* TUINSView+NSTextInputClient.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C6013BE6E1900C85CB5 /* TUINSView+NSTextInputClient.m */; };
+		D07AA82B15BDD79A00F736C0 /* TUINSView+NSTextInputClient.m in Sources */ = {isa = PBXBuildFile; fileRef = CBB74C6013BE6E1900C85CB5 /* TUINSView+NSTextInputClient.m */; };
 		D0C764EB15B611C200E7AC2C /* TUIBridgedView.h in Headers */ = {isa = PBXBuildFile; fileRef = D0C764EA15B611C200E7AC2C /* TUIBridgedView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D0C764EC15B611C200E7AC2C /* TUIBridgedView.h in Headers */ = {isa = PBXBuildFile; fileRef = D0C764EA15B611C200E7AC2C /* TUIBridgedView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D0C764ED15B611C200E7AC2C /* TUIBridgedView.h in Headers */ = {isa = PBXBuildFile; fileRef = D0C764EA15B611C200E7AC2C /* TUIBridgedView.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -329,18 +346,6 @@
 		D0C7657415B6341800E7AC2C /* TUICAAction.m in Sources */ = {isa = PBXBuildFile; fileRef = D0C7657015B6341800E7AC2C /* TUICAAction.m */; };
 		D0C7657515B6341800E7AC2C /* TUICAAction.m in Sources */ = {isa = PBXBuildFile; fileRef = D0C7657015B6341800E7AC2C /* TUICAAction.m */; };
 		D0C7657615B6341800E7AC2C /* TUICAAction.m in Sources */ = {isa = PBXBuildFile; fileRef = D0C7657015B6341800E7AC2C /* TUICAAction.m */; };
-		D039723F15B7D7CB0092CD26 /* TUILayoutConstraint.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E7E15B7769A007F9EE3 /* TUILayoutConstraint.m */; };
-		D039724115B7D7CC0092CD26 /* TUILayoutConstraint.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E7E15B7769A007F9EE3 /* TUILayoutConstraint.m */; };
-		D039724215B7D7CE0092CD26 /* TUILayoutManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E8015B7769A007F9EE3 /* TUILayoutManager.m */; };
-		D039724315B7D7CE0092CD26 /* TUILayoutManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E8015B7769A007F9EE3 /* TUILayoutManager.m */; };
-		D039724415B7D7D40092CD26 /* TUIView+Layout.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E8715B778E8007F9EE3 /* TUIView+Layout.m */; };
-		D039724515B7D7D40092CD26 /* TUIView+Layout.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E8715B778E8007F9EE3 /* TUIView+Layout.m */; };
-		D039724615B7D7D60092CD26 /* TUIView+Layout.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E8A15B77A46007F9EE3 /* TUIView+Layout.h */; };
-		D039724715B7D7D70092CD26 /* TUIView+Layout.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E8A15B77A46007F9EE3 /* TUIView+Layout.h */; };
-		D039724815B7D7DB0092CD26 /* TUILayoutManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E7F15B7769A007F9EE3 /* TUILayoutManager.h */; };
-		D039724915B7D7DC0092CD26 /* TUILayoutManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E7F15B7769A007F9EE3 /* TUILayoutManager.h */; };
-		D039724A15B7D7DE0092CD26 /* TUILayoutConstraint.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E7D15B7769A007F9EE3 /* TUILayoutConstraint.h */; };
-		D039724B15B7D7DE0092CD26 /* TUILayoutConstraint.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E7D15B7769A007F9EE3 /* TUILayoutConstraint.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -494,6 +499,7 @@
 		D040610915B6A77500F753ED /* TUIAnimationManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TUIAnimationManager.m; sourceTree = "<group>"; };
 		D040611115B6A7CC00F753ED /* NSTextView+TUIExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSTextView+TUIExtensions.h"; sourceTree = "<group>"; };
 		D040611215B6A7CC00F753ED /* NSTextView+TUIExtensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSTextView+TUIExtensions.m"; sourceTree = "<group>"; };
+		D07AA82515BDD72D00F736C0 /* TUINSView+NSTextInputClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TUINSView+NSTextInputClient.h"; sourceTree = "<group>"; };
 		D0C764EA15B611C200E7AC2C /* TUIBridgedView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TUIBridgedView.h; sourceTree = "<group>"; };
 		D0C7650415B6156A00E7AC2C /* TUIHostView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TUIHostView.h; sourceTree = "<group>"; };
 		D0C7650C15B6189D00E7AC2C /* TUINSHostView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TUINSHostView.h; sourceTree = "<group>"; };
@@ -737,6 +743,7 @@
 				48A10E8015B7769A007F9EE3 /* TUILayoutManager.m */,
 				CBB74C5E13BE6E1900C85CB5 /* TUINSView+Hyperfocus.h */,
 				CBB74C5F13BE6E1900C85CB5 /* TUINSView+Hyperfocus.m */,
+				D07AA82515BDD72D00F736C0 /* TUINSView+NSTextInputClient.h */,
 				CBB74C6013BE6E1900C85CB5 /* TUINSView+NSTextInputClient.m */,
 				D0C7656915B62EFA00E7AC2C /* TUINSView+Private.h */,
 				CBB74C6113BE6E1900C85CB5 /* TUINSView.h */,
@@ -842,6 +849,8 @@
 				D039724715B7D7D70092CD26 /* TUIView+Layout.h in Headers */,
 				D039724915B7D7DC0092CD26 /* TUILayoutManager.h in Headers */,
 				D039724B15B7D7DE0092CD26 /* TUILayoutConstraint.h in Headers */,
+				D07AA82415BDD6B700F736C0 /* TUINSView+Hyperfocus.h in Headers */,
+				D07AA82815BDD72F00F736C0 /* TUINSView+NSTextInputClient.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -914,6 +923,7 @@
 				48A10E8115B7769A007F9EE3 /* TUILayoutConstraint.h in Headers */,
 				48A10E8315B7769A007F9EE3 /* TUILayoutManager.h in Headers */,
 				48A10E8B15B77A46007F9EE3 /* TUIView+Layout.h in Headers */,
+				D07AA82615BDD72F00F736C0 /* TUINSView+NSTextInputClient.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -942,6 +952,8 @@
 				D039724615B7D7D60092CD26 /* TUIView+Layout.h in Headers */,
 				D039724815B7D7DB0092CD26 /* TUILayoutManager.h in Headers */,
 				D039724A15B7D7DE0092CD26 /* TUILayoutConstraint.h in Headers */,
+				D07AA82315BDD6B600F736C0 /* TUINSView+Hyperfocus.h in Headers */,
+				D07AA82715BDD72F00F736C0 /* TUINSView+NSTextInputClient.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1108,7 +1120,6 @@
 				5EE983CE13BE7834005F430D /* TUIImageView.m in Sources */,
 				5EE983CF13BE7834005F430D /* TUILabel.m in Sources */,
 				5EE983D013BE7834005F430D /* TUINSView+Hyperfocus.m in Sources */,
-				5EE983D113BE7834005F430D /* TUINSView+NSTextInputClient.m in Sources */,
 				5EE983D213BE7834005F430D /* TUINSView.m in Sources */,
 				5EE983D313BE7834005F430D /* TUINSWindow.m in Sources */,
 				5EE983D413BE7834005F430D /* TUIResponder.m in Sources */,
@@ -1157,6 +1168,7 @@
 				D039724115B7D7CC0092CD26 /* TUILayoutConstraint.m in Sources */,
 				D039724315B7D7CE0092CD26 /* TUILayoutManager.m in Sources */,
 				D039724515B7D7D40092CD26 /* TUIView+Layout.m in Sources */,
+				D07AA82B15BDD79A00F736C0 /* TUINSView+NSTextInputClient.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1184,7 +1196,6 @@
 				CBB74CB213BE6E1900C85CB5 /* TUIKit.m in Sources */,
 				CBB74CB413BE6E1900C85CB5 /* TUILabel.m in Sources */,
 				CBB74CB613BE6E1900C85CB5 /* TUINSView+Hyperfocus.m in Sources */,
-				CBB74CB713BE6E1900C85CB5 /* TUINSView+NSTextInputClient.m in Sources */,
 				CBB74CB913BE6E1900C85CB5 /* TUINSView.m in Sources */,
 				CBB74CBB13BE6E1900C85CB5 /* TUINSWindow.m in Sources */,
 				CBB74CBD13BE6E1900C85CB5 /* TUIResponder.m in Sources */,
@@ -1236,6 +1247,7 @@
 				48A10E8215B7769A007F9EE3 /* TUILayoutConstraint.m in Sources */,
 				48A10E8415B7769A007F9EE3 /* TUILayoutManager.m in Sources */,
 				48A10E8915B778E8007F9EE3 /* TUIView+Layout.m in Sources */,
+				D07AA82915BDD79900F736C0 /* TUINSView+NSTextInputClient.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1272,7 +1284,6 @@
 				CB5E323913BE70CA004B7899 /* TUIKit.m in Sources */,
 				CB5E323B13BE70CA004B7899 /* TUILabel.m in Sources */,
 				CB5E323D13BE70CA004B7899 /* TUINSView+Hyperfocus.m in Sources */,
-				CB5E323E13BE70CA004B7899 /* TUINSView+NSTextInputClient.m in Sources */,
 				CB5E324013BE70CA004B7899 /* TUINSView.m in Sources */,
 				CB5E324213BE70CA004B7899 /* TUINSWindow.m in Sources */,
 				CB5E324413BE70CA004B7899 /* TUIResponder.m in Sources */,
@@ -1321,6 +1332,7 @@
 				D039723F15B7D7CB0092CD26 /* TUILayoutConstraint.m in Sources */,
 				D039724215B7D7CE0092CD26 /* TUILayoutManager.m in Sources */,
 				D039724415B7D7D40092CD26 /* TUIView+Layout.m in Sources */,
+				D07AA82A15BDD79A00F736C0 /* TUINSView+NSTextInputClient.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

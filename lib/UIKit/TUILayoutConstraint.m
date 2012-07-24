@@ -1,5 +1,6 @@
 #import "TUILayoutConstraint.h"
 #import "TUILayoutManager.h"
+#import "TUIView.h"
 
 @interface TUIView (Layout_Private)
 

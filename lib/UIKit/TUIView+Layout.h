@@ -1,5 +1,7 @@
 #import <Cocoa/Cocoa.h>
-#import "TUILayoutConstraint.h"
+#import "TUIView.h"
+
+@class TUILayoutConstraint;
 
 /*
  

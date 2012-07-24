@@ -14,8 +14,10 @@
  limitations under the License.
  */
 
-#import "TUIKit.h"
 #import "TUIView+PasteboardDragging.h"
+#import "TUICGAdditions.h"
+#import "TUIImage.h"
+#import "TUINSView.h"
 
 @implementation TUIView (PasteboardDragging)
 

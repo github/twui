@@ -14,8 +14,9 @@
  limitations under the License.
  */
 
-#import "TUIKit.h"
 #import "TUITextField.h"
+#import "TUIButton.h"
+#import "TUIImage.h"
 #import "TUITextViewEditor.h"
 
 @interface TUITextFieldEditor : TUITextViewEditor

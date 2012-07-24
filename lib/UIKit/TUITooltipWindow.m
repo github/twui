@@ -15,7 +15,10 @@
  */
 
 #import "TUITooltipWindow.h"
-#import "TUIKit.h"
+#import "TUIAttributedString.h"
+#import "TUICGAdditions.h"
+#import "TUIFont.h"
+#import "TUIStringDrawing.h"
 
 #define TOOLTIP_HEIGHT 18
 #define SWITCH_DELAY 0.2

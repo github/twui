@@ -14,9 +14,9 @@
  limitations under the License.
  */
 
-#import "TUIKit.h"
-
 #import "TUIScrollKnob.h"
+#import "TUICGAdditions.h"
+#import "TUIColor.h"
 #import "TUIScrollView.h"
 
 @interface TUIScrollKnob ()

@@ -14,8 +14,12 @@
  limitations under the License.
  */
 
-#import "TUIKit.h"
 #import "TUITextView.h"
+#import "TUICGAdditions.h"
+#import "TUIColor.h"
+#import "TUIFont.h"
+#import "TUINSView.h"
+#import "TUINSWindow.h"
 #import "TUITextViewEditor.h"
 #import "TUITextRenderer+Event.h"
 

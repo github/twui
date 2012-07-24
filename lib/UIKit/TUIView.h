@@ -15,7 +15,6 @@
  */
 
 #import "TUIResponder.h"
-#import "TUIColor.h"
 #import "TUIAccessibility.h"
 
 extern NSString * const TUIViewWillMoveToWindowNotification; // both notification's userInfo will contain the new window under the key TUIViewWindow
@@ -62,9 +61,10 @@ typedef enum {
     TUIViewContentModeScaleAspectFill,
 } TUIViewContentMode;
 
-@class TUIView;
+@class TUIColor;
 @class TUINSView;
 @class TUINSWindow;
+@class TUIView;
 
 typedef void(^TUIViewDrawRect)(TUIView *, CGRect);
 typedef CGRect(^TUIViewLayout)(TUIView *);

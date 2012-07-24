@@ -15,7 +15,8 @@
  */
 
 #import "TUIScrollView.h"
-#import "TUIFastIndexPath.h"
+
+@class TUIFastIndexPath;
 
 typedef enum {
 	TUITableViewStylePlain,              // regular table view

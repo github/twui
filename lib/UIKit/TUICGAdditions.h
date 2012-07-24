@@ -29,6 +29,9 @@ typedef NSUInteger TUICGRoundedRectCorner;
 
 #import <Foundation/Foundation.h>
 
+@class TUIImage;
+@class TUIView;
+
 extern CGContextRef TUICreateOpaqueGraphicsContext(CGSize size);
 extern CGContextRef TUICreateGraphicsContext(CGSize size);
 extern CGContextRef TUICreateGraphicsContextWithOptions(CGSize size, BOOL opaque);
@@ -47,3 +50,25 @@ extern CGRect ABIntegralRectWithSizeCenteredInRect(CGSize s, CGRect r);
 
 extern void CGContextFillRoundRect(CGContextRef context, CGRect rect, CGFloat radius);
 extern void CGContextDrawLinearGradientBetweenPoints(CGContextRef context, CGPoint a, CGFloat color_a[4], CGPoint b, CGFloat color_b[4]);
+
+extern CGContextRef TUIGraphicsGetCurrentContext(void);
+extern void TUIGraphicsPushContext(CGContextRef context);
+extern void TUIGraphicsPopContext(void);
+
+extern TUIImage *TUIGraphicsContextGetImage(CGContextRef ctx);
+
+extern void TUIGraphicsBeginImageContext(CGSize size);
+extern void TUIGraphicsBeginImageContextWithOptions(CGSize size, BOOL opaque, CGFloat scale);
+extern TUIImage *TUIGraphicsGetImageFromCurrentImageContext(void);
+extern void TUIGraphicsEndImageContext(void); 
+
+extern TUIImage *TUIGraphicsGetImageForView(TUIView *view);
+
+extern TUIImage *TUIGraphicsDrawAsImage(CGSize size, void(^draw)(void));
+
+/**
+ Draw drawing as a PDF
+ @param optionalMediaBox may be NULL
+ @returns NSData encapsulating the PDF drawing, suitable for writing to a file or the pasteboard
+ */
+extern NSData *TUIGraphicsDrawAsPDF(CGRect *optionalMediaBox, void(^draw)(CGContextRef));

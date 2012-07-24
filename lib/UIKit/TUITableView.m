@@ -15,9 +15,11 @@
  */
 
 #import "TUITableView.h"
+#import "TUIFastIndexPath.h"
+#import "TUINSView.h"
+#import "TUINSWindow.h"
 #import "TUITableView+Cell.h"
 #import "TUITableViewSectionHeader.h"
-#import "TUINSView.h"
 
 // header views need to be above the cells at all times
 #define HEADER_Z_POSITION 1000 

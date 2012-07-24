@@ -15,6 +15,7 @@
  */
 
 #import "TUIActivityIndicatorView.h"
+#import "TUIColor.h"
 
 @implementation TUIActivityIndicatorView
 

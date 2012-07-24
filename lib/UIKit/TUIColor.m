@@ -15,7 +15,8 @@
  */
 
 #import "TUIColor.h"
-#import "TUIKit.h"
+#import "TUICGAdditions.h"
+#import "TUIImage.h"
 
 @implementation TUIColor
 
