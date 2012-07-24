@@ -23,6 +23,13 @@
 #import "TUIView.h"
 #import "TUIViewController.h"
 
+/*
+ * Enable this to debug blending.
+ *
+ * Opaque views will be colored green, and blended views will be colored red.
+ */
+#define CA_COLOR_OVERLAY_DEBUG 0
+
 NSString * const TUIViewWillMoveToWindowNotification = @"TUIViewWillMoveToWindowNotification";
 NSString * const TUIViewDidMoveToWindowNotification = @"TUIViewDidMoveToWindowNotification";
 NSString * const TUIViewWindow = @"TUIViewWindow";
@@ -62,6 +69,13 @@ CGRect(^TUIViewCenteredLayout)(TUIView*) = nil;
 
 @interface TUIView ()
 @property (nonatomic, strong) NSMutableArray *subviews;
+
+/*
+ * Sets up the given view as a subview of the receiver. The given block is
+ * expected to perform the actual insertion into the subviews array or the
+ * layer.
+ */
+- (void)prepareSubview:(TUIView *)view insertionBlock:(void (^)(void))block;
 @end
 
 @implementation TUIView
@@ -322,69 +336,70 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 
 - (void)displayLayer:(CALayer *)layer
 {
-	if(_viewFlags.delegateWillDisplayLayer)
+	if (_viewFlags.delegateWillDisplayLayer) {
 		[_viewDelegate viewWillDisplayLayer:self];
+	}
 	
 	typedef void (*DrawRectIMP)(id,SEL,CGRect);
 	SEL drawRectSEL = @selector(drawRect:);
 	DrawRectIMP drawRectIMP = (DrawRectIMP)[self methodForSelector:drawRectSEL];
 	DrawRectIMP dontCallThisBasicDrawRectIMP = (DrawRectIMP)[TUIView instanceMethodForSelector:drawRectSEL];
 
-#if 0
-#define CA_COLOR_OVERLAY_DEBUG \
-if(self.opaque) CGContextSetRGBFillColor(context, 0, 1, 0, 0.3); \
-else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context, b);
-#else
-#define CA_COLOR_OVERLAY_DEBUG
-#endif
-
-#define PRE_DRAW \
-	CGRect b = self.bounds; \
-	CGContextRef context = [self _CGContext]; \
-	TUIGraphicsPushContext(context); \
-	if(_viewFlags.clearsContextBeforeDrawing) \
-		CGContextClearRect(context, b); \
-	CGFloat scale = [self.layer respondsToSelector:@selector(contentsScale)] ? self.layer.contentsScale : 1.0f; \
-	TUISetCurrentContextScaleFactor(scale); \
-	CGContextScaleCTM(context, scale, scale); \
-	CGContextSetAllowsAntialiasing(context, true); \
-	CGContextSetShouldAntialias(context, true); \
-	CGContextSetShouldSmoothFonts(context, !_viewFlags.disableSubpixelTextRendering);
-	
-#define POST_DRAW \
-	CA_COLOR_OVERLAY_DEBUG \
-	TUIImage *image = TUIGraphicsGetImageFromCurrentImageContext(); \
-	layer.contents = (id)image.CGImage; \
-	CGContextScaleCTM(context, 1.0f / scale, 1.0f / scale); \
-	TUIGraphicsPopContext(); \
-	if(self.drawInBackground) [CATransaction flush];
+	if (!self.drawRect && (drawRectIMP == dontCallThisBasicDrawRectIMP || [self _disableDrawRect])) {
+		// drawRect isn't overridden by subclass, don't call, let the CA machinery just handle backgroundColor (fast path)
+		return;
+	}
 
 	CGRect rectToDraw = self.bounds;
-	if(!CGRectEqualToRect(_context.dirtyRect, CGRectZero)) {
+	if (!CGRectEqualToRect(_context.dirtyRect, CGRectZero)) {
 		rectToDraw = _context.dirtyRect;
 		_context.dirtyRect = CGRectZero;
 	}
-	
+
 	void (^drawBlock)(void) = ^{
-		if(drawRect) {
-			// drawRect is implemented via a block
-			PRE_DRAW
-			drawRect(self, rectToDraw);
-			POST_DRAW
-		} else if((drawRectIMP != dontCallThisBasicDrawRectIMP) && ![self _disableDrawRect]) {
-			// drawRect is overridden by subclass
-			PRE_DRAW
-			drawRectIMP(self, drawRectSEL, rectToDraw);
-			POST_DRAW
-		} else {
-			// drawRect isn't overridden by subclass, don't call, let the CA machinery just handle backgroundColor (fast path)
+		CGContextRef context = [self _CGContext];
+		TUIGraphicsPushContext(context);
+		if (_viewFlags.clearsContextBeforeDrawing) {
+			CGContextClearRect(context, rectToDraw);
 		}
+
+		CGFloat scale = [self.layer respondsToSelector:@selector(contentsScale)] ? self.layer.contentsScale : 1.0f;
+		TUISetCurrentContextScaleFactor(scale);
+		CGContextScaleCTM(context, scale, scale);
+
+		CGContextSetAllowsAntialiasing(context, true);
+		CGContextSetShouldAntialias(context, true);
+		CGContextSetShouldSmoothFonts(context, !_viewFlags.disableSubpixelTextRendering);
+
+		if (self.drawRect) {
+			// drawRect is implemented via a block
+			self.drawRect(self, rectToDraw);
+		} else if ((drawRectIMP != dontCallThisBasicDrawRectIMP) && ![self _disableDrawRect]) {
+			// drawRect is overridden by subclass
+			drawRectIMP(self, drawRectSEL, rectToDraw);
+		}
+
+		#if CA_COLOR_OVERLAY_DEBUG
+		if (self.opaque) {
+			CGContextSetRGBFillColor(context, 0, 1, 0, 0.3);
+		} else {
+			CGContextSetRGBFillColor(context, 1, 0, 0, 0.3);
+			CGContextFillRect(context, rectToDraw);
+		}
+		#endif
+
+		TUIImage *image = TUIGraphicsGetImageFromCurrentImageContext();
+		layer.contents = (id)image.CGImage;
+		CGContextScaleCTM(context, 1.0f / scale, 1.0f / scale);
+		TUIGraphicsPopContext();
+
+		if (self.drawInBackground) [CATransaction flush];
 	};
 	
-	if(self.drawInBackground) {
+	if (self.drawInBackground) {
 		layer.contents = nil;
 		
-		if(self.drawQueue != nil) {
+		if (self.drawQueue != nil) {
 			[self.drawQueue addOperationWithBlock:drawBlock];
 		} else {
 			dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), drawBlock);
@@ -540,6 +555,31 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 			[self setNeedsDisplay];
 		}
 	}
+}
+
+- (void)prepareSubview:(TUIView *)view insertionBlock:(void (^)(void))block
+{
+	if (!_subviews) {
+		_subviews = [[NSMutableArray alloc] init];
+	}
+
+	TUINSView *originalNSView = view.ancestorTUINSView;
+
+	/* will call willAdd:nil and didAdd (nil) */
+	[view removeFromSuperview];
+
+	[view willMoveToTUINSView:_nsView];
+	[view willMoveToSuperview:self];
+	view.nsView = _nsView;
+
+	block();
+
+	[self didAddSubview:view];
+	[view didMoveToSuperview];
+	[view didMoveFromTUINSView:originalNSView];
+
+	[view setNextResponder:self];
+	[self _blockLayout];
 }
 
 @end
@@ -779,45 +819,23 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 	}
 }
 
-// TODO: get rid of these macros, and just always go through a single method
-#define PRE_ADDSUBVIEW(index) \
-	if (!_subviews) \
-		_subviews = [[NSMutableArray alloc] init]; \
-	\
-	if (index == NSUIntegerMax) {\
-		[self.subviews addObject:view]; \
-	} else {\
-		[self.subviews insertObject:view atIndex:index];\
-	}\
-	[view removeFromSuperview]; /* will call willAdd:nil and didAdd (nil) */ \
-	\
-	TUINSView *originalNSView_ = view.ancestorTUINSView; \
-	[view willMoveToTUINSView:_nsView]; \
-	\
-	[view willMoveToSuperview:self]; \
-	view.nsView = _nsView;
-
-#define POST_ADDSUBVIEW \
-	[self didAddSubview:view]; \
-	[view didMoveToSuperview]; \
-	[view didMoveFromTUINSView:originalNSView_]; \
-	[view setNextResponder:self]; \
-	[self _blockLayout];
-
-- (void)addSubview:(TUIView *)view // everything should go through this
+- (void)addSubview:(TUIView *)view
 {
 	if(!view)
 		return;
-	PRE_ADDSUBVIEW(NSUIntegerMax)
-	[self.layer addSublayer:view.layer];
-	POST_ADDSUBVIEW
+
+	[self prepareSubview:view insertionBlock:^{
+		[self.subviews addObject:view];
+		[self.layer addSublayer:view.layer];
+	}];
 }
 
 - (void)insertSubview:(TUIView *)view atIndex:(NSInteger)index
 {
-	PRE_ADDSUBVIEW(index)
-	[self.layer insertSublayer:view.layer atIndex:(unsigned int)index];
-	POST_ADDSUBVIEW
+	[self prepareSubview:view insertionBlock:^{
+		[self.subviews insertObject:view atIndex:index];
+		[self.layer insertSublayer:view.layer atIndex:(unsigned)index];
+	}];
 }
 
 - (void)insertSubview:(TUIView *)view belowSubview:(TUIView *)siblingSubview
@@ -826,9 +844,10 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 	if (siblingIndex == NSNotFound)
 		return;
 	
-	PRE_ADDSUBVIEW(siblingIndex + 1)
-	[self.layer insertSublayer:view.layer below:siblingSubview.layer];
-	POST_ADDSUBVIEW
+	[self prepareSubview:view insertionBlock:^{
+		[self.subviews insertObject:view atIndex:siblingIndex + 1];
+		[self.layer insertSublayer:view.layer below:siblingSubview.layer];
+	}];
 }
 
 - (void)insertSubview:(TUIView *)view aboveSubview:(TUIView *)siblingSubview
@@ -837,9 +856,10 @@ else CGContextSetRGBFillColor(context, 1, 0, 0, 0.3); CGContextFillRect(context,
 	if (siblingIndex == NSNotFound)
 		return;
 	
-	PRE_ADDSUBVIEW(siblingIndex)
-	[self.layer insertSublayer:view.layer above:siblingSubview.layer];
-	POST_ADDSUBVIEW
+	[self prepareSubview:view insertionBlock:^{
+		[self.subviews insertObject:view atIndex:siblingIndex];
+		[self.layer insertSublayer:view.layer above:siblingSubview.layer];
+	}];
 }
 
 - (TUIView *)_topSubview
