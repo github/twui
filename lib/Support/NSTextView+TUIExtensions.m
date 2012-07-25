@@ -26,9 +26,13 @@ static void fixedDrawRect (NSTextView *self, SEL _cmd, NSRect rect) {
 	CGContextSetShouldSubpixelPositionFonts(context, NO);
 	CGContextSetShouldSubpixelQuantizeFonts(context, NO);
 
-	if (self.superview) {
-		// NSTextView likes to fall on non-integral points sometimes -- fix that
+	// NSTextView likes to fall on non-integral points sometimes -- fix that
+	if ([self.superview respondsToSelector:@selector(backingAlignedRect:options:)]) {
 		self.frame = [self.superview backingAlignedRect:self.frame options:NSAlignAllEdgesNearest];
+	} else {
+		// This is less reliable, since one of our ancestors may not be on
+		// integral points.
+		self.frame = NSIntegralRect(self.frame);
 	}
 
 	originalDrawRectIMP(self, _cmd, rect);
