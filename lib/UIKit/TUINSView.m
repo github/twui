@@ -152,6 +152,7 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 {
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	
+	_rootView.hostView = nil;
 	_rootView.nsView = nil;
 	[_rootView removeFromSuperview];
 	
