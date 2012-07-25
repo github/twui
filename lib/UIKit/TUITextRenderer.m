@@ -19,7 +19,6 @@
 #import "TUIAttributedString.h"
 #import "TUICGAdditions.h"
 #import "TUIColor.h"
-#import "TUIFont.h"
 #import "TUIStringDrawing.h"
 #import "TUITextRenderer+Event.h"
 #import "TUIView.h"

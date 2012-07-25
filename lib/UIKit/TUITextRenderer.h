@@ -17,8 +17,8 @@
 #import "TUIResponder.h"
 #import "CoreText+Additions.h"
 
+@class NSFont;
 @class TUIColor;
-@class TUIFont;
 @class TUIView;
 @protocol ABActiveTextRange;
 

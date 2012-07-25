@@ -19,7 +19,7 @@
 #import "TUIAttributedString.h"
 
 @class TUITextEditor;
-@class TUIFont;
+@class NSFont;
 @class TUIColor;
 
 @protocol TUITextViewDelegate;
@@ -32,7 +32,7 @@
 	NSString *placeholder;
 	TUITextRenderer *placeholderRenderer;
 	
-	TUIFont *font;
+	NSFont *font;
 	TUIColor *textColor;
 	TUITextAlignment textAlignment;
 	BOOL editable;
@@ -67,7 +67,7 @@
 
 @property (nonatomic, copy) NSString *text;
 @property (nonatomic, copy) NSString *placeholder;
-@property (nonatomic, strong) TUIFont *font;
+@property (nonatomic, strong) NSFont *font;
 @property (nonatomic, strong) TUIColor *textColor;
 @property (nonatomic, assign) TUITextAlignment textAlignment;
 @property (nonatomic, assign) TUIEdgeInsets contentInset;

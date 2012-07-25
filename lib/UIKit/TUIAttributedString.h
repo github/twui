@@ -20,7 +20,6 @@ extern NSString * const TUIAttributedStringBackgroundColorAttributeName;
 extern NSString * const TUIAttributedStringBackgroundFillStyleName;
 extern NSString * const TUIAttributedStringPreDrawBlockName;
 
-@class TUIFont;
 @class TUIColor;
 
 typedef void (^TUIAttributedStringPreDrawBlock)(NSAttributedString *attributedString, NSRange substringRange, CGRect rects[], CFIndex rectCount);
@@ -61,7 +60,7 @@ typedef enum {
 @interface NSMutableAttributedString (TUIAdditions)
 
 // write-only properties, reading will return nil
-@property (nonatomic, retain) TUIFont *font;
+@property (nonatomic, retain) NSFont *font;
 @property (nonatomic, retain) TUIColor *color;
 @property (nonatomic, retain) TUIColor *backgroundColor;
 @property (nonatomic, assign) TUIBackgroundFillStyle backgroundFillStyle;
@@ -74,7 +73,7 @@ typedef enum {
 - (void)setAlignment:(TUITextAlignment)alignment lineBreakMode:(TUILineBreakMode)lineBreakMode;
 
 - (NSRange)_stringRange;
-- (void)setFont:(TUIFont *)font inRange:(NSRange)range;
+- (void)setFont:(NSFont *)font inRange:(NSRange)range;
 - (void)setColor:(TUIColor *)color inRange:(NSRange)range;
 - (void)setBackgroundColor:(TUIColor *)color inRange:(NSRange)range;
 - (void)setBackgroundFillStyle:(TUIBackgroundFillStyle)fillStyle inRange:(NSRange)range;

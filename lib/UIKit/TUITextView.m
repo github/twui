@@ -17,7 +17,6 @@
 #import "TUITextView.h"
 #import "TUICGAdditions.h"
 #import "TUIColor.h"
-#import "TUIFont.h"
 #import "TUINSView.h"
 #import "TUINSWindow.h"
 #import "TUITextViewEditor.h"
@@ -90,12 +89,12 @@
 - (void)_updateDefaultAttributes
 {
 	renderer.defaultAttributes = [NSDictionary dictionaryWithObjectsAndKeys:
-						 (id)[self.font ctFont], kCTFontAttributeName,
+						 self.font, kCTFontAttributeName,
 						 [self.textColor CGColor], kCTForegroundColorAttributeName,
 						 ABNSParagraphStyleForTextAlignment(textAlignment), NSParagraphStyleAttributeName,
 						 nil];
 	renderer.markedAttributes = [NSDictionary dictionaryWithObjectsAndKeys:
-						[NSFont fontWithName:self.font.fontName size:self.font.pointSize], kCTFontAttributeName, // NSFont and CTFont are toll-free bridged. *BUT* for reasons beyond my understanding, advanced input methods like Japanese and simplified Pinyin break unless this is an NSFont. So there we go.
+						self.font, kCTFontAttributeName,
 						[self.textColor CGColor], kCTForegroundColorAttributeName,
 						ABNSParagraphStyleForTextAlignment(textAlignment), NSParagraphStyleAttributeName,
 						nil];
@@ -122,7 +121,7 @@
 		
 		self.autocorrectedResults = [NSMutableDictionary dictionary];
 		
-		self.font = [TUIFont fontWithName:@"HelveticaNeue" size:12];
+		self.font = [NSFont fontWithName:@"HelveticaNeue" size:12];
 		self.textColor = [TUIColor blackColor];
 		[self _updateDefaultAttributes];
 		
@@ -166,7 +165,7 @@
 	return renderer.initialFirstResponder;
 }
 
-- (void)setFont:(TUIFont *)f
+- (void)setFont:(NSFont *)f
 {
 	font = f;
 	[self _updateDefaultAttributes];
@@ -323,7 +322,7 @@ static CAAnimation *ThrobAnimation()
 	// Ugh. So this seems to be a decent approximation for the height of the cursor. It doesn't always match the native cursor but what ev.
 	CGRect r = CGRectIntegral([renderer firstRectForCharacterRange:ABCFRangeFromNSRange(selection)]);
 	r.size.width = 2.0f;
-	CGRect fontBoundingBox = CTFontGetBoundingBox(self.font.ctFont);
+	CGRect fontBoundingBox = CTFontGetBoundingBox((__bridge CTFontRef)self.font);
 	r.size.height = round(fontBoundingBox.origin.y + fontBoundingBox.size.height);
 	r.origin.y += floor(self.font.leading);
 	//NSLog(@"ascent: %f, descent: %f, leading: %f, cap height: %f, x-height: %f, bounding: %@", self.font.ascender, self.font.descender, self.font.leading, self.font.capHeight, self.font.xHeight, NSStringFromRect(CTFontGetBoundingBox(self.font.ctFont)));

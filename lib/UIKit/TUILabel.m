@@ -16,7 +16,6 @@
 
 #import "TUILabel.h"
 #import "TUIColor.h"
-#import "TUIFont.h"
 #import "TUINSView.h"
 #import "TUIStringDrawing.h"
 #import "TUITextRenderer.h"
@@ -130,7 +129,7 @@
 	self.attributedString = nil;
 }
 
-- (void)setFont:(TUIFont *)font
+- (void)setFont:(NSFont *)font
 {
 	if(font == _font) return;
 	

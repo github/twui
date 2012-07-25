@@ -15,7 +15,6 @@
  */
 
 #import "TUIAttributedString.h"
-#import "TUIFont.h"
 #import "TUIColor.h"
 
 NSString * const TUIAttributedStringBackgroundColorAttributeName = @"TUIAttributedStringBackgroundColorAttributeName";
@@ -38,9 +37,10 @@ NSString * const TUIAttributedStringPreDrawBlockName = @"TUIAttributedStringPreD
 	return NSMakeRange(0, [self length]);
 }
 
-- (void)setFont:(TUIFont *)font inRange:(NSRange)range
+- (void)setFont:(NSFont *)font inRange:(NSRange)range
 {
-	[self addAttribute:(NSString *)kCTFontAttributeName value:(id)[font ctFont] range:range];
+	// NSFont and CTFont are toll-free bridged.
+	[self addAttribute:(NSString *)kCTFontAttributeName value:font range:range];
 }
 
 - (void)setColor:(TUIColor *)color inRange:(NSRange)range
@@ -58,7 +58,7 @@ NSString * const TUIAttributedStringPreDrawBlockName = @"TUIAttributedStringPreD
 	[self addAttribute:(NSString *)kCTKernAttributeName value:[NSNumber numberWithFloat:k] range:range];
 }
 
-- (void)setFont:(TUIFont *)font
+- (void)setFont:(NSFont *)font
 {
 	[self setFont:font inRange:[self _stringRange]];
 }
@@ -199,7 +199,7 @@ NSParagraphStyle *ABNSParagraphStyleForTextAlignment(TUITextAlignment alignment)
 	[self setAlignment:alignment lineBreakMode:TUILineBreakModeWordWrap];
 }
 
-- (TUIFont *)font
+- (NSFont *)font
 {
 	return nil;
 }
