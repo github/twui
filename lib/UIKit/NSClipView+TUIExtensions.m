@@ -12,6 +12,10 @@
 #import "NSClipView+TUIExtensions.h"
 #import "NSView+TUIExtensions.h"
 
+// Without this, the compiler will complain about -scrollToPoint: missing from
+// this category, but the method is part of NSClipView itself.
+#pragma clang diagnostic ignored "-Wprotocol"
+
 @implementation NSClipView (TUIExtensions)
 
 #pragma mark TUIBridgedView
