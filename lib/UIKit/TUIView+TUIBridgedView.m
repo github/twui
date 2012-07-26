@@ -142,11 +142,7 @@
 }
 
 - (TUINSView *)ancestorTUINSView; {
-	id<TUIHostView> hostView = self.hostView;
-	if (!hostView)
-		return nil;
-
-	return hostView.ancestorTUINSView;
+	return self.nsView;
 }
 
 - (id<TUIBridgedScrollView>)ancestorScrollView; {
