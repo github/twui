@@ -15,7 +15,6 @@
  */
 
 #import "TUICGAdditions.h"
-#import "TUIImage.h"
 #import "TUIView.h"
 
 CGContextRef TUICreateOpaqueGraphicsContext(CGSize size)
@@ -194,10 +193,11 @@ void TUIGraphicsPopContext(void)
 	[NSGraphicsContext restoreGraphicsState];
 }
 
-TUIImage* TUIGraphicsContextGetImage(CGContextRef ctx)
+NSImage *TUIGraphicsContextGetImage(CGContextRef ctx)
 {
 	CGImageRef CGImage = TUICreateCGImageFromBitmapContext(ctx);
-	TUIImage *image = [TUIImage imageWithCGImage:CGImage];
+	CGSize size = CGSizeMake(CGImageGetWidth(CGImage), CGImageGetHeight(CGImage));
+	NSImage *image = [[NSImage alloc] initWithCGImage:CGImage size:size];
 	CGImageRelease(CGImage);
 
 	return image;
@@ -219,17 +219,18 @@ void TUIGraphicsBeginImageContext(CGSize size)
 	TUIGraphicsBeginImageContextWithOptions(size, NO, 1.0f);
 }
 
-TUIImage* TUIGraphicsGetImageFromCurrentImageContext(void)
+NSImage *TUIGraphicsGetImageFromCurrentImageContext(void)
 {
 	return TUIGraphicsContextGetImage(TUIGraphicsGetCurrentContext());
 }
 
-TUIImage* TUIGraphicsGetImageForView(TUIView *view)
+NSImage *TUIGraphicsGetImageForView(TUIView *view)
 {
 	TUIGraphicsBeginImageContext(view.frame.size);
 	[view.layer renderInContext:TUIGraphicsGetCurrentContext()];
-	TUIImage *image = TUIGraphicsGetImageFromCurrentImageContext();
+	NSImage *image = TUIGraphicsGetImageFromCurrentImageContext();
 	TUIGraphicsEndImageContext();
+
 	return image;
 }
 
@@ -238,12 +239,13 @@ void TUIGraphicsEndImageContext(void)
 	TUIGraphicsPopContext();
 }
 
-TUIImage *TUIGraphicsDrawAsImage(CGSize size, void(^draw)(void))
+NSImage *TUIGraphicsDrawAsImage(CGSize size, void(^draw)(void))
 {
 	TUIGraphicsBeginImageContext(size);
 	draw();
-	TUIImage *image = TUIGraphicsGetImageFromCurrentImageContext();
+	NSImage *image = TUIGraphicsGetImageFromCurrentImageContext();
 	TUIGraphicsEndImageContext();
+
 	return image;
 }
 

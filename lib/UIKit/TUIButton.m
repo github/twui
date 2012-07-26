@@ -14,7 +14,6 @@
  limitations under the License.
  */
 
-#import "TUIImage.h"
 #import "TUIButton.h"
 #import "TUICGAdditions.h"
 #import "TUIColor.h"
@@ -22,6 +21,7 @@
 #import "TUIImageView.h"
 #import "TUILabel.h"
 #import "TUINSView.h"
+#import "TUIStretchableImage.h"
 #import "TUITextRenderer.h"
 
 @interface TUIButton ()
@@ -185,14 +185,14 @@ static CGRect ButtonRectCenteredInRect(CGRect a, CGRect b)
 		CGContextFillRect(TUIGraphicsGetCurrentContext(), self.bounds);
 	}
 	
-	TUIImage *backgroundImage = self.currentBackgroundImage;
-	TUIImage *image = self.currentImage;
+	NSImage *backgroundImage = self.currentBackgroundImage;
+	NSImage *image = self.currentImage;
 	
-	[backgroundImage drawInRect:[self backgroundRectForBounds:bounds] blendMode:kCGBlendModeNormal alpha:1.0];
+	[backgroundImage drawInRect:[self backgroundRectForBounds:bounds] fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
 	
 	if(image) {
 		CGRect imageRect;
-		if(image.leftCapWidth || image.topCapHeight) {
+		if([image isKindOfClass:[TUIStretchableImage class]]) {
 			// stretchable
 			imageRect = self.bounds;
 		} else {
@@ -206,7 +206,8 @@ static CGRect ButtonRectCenteredInRect(CGRect a, CGRect b)
 			b.size.height -= _imageEdgeInsets.bottom + _imageEdgeInsets.top;
 			imageRect = ButtonRectRoundOrigin(ButtonRectCenteredInRect(imageRect, b));
 		}
-		[image drawInRect:imageRect blendMode:kCGBlendModeNormal alpha:alpha];
+
+		[image drawInRect:imageRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:alpha];
 	}
 	
 	NSString *title = self.currentTitle;

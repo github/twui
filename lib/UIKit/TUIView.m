@@ -18,7 +18,6 @@
 #import <pthread.h>
 #import "TUICGAdditions.h"
 #import "TUIColor.h"
-#import "TUIImage.h"
 #import "TUILayoutManager.h"
 #import "TUINSView.h"
 #import "TUINSWindow.h"
@@ -393,8 +392,7 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 		}
 		#endif
 
-		TUIImage *image = TUIGraphicsGetImageFromCurrentImageContext();
-		layer.contents = (id)image.CGImage;
+		layer.contents = TUIGraphicsGetImageFromCurrentImageContext();
 		CGContextScaleCTM(context, 1.0f / scale, 1.0f / scale);
 		TUIGraphicsPopContext();
 

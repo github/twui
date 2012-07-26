@@ -28,7 +28,7 @@
 		_scrollView.scrollIndicatorStyle = TUIScrollViewIndicatorStyleDark;
 		[self addSubview:_scrollView];
 		
-		TUIImageView *imageView = [[TUIImageView alloc] initWithImage:[TUIImage imageNamed:@"large-image.jpeg"]];
+		TUIImageView *imageView = [[TUIImageView alloc] initWithImage:[NSImage imageNamed:@"large-image.jpeg"]];
 		[_scrollView addSubview:imageView];
 		[_scrollView setContentSize:imageView.frame.size];
 		

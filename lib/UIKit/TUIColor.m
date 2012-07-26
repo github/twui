@@ -16,11 +16,10 @@
 
 #import "TUIColor.h"
 #import "TUICGAdditions.h"
-#import "TUIImage.h"
 
 @implementation TUIColor
 
-+ (TUIColor *)colorWithPatternImage:(TUIImage *)image
++ (TUIColor *)colorWithPatternImage:(NSImage *)image
 {
 	return [[self alloc] initWithPatternImage:image];
 }
@@ -76,20 +75,23 @@
 
 static void patternDraw(void *info, CGContextRef ctx)
 {
-	TUIImage *image = (__bridge TUIImage *)info;
+	NSImage *image = (__bridge NSImage *)info;
+
 	CGRect rect;
 	rect.origin = CGPointZero;
 	rect.size = image.size;
-	CGContextDrawImage(ctx, rect, image.CGImage);
+
+	CGImageRef cgImage = [image CGImageForProposedRect:&rect context:nil hints:nil];
+	CGContextDrawImage(ctx, rect, cgImage);
 }
 
 static void patternRelease(void *info)
 {
 	// transfer the object back to ARC, thus releasing it
-	(void)(__bridge_transfer TUIImage *)info;
+	(void)(__bridge_transfer NSImage *)info;
 }
 
-- (TUIColor *)initWithPatternImage:(TUIImage *)image
+- (TUIColor *)initWithPatternImage:(NSImage *)image
 {
 	if((self = [super init]))
 	{

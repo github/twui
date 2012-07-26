@@ -16,8 +16,6 @@
 
 #import <Foundation/Foundation.h>
 
-@class TUIImage;
-
 @interface TUIColor : NSObject
 {
 	CGColorRef _cgColor; // backing color
@@ -28,12 +26,12 @@
 + (TUIColor *)colorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
 + (TUIColor *)colorWithCGColor:(CGColorRef)cgColor;
 + (TUIColor *)colorWithNSColor:(NSColor *)nsColor;
-+ (TUIColor *)colorWithPatternImage:(TUIImage *)image;
++ (TUIColor *)colorWithPatternImage:(NSImage *)image;
 
 - (TUIColor *)initWithWhite:(CGFloat)white alpha:(CGFloat)alpha;
 - (TUIColor *)initWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
 - (TUIColor *)initWithCGColor:(CGColorRef)cgColor;
-- (TUIColor *)initWithPatternImage:(TUIImage *)image;
+- (TUIColor *)initWithPatternImage:(NSImage *)image;
 
 // cached
 + (TUIColor *)blackColor;      // 0.0 white

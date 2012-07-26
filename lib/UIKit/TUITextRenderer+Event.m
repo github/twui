@@ -18,7 +18,6 @@
 #import "ABActiveRange.h"
 #import "CoreText+Additions.h"
 #import "TUICGAdditions.h"
-#import "TUIImage.h"
 #import "TUINSView.h"
 #import "TUINSWindow.h"
 #import "TUIView+Private.h"
@@ -87,12 +86,12 @@
 	return nil;
 }
 
-- (TUIImage *)dragImageForSelection:(NSRange)selection
+- (NSImage *)dragImageForSelection:(NSRange)selection
 {
 	CGRect b = self.view.frame;
 	
 	_flags.drawMaskDragSelection = 1;
-	TUIImage *image = TUIGraphicsDrawAsImage(b.size, ^{
+	NSImage *image = TUIGraphicsDrawAsImage(b.size, ^{
 		[self draw];
 	});
 	_flags.drawMaskDragSelection = 0;
@@ -117,11 +116,9 @@
 		CFIndex saveEnd = _selectionEnd;
 		_selectionStart = range.location;
 		_selectionEnd = range.location + range.length;
-		TUIImage *dragImage = [self dragImageForSelection:range];
+		NSImage *image = [self dragImageForSelection:range];
 		_selectionStart = saveStart;
 		_selectionEnd = saveEnd;
-		
-		NSImage *image = [[NSImage alloc] initWithCGImage:dragImage.CGImage size:NSZeroSize];
 		
 		[view.nsView dragImage:image 
 							at:f.origin

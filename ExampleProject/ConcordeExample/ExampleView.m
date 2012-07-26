@@ -67,14 +67,17 @@
 				CGRect b = v.bounds;
 				CGContextRef ctx = TUIGraphicsGetCurrentContext();
 				
-				TUIImage *image = [TUIImage imageNamed:@"clock.png" cache:YES];
+				NSImage *image = [NSImage imageNamed:@"clock.png"];
 				CGRect imageRect = ABIntegralRectWithSizeCenteredInRect([image size], b);
 
 				if([v.nsView isTrackingSubviewOfView:v]) { // simple way to check if the mouse is currently down inside of 'v'.  See the other methods in TUINSView for more.
 					
 					// first draw a slight white emboss below
 					CGContextSaveGState(ctx);
-					CGContextClipToMask(ctx, CGRectOffset(imageRect, 0, -1), image.CGImage);
+					
+					CGImageRef cgImage = [image CGImageForProposedRect:&imageRect context:nil hints:nil];
+					CGContextClipToMask(ctx, CGRectOffset(imageRect, 0, -1), cgImage);
+
 					CGContextSetRGBFillColor(ctx, 1, 1, 1, 0.5);
 					CGContextFillRect(ctx, b);
 					CGContextRestoreGState(ctx);
@@ -82,20 +85,20 @@
 					// replace image with a dynamically generated fancy inset image
 					// 1. use the image as a mask to draw a blue gradient
 					// 2. generate an inner shadow image based on the mask, then overlay that on top
-					image = [TUIImage imageWithSize:imageRect.size drawing:^(CGContextRef ctx) {
+					image = [NSImage tui_imageWithSize:imageRect.size drawing:^(CGContextRef ctx) {
 						CGRect r;
 						r.origin = CGPointZero;
 						r.size = imageRect.size;
 						
-						CGContextClipToMask(ctx, r, image.CGImage);
+						CGContextClipToMask(ctx, r, image.tui_CGImage);
 						CGContextDrawLinearGradientBetweenPoints(ctx, CGPointMake(0, r.size.height), (CGFloat[]){0,0,1,1}, CGPointZero, (CGFloat[]){0,0.6,1,1});
-						TUIImage *innerShadow = [image innerShadowWithOffset:CGSizeMake(0, -1) radius:3.0 color:[TUIColor blackColor] backgroundColor:[TUIColor cyanColor]];
+						NSImage *innerShadow = [image tui_innerShadowWithOffset:CGSizeMake(0, -1) radius:3.0 color:[TUIColor blackColor] backgroundColor:[TUIColor cyanColor]];
 						CGContextSetBlendMode(ctx, kCGBlendModeOverlay);
-						CGContextDrawImage(ctx, r, innerShadow.CGImage);
+						CGContextDrawImage(ctx, r, innerShadow.tui_CGImage);
 					}];
 				}
 
-				[image drawInRect:imageRect]; // draw 'image' (might be the regular one, or the dynamically generated one)
+				[image drawInRect:imageRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0]; // draw 'image' (might be the regular one, or the dynamically generated one)
 
 				// draw the index
 				TUIAttributedString *s = [TUIAttributedString stringWithString:[NSString stringWithFormat:@"%ld", v.tag]];

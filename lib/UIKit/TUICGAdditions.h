@@ -29,7 +29,6 @@ typedef NSUInteger TUICGRoundedRectCorner;
 
 #import <Foundation/Foundation.h>
 
-@class TUIImage;
 @class TUIView;
 
 extern CGContextRef TUICreateOpaqueGraphicsContext(CGSize size);
@@ -55,16 +54,16 @@ extern CGContextRef TUIGraphicsGetCurrentContext(void);
 extern void TUIGraphicsPushContext(CGContextRef context);
 extern void TUIGraphicsPopContext(void);
 
-extern TUIImage *TUIGraphicsContextGetImage(CGContextRef ctx);
+extern NSImage *TUIGraphicsContextGetImage(CGContextRef ctx);
 
 extern void TUIGraphicsBeginImageContext(CGSize size);
 extern void TUIGraphicsBeginImageContextWithOptions(CGSize size, BOOL opaque, CGFloat scale);
-extern TUIImage *TUIGraphicsGetImageFromCurrentImageContext(void);
+extern NSImage *TUIGraphicsGetImageFromCurrentImageContext(void);
 extern void TUIGraphicsEndImageContext(void); 
 
-extern TUIImage *TUIGraphicsGetImageForView(TUIView *view);
+extern NSImage *TUIGraphicsGetImageForView(TUIView *view);
 
-extern TUIImage *TUIGraphicsDrawAsImage(CGSize size, void(^draw)(void));
+extern NSImage *TUIGraphicsDrawAsImage(CGSize size, void(^draw)(void));
 
 /**
  Draw drawing as a PDF
