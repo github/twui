@@ -39,8 +39,12 @@ NSString * const TUIAttributedStringPreDrawBlockName = @"TUIAttributedStringPreD
 
 - (void)setFont:(NSFont *)font inRange:(NSRange)range
 {
-	// NSFont and CTFont are toll-free bridged.
-	[self addAttribute:(NSString *)kCTFontAttributeName value:font range:range];
+	if (font != nil) {
+		// NSFont and CTFont are toll-free bridged.
+		[self addAttribute:(NSString *)kCTFontAttributeName value:font range:range];
+	} else {
+		[self removeAttribute:(NSString *)kCTFontAttributeName range:range];
+	}
 }
 
 - (void)setColor:(TUIColor *)color inRange:(NSRange)range

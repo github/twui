@@ -82,22 +82,33 @@
 @synthesize autocorrectedResults;
 @synthesize placeholderRenderer;
 
+- (NSFont *)font {
+	// Fall back to the system font if none (or an invalid one) was set.
+	// Otherwise, text rendering becomes dog slow.
+	return font ?: [NSFont systemFontOfSize:[NSFont systemFontSize]];
+}
+
 - (void)dealloc {
 	renderer.delegate = nil;
 }
 
 - (void)_updateDefaultAttributes
 {
-	renderer.defaultAttributes = [NSDictionary dictionaryWithObjectsAndKeys:
-						 self.font, kCTFontAttributeName,
-						 [self.textColor CGColor], kCTForegroundColorAttributeName,
-						 ABNSParagraphStyleForTextAlignment(textAlignment), NSParagraphStyleAttributeName,
-						 nil];
-	renderer.markedAttributes = [NSDictionary dictionaryWithObjectsAndKeys:
-						self.font, kCTFontAttributeName,
-						[self.textColor CGColor], kCTForegroundColorAttributeName,
-						ABNSParagraphStyleForTextAlignment(textAlignment), NSParagraphStyleAttributeName,
-						nil];
+	NSMutableDictionary *attributes = [NSMutableDictionary dictionary];
+	
+	if (self.textColor != nil) {
+		[attributes setObject:(__bridge id)self.textColor.CGColor forKey:(__bridge id)kCTForegroundColorAttributeName];
+	}
+
+	NSParagraphStyle *style = ABNSParagraphStyleForTextAlignment(textAlignment);
+	if (style != nil) {
+		[attributes setObject:style forKey:NSParagraphStyleAttributeName];
+	}
+
+	[attributes setObject:self.font forKey:(__bridge id)kCTFontAttributeName];
+
+	renderer.defaultAttributes = attributes;
+	renderer.markedAttributes = attributes;
 }
 
 - (Class)textEditorClass
