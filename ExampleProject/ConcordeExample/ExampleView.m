@@ -25,7 +25,7 @@
 - (id)initWithFrame:(CGRect)frame
 {
 	if((self = [super initWithFrame:frame])) {
-		self.backgroundColor = [TUIColor colorWithWhite:0.9 alpha:1.0];
+		self.backgroundColor = [NSColor colorWithCalibratedWhite:0.9 alpha:1.0];
 		
 		// if you're using a font a lot, it's best to allocate it once and re-use it
 		exampleFont1 = [NSFont fontWithName:@"HelveticaNeue" size:15];
@@ -60,7 +60,7 @@
 		
 		// setup individual tabs
 		for(TUIView *tabView in _tabBar.tabViews) {
-			tabView.backgroundColor = [TUIColor clearColor]; // will also set opaque=NO
+			tabView.backgroundColor = [NSColor clearColor]; // will also set opaque=NO
 			
 			// let's just teach the tabs how to draw themselves right here - no need to subclass anything
 			tabView.drawRect = ^(TUIView *v, CGRect rect) {
@@ -92,7 +92,7 @@
 						
 						CGContextClipToMask(ctx, r, image.tui_CGImage);
 						CGContextDrawLinearGradientBetweenPoints(ctx, CGPointMake(0, r.size.height), (CGFloat[]){0,0,1,1}, CGPointZero, (CGFloat[]){0,0.6,1,1});
-						NSImage *innerShadow = [image tui_innerShadowWithOffset:CGSizeMake(0, -1) radius:3.0 color:[TUIColor blackColor] backgroundColor:[TUIColor cyanColor]];
+						NSImage *innerShadow = [image tui_innerShadowWithOffset:CGSizeMake(0, -1) radius:3.0 color:[NSColor blackColor] backgroundColor:[NSColor cyanColor]];
 						CGContextSetBlendMode(ctx, kCGBlendModeOverlay);
 						CGContextDrawImage(ctx, r, innerShadow.tui_CGImage);
 					}];
@@ -138,7 +138,7 @@
 {
 	ExampleSectionHeaderView *view = [[ExampleSectionHeaderView alloc] initWithFrame:CGRectMake(0, 0, 100, 32)];
 	TUIAttributedString *title = [TUIAttributedString stringWithString:[NSString stringWithFormat:@"Example Section %d", (int)section]];
-	title.color = [TUIColor blackColor];
+	title.color = [NSColor blackColor];
 	title.font = exampleFont2;
 	view.labelRenderer.attributedString = title;
 	return view;
@@ -149,7 +149,7 @@
 	ExampleTableViewCell *cell = reusableTableCellOfClass(tableView, ExampleTableViewCell);
 	
 	TUIAttributedString *s = [TUIAttributedString stringWithString:[NSString stringWithFormat:@"example cell %d", (int)indexPath.row]];
-	s.color = [TUIColor blackColor];
+	s.color = [NSColor blackColor];
 	s.font = exampleFont1;
 	[s setFont:exampleFont2 inRange:NSMakeRange(8, 4)]; // make the word "cell" bold
 	cell.attributedString = s;

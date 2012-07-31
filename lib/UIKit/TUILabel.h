@@ -23,27 +23,12 @@
  */
 
 @interface TUILabel : TUIView
-{
-	TUITextRenderer *renderer;
-	struct {
-		unsigned int selectable:1;
-	} _textLabelFlags;
-	
-	NSString *_text;
-	NSFont *_font;
-	TUIColor *_textColor;
-	TUITextAlignment _alignment;
-	TUILineBreakMode _lineBreakMode;
-}
-
-@property(nonatomic,copy) NSString *text;
-@property(nonatomic,strong) NSAttributedString	*attributedString;
-
-@property(nonatomic,getter=isSelectable) BOOL selectable;
+@property(nonatomic, copy) NSString *text;
+@property(nonatomic, strong) NSAttributedString	*attributedString;
+@property(nonatomic, getter=isSelectable) BOOL selectable;
 @property(nonatomic, readonly) TUITextRenderer *renderer;
-@property(nonatomic,strong) NSFont *font;
-@property(nonatomic,strong) TUIColor *textColor;
-@property(nonatomic,assign) TUITextAlignment alignment;
+@property(nonatomic, strong) NSFont *font;
+@property(nonatomic, strong) NSColor *textColor;
+@property(nonatomic, assign) TUITextAlignment alignment;
 @property(nonatomic, assign) TUILineBreakMode lineBreakMode; 
-
 @end

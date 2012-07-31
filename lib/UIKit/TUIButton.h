@@ -74,20 +74,20 @@ typedef enum {
 @interface TUIButton (Content)
 
 - (void)setTitle:(NSString *)title forState:(TUIControlState)state;
-- (void)setTitleColor:(TUIColor *)color forState:(TUIControlState)state;
-- (void)setTitleShadowColor:(TUIColor *)color forState:(TUIControlState)state;
+- (void)setTitleColor:(NSColor *)color forState:(TUIControlState)state;
+- (void)setTitleShadowColor:(NSColor *)color forState:(TUIControlState)state;
 - (void)setImage:(NSImage *)image forState:(TUIControlState)state;
 - (void)setBackgroundImage:(NSImage *)image forState:(TUIControlState)state;
 
 - (NSString *)titleForState:(TUIControlState)state;
-- (TUIColor *)titleColorForState:(TUIControlState)state;
-- (TUIColor *)titleShadowColorForState:(TUIControlState)state;
+- (NSColor *)titleColorForState:(TUIControlState)state;
+- (NSColor *)titleShadowColorForState:(TUIControlState)state;
 - (NSImage *)imageForState:(TUIControlState)state;
 - (NSImage *)backgroundImageForState:(TUIControlState)state;
 
 @property(nonatomic, readonly, strong) NSString *currentTitle;
-@property(nonatomic, readonly, strong) TUIColor *currentTitleColor;
-@property(nonatomic, readonly, strong) TUIColor *currentTitleShadowColor;
+@property(nonatomic, readonly, strong) NSColor *currentTitleColor;
+@property(nonatomic, readonly, strong) NSColor *currentTitleShadowColor;
 @property(nonatomic, readonly, strong) NSImage *currentImage;
 @property(nonatomic, readonly, strong) NSImage *currentBackgroundImage;
 @end

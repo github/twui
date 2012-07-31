@@ -19,8 +19,8 @@
 
 @interface TUIButtonContent : NSObject
 @property (nonatomic, strong) NSString *title;
-@property (nonatomic, strong) TUIColor *titleColor;
-@property (nonatomic, strong) TUIColor *shadowColor;
+@property (nonatomic, strong) NSColor *titleColor;
+@property (nonatomic, strong) NSColor *shadowColor;
 @property (nonatomic, strong) NSImage *image;
 @property (nonatomic, strong) NSImage *backgroundImage;
 @end
@@ -55,7 +55,7 @@
 	[self _stateDidChange];
 }
 
-- (void)setTitleColor:(TUIColor *)color forState:(TUIControlState)state
+- (void)setTitleColor:(NSColor *)color forState:(TUIControlState)state
 {
 	[self _stateWillChange];
 	[[self _contentForState:state] setTitleColor:color];
@@ -63,7 +63,7 @@
 	[self _stateDidChange];
 }
 
-- (void)setTitleShadowColor:(TUIColor *)color forState:(TUIControlState)state
+- (void)setTitleShadowColor:(NSColor *)color forState:(TUIControlState)state
 {
 	[self _stateWillChange];
 	[[self _contentForState:state] setShadowColor:color];
@@ -92,12 +92,12 @@
 	return [[self _contentForState:state] title];
 }
 
-- (TUIColor *)titleColorForState:(TUIControlState)state
+- (NSColor *)titleColorForState:(TUIControlState)state
 {
 	return [[self _contentForState:state] titleColor];
 }
 
-- (TUIColor *)titleShadowColorForState:(TUIControlState)state
+- (NSColor *)titleShadowColorForState:(TUIControlState)state
 {
 	return [[self _contentForState:state] shadowColor];
 }
@@ -122,9 +122,9 @@
 	return title;
 }
 
-- (TUIColor *)currentTitleColor
+- (NSColor *)currentTitleColor
 {
-	TUIColor *color = [self titleColorForState:self.state];
+	NSColor *color = [self titleColorForState:self.state];
 	if(color == nil) {
 		color = [self titleColorForState:TUIControlStateNormal];
 	}
@@ -132,9 +132,9 @@
 	return color;
 }
 
-- (TUIColor *)currentTitleShadowColor
+- (NSColor *)currentTitleShadowColor
 {
-	TUIColor *color = [self titleShadowColorForState:self.state];
+	NSColor *color = [self titleShadowColorForState:self.state];
 	if(color == nil) {
 		color = [self titleShadowColorForState:TUIControlStateNormal];
 	}

@@ -8,7 +8,6 @@
 
 #import "TUIStyledView.h"
 #import "TUICGAdditions.h"
-#import "TUIColor.h"
 #import "TUITextRenderer.h"
 
 @implementation TUIStyledView

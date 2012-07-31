@@ -16,7 +16,6 @@
 
 #import "TUITextView.h"
 #import "TUICGAdditions.h"
-#import "TUIColor.h"
 #import "TUINSView.h"
 #import "TUINSWindow.h"
 #import "TUITextViewEditor.h"
@@ -119,7 +118,7 @@
 - (id)initWithFrame:(CGRect)frame
 {
 	if((self = [super initWithFrame:frame])) {
-		self.backgroundColor = [TUIColor clearColor];
+		self.backgroundColor = [NSColor clearColor];
 		
 		renderer = [[[self textEditorClass] alloc] init];
 		renderer.delegate = self;
@@ -127,13 +126,13 @@
 		
 		cursor = [[TUIView alloc] initWithFrame:CGRectZero];
 		cursor.userInteractionEnabled = NO;
-		cursor.backgroundColor = [TUIColor linkColor];
+		cursor.backgroundColor = [NSColor colorWithCalibratedRed:13 / 255.0 green:140 / 255.0 blue:231 / 255.0 alpha:1];
 		[self addSubview:cursor];
 		
 		self.autocorrectedResults = [NSMutableDictionary dictionary];
 		
 		self.font = [NSFont fontWithName:@"HelveticaNeue" size:12];
-		self.textColor = [TUIColor blackColor];
+		self.textColor = [NSColor blackColor];
 		[self _updateDefaultAttributes];
 		
 		self.drawFrame = TUITextViewStandardFrame();
@@ -182,7 +181,7 @@
 	[self _updateDefaultAttributes];
 }
 
-- (void)setTextColor:(TUIColor *)c
+- (void)setTextColor:(NSColor *)c
 {
 	textColor = c;
 	[self _updateDefaultAttributes];
@@ -432,7 +431,7 @@ static CAAnimation *ThrobAnimation()
 						NSLog(@"Autocorrection result that's out of range: %@", result);
 					}
 				} else if(result.resultType == NSTextCheckingTypeSpelling) {
-					[[renderer backingStore] addAttribute:(id)kCTUnderlineColorAttributeName value:(id)[TUIColor redColor].CGColor range:result.range];
+					[[renderer backingStore] addAttribute:NSUnderlineColorAttributeName value:[NSColor redColor] range:result.range];
 					[[renderer backingStore] addAttribute:(id)kCTUnderlineStyleAttributeName value:[NSNumber numberWithInteger:kCTUnderlineStyleThick | kCTUnderlinePatternDot] range:result.range];
 				}
 			}

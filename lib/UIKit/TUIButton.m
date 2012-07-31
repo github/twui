@@ -16,7 +16,6 @@
 
 #import "TUIButton.h"
 #import "TUICGAdditions.h"
-#import "TUIColor.h"
 #import "TUIControl+Private.h"
 #import "TUIImageView.h"
 #import "TUILabel.h"
@@ -43,7 +42,7 @@
 		_buttonFlags.buttonType = TUIButtonTypeCustom;
 		_buttonFlags.dimsInBackground = 1;
 		_buttonFlags.firstDraw = 1;
-		self.backgroundColor = [TUIColor clearColor];
+		self.backgroundColor = [NSColor clearColor];
 		self.needsDisplayWhenWindowsKeyednessChanges = YES;
 		self.reversesTitleShadowWhenHighlighted = NO;
 	}
@@ -97,7 +96,7 @@
 	if(!_titleView) {
 		_titleView = [[TUILabel alloc] initWithFrame:CGRectZero];
 		_titleView.userInteractionEnabled = NO;
-		_titleView.backgroundColor = [TUIColor clearColor];
+		_titleView.backgroundColor = [NSColor clearColor];
 		_titleView.hidden = YES; // we'll be drawing it ourselves
 		[self addSubview:_titleView];
 	}
@@ -108,7 +107,7 @@
 {
 	if(!_imageView) {
 		_imageView = [[TUIImageView alloc] initWithFrame:CGRectZero];
-		_imageView.backgroundColor = [TUIColor clearColor];
+		_imageView.backgroundColor = [NSColor clearColor];
 		_imageView.hidden = YES;
 	}
 	return _imageView;
@@ -215,12 +214,12 @@ static CGRect ButtonRectCenteredInRect(CGRect a, CGRect b)
 		_titleView.text = title;
 	}
 	
-	TUIColor *color = self.currentTitleColor;
+	NSColor *color = self.currentTitleColor;
 	if(color != nil) {
 		_titleView.textColor = color;
 	}
 	
-	TUIColor *shadowColor = self.currentTitleShadowColor;
+	NSColor *shadowColor = self.currentTitleShadowColor;
 	// they may have manually set the renderer's shadow color, in which case we 
 	// don't want to reset it to nothing
 	if(shadowColor != nil) {

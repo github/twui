@@ -20,8 +20,6 @@ extern NSString * const TUIAttributedStringBackgroundColorAttributeName;
 extern NSString * const TUIAttributedStringBackgroundFillStyleName;
 extern NSString * const TUIAttributedStringPreDrawBlockName;
 
-@class TUIColor;
-
 typedef void (^TUIAttributedStringPreDrawBlock)(NSAttributedString *attributedString, NSRange substringRange, CGRect rects[], CFIndex rectCount);
 
 typedef enum {		
@@ -61,8 +59,8 @@ typedef enum {
 
 // write-only properties, reading will return nil
 @property (nonatomic, retain) NSFont *font;
-@property (nonatomic, retain) TUIColor *color;
-@property (nonatomic, retain) TUIColor *backgroundColor;
+@property (nonatomic, retain) NSColor *color;
+@property (nonatomic, retain) NSColor *backgroundColor;
 @property (nonatomic, assign) TUIBackgroundFillStyle backgroundFillStyle;
 @property (nonatomic, retain) NSShadow *shadow;
 @property (nonatomic, assign) TUITextAlignment alignment; // setting this will set lineBreakMode to word wrap, use setAlignment:lineBreakMode: for more control
@@ -74,8 +72,8 @@ typedef enum {
 
 - (NSRange)_stringRange;
 - (void)setFont:(NSFont *)font inRange:(NSRange)range;
-- (void)setColor:(TUIColor *)color inRange:(NSRange)range;
-- (void)setBackgroundColor:(TUIColor *)color inRange:(NSRange)range;
+- (void)setColor:(NSColor *)color inRange:(NSRange)range;
+- (void)setBackgroundColor:(NSColor *)color inRange:(NSRange)range;
 - (void)setBackgroundFillStyle:(TUIBackgroundFillStyle)fillStyle inRange:(NSRange)range;
 - (void)setPreDrawBlock:(TUIAttributedStringPreDrawBlock)block inRange:(NSRange)range; // the pre-draw block is called before the text or text background has been drawn
 - (void)setShadow:(NSShadow *)shadow inRange:(NSRange)range;
@@ -86,7 +84,7 @@ typedef enum {
 
 @interface NSShadow (TUIAdditions)
 
-+ (NSShadow *)shadowWithRadius:(CGFloat)radius offset:(CGSize)offset color:(TUIColor *)color;
++ (NSShadow *)shadowWithRadius:(CGFloat)radius offset:(CGSize)offset color:(NSColor *)color;
 
 @end
 

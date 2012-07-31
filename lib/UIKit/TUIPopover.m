@@ -16,8 +16,8 @@
 
 #import "TUIPopover.h"
 #import "CAAnimation+TUIExtensions.h"
+#import "NSColor+TUIExtensions.h"
 #import "TUICGAdditions.h"
-#import "TUIColor.h"
 #import "TUINSView.h"
 #import "TUINSWindow.h"
 #import "TUIViewController.h"
@@ -479,8 +479,8 @@ CGFloat const TUIPopoverBackgroundViewArrowWidth = 35.0;
     
 	_popoverEdge = popoverEdge;
 	_screenOriginRect = originScreenRect;
-	_strokeColor = [TUIColor blackColor];
-	_fillColor = [TUIColor whiteColor];
+	_strokeColor = [NSColor blackColor];
+	_fillColor = [NSColor whiteColor];
 	
 	__block __unsafe_unretained TUIPopoverBackgroundView *weakSelf = self;
     self.drawRect = ^ (TUIView *view, CGRect rect) 
@@ -488,11 +488,11 @@ CGFloat const TUIPopoverBackgroundViewArrowWidth = 35.0;
 		TUIPopoverBackgroundView *strongSelf = weakSelf;
         CGContextRef context = TUIGraphicsGetCurrentContext();
         CGPathRef outerBorder = [strongSelf newPopoverPathForEdge:self.popoverEdge inFrame:self.bounds];
-        CGContextSetStrokeColorWithColor(context, self.strokeColor.CGColor);
+        CGContextSetStrokeColorWithColor(context, self.strokeColor.tui_CGColor);
         CGContextAddPath(context, outerBorder);
         CGContextStrokePath(context);
         
-        CGContextSetFillColorWithColor(context, self.fillColor.CGColor);
+        CGContextSetFillColorWithColor(context, self.fillColor.tui_CGColor);
         CGContextAddPath(context, outerBorder);
         CGContextFillPath(context);
 		

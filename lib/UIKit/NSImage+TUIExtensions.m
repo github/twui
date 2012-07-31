@@ -15,8 +15,8 @@
  */
 
 #import "NSImage+TUIExtensions.h"
+#import "NSColor+TUIExtensions.h"
 #import "TUICGAdditions.h"
-#import "TUIColor.h"
 #import "TUIStretchableImage.h"
 
 @implementation NSImage (TUIExtensions)
@@ -162,7 +162,7 @@
 	}];
 }
 
-- (NSImage *)tui_innerShadowWithOffset:(CGSize)offset radius:(CGFloat)radius color:(TUIColor *)color backgroundColor:(TUIColor *)backgroundColor
+- (NSImage *)tui_innerShadowWithOffset:(CGSize)offset radius:(CGFloat)radius color:(NSColor *)color backgroundColor:(NSColor *)backgroundColor
 {
 	CGFloat padding = ceil(radius);
 	NSImage *paddedImage = [self tui_pad:padding];
@@ -170,13 +170,14 @@
 		CGContextSaveGState(ctx);
 		CGRect r = CGRectMake(0, 0, paddedImage.size.width, paddedImage.size.height);
 		CGContextClipToMask(ctx, r, paddedImage.tui_CGImage); // clip to image
-		CGContextSetShadowWithColor(ctx, offset, radius, color.CGColor);
+		CGContextSetShadowWithColor(ctx, offset, radius, color.tui_CGColor);
 		CGContextBeginTransparencyLayer(ctx, NULL);
 		{
 			CGContextClipToMask(ctx, r, [[paddedImage tui_invertedMask] tui_CGImage]); // clip to inverted
-			CGContextSetFillColorWithColor(ctx, backgroundColor.CGColor);
+			CGContextSetFillColorWithColor(ctx, backgroundColor.tui_CGColor);
 			CGContextFillRect(ctx, r); // draw with shadow
 		}
+
 		CGContextEndTransparencyLayer(ctx);
 		CGContextRestoreGState(ctx);
 	}];

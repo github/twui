@@ -16,7 +16,6 @@
 
 #import "TUIAttributedString.h"
 #import "TUICGAdditions.h"
-#import "TUIColor.h"
 #import "TUIStringDrawing.h"
 #import "TUITextRenderer.h"
 
@@ -89,7 +88,7 @@
 
 #endif
 
-- (CGSize)ab_drawInRect:(CGRect)rect color:(TUIColor *)color font:(NSFont *)font
+- (CGSize)ab_drawInRect:(CGRect)rect color:(NSColor *)color font:(NSFont *)font
 {
 	TUIAttributedString *s = [TUIAttributedString stringWithString:self];
 	s.color = color;

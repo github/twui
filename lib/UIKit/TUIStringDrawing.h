@@ -18,7 +18,6 @@
 #import "TUIAttributedString.h"
 
 @class NSFont;
-@class TUIColor;
 
 @interface NSAttributedString (TUIStringDrawing)
 
@@ -41,7 +40,7 @@
 //- (CGSize)drawInRect:(CGRect)rect withFont:(NSFont *)font lineBreakMode:(TUILineBreakMode)lineBreakMode alignment:(TUITextAlignment)alignment;
 #endif
 
-- (CGSize)ab_drawInRect:(CGRect)rect color:(TUIColor *)color font:(NSFont *)font;
+- (CGSize)ab_drawInRect:(CGRect)rect color:(NSColor *)color font:(NSFont *)font;
 - (CGSize)ab_drawInRect:(CGRect)rect withFont:(NSFont *)font lineBreakMode:(TUILineBreakMode)lineBreakMode alignment:(TUITextAlignment)alignment;
 
 @end

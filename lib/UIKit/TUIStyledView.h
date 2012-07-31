@@ -11,7 +11,7 @@
 
 @interface TUIStyledView : TUIView
 
-@property (nonatomic, strong) TUIColor *strokeColor;
+@property (nonatomic, strong) NSColor *strokeColor;
 @property (nonatomic, assign) CGFloat strokeWidth;
 
 @end

@@ -17,7 +17,6 @@
 #import <Cocoa/Cocoa.h>
 #import "TUIGeometry.h"
 
-@class TUIColor;
 @class TUIStretchableImage;
 
 @interface NSImage (TUIExtensions)
@@ -63,6 +62,6 @@
 - (NSImage *)tui_roundImage:(CGFloat)radius;
 - (NSImage *)tui_invertedMask;
 - (NSImage *)tui_embossMaskWithOffset:(CGSize)offset; // subtract reciever from itself offset by 'offset', use as a mask to draw emboss
-- (NSImage *)tui_innerShadowWithOffset:(CGSize)offset radius:(CGFloat)radius color:(TUIColor *)color backgroundColor:(TUIColor *)backgroundColor; // 'backgroundColor' is used as the color the shadow is drawn with, it is mostly masked out, but a halo will remain, leading to artifacts unless it is close enough to the background color
+- (NSImage *)tui_innerShadowWithOffset:(CGSize)offset radius:(CGFloat)radius color:(NSColor *)color backgroundColor:(NSColor *)backgroundColor; // 'backgroundColor' is used as the color the shadow is drawn with, it is mostly masked out, but a halo will remain, leading to artifacts unless it is close enough to the background color
 
 @end

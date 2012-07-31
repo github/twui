@@ -61,7 +61,6 @@ typedef enum {
     TUIViewContentModeScaleAspectFill,
 } TUIViewContentMode;
 
-@class TUIColor;
 @class TUINSView;
 @class TUINSWindow;
 @class TUIView;
@@ -373,7 +372,7 @@ extern CGRect(^TUIViewCenteredLayout)(TUIView*);
 /**
  default is nil.  Setting this with a color with <1.0 alpha will also set opaque=NO
  */
-@property (nonatomic,copy) TUIColor *backgroundColor;
+@property (nonatomic,copy) NSColor *backgroundColor;
 
 /**
  animatable. default is 1.0

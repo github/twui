@@ -17,7 +17,6 @@
 #import "TUIProgressBar.h"
 #import "CAAnimation+TUIExtensions.h"
 #import "TUICGAdditions.h"
-#import "TUIColor.h"
 
 NSString *GHUIProgressBarSetNeedsDisplayObservationContext = @"GHUIProgressBarSetNeedsDisplayObservationContext";
 
@@ -59,7 +58,7 @@ void GHUIProgressPatternDrawCallback(void *info, CGContextRef context);
 	self = [super initWithFrame:frame];
 	if(self == nil) return nil;
 	
-	self.backgroundColor = [TUIColor clearColor];
+	self.backgroundColor = [NSColor clearColor];
 	self.clipsToBounds = YES;
 	_style = style;
 	
@@ -280,7 +279,7 @@ void GHUIProgressPatternDrawCallback(void *info, CGContextRef context);
 	TUIView *animationClippingView = [[TUIView alloc] initWithFrame:[self fillRect]];
 	animationClippingView.clipsToBounds = YES;
 	animationClippingView.opaque = NO;
-	animationClippingView.backgroundColor = [TUIColor clearColor];
+	animationClippingView.backgroundColor = [NSColor clearColor];
 	
 	CGPathRef clipPath = TUICGPathCreateRoundedRect(animationClippingView.bounds, ceil(NSHeight(animationClippingView.bounds) / 2.0));
 	CAShapeLayer *clipLayer = [[CAShapeLayer alloc] init];
@@ -291,7 +290,7 @@ void GHUIProgressPatternDrawCallback(void *info, CGContextRef context);
 	CGRect animationViewFrame = CGRectMake(NSMinX(animationClippingView.bounds),NSMinY(animationClippingView.bounds), (NSWidth(animationClippingView.bounds) * 2.0), NSHeight(animationClippingView.bounds));
 	self.animationView = [[TUIView alloc] initWithFrame:animationViewFrame];
 	self.animationView.opaque = NO;
-	self.animationView.backgroundColor = [TUIColor clearColor];
+	self.animationView.backgroundColor = [NSColor clearColor];
 	self.animationView.drawRect = ^ (TUIView *view, CGRect dirtyRect) {
 		CGRect patternBounds = CGRectMake(0.0, 0.0, GHUIProgressBarBarberPolePatternWidth, NSHeight(view.bounds));
 		

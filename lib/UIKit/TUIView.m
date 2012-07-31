@@ -16,8 +16,8 @@
 
 #import "TUIView.h"
 #import <pthread.h>
+#import "NSColor+TUIExtensions.h"
 #import "TUICGAdditions.h"
-#import "TUIColor.h"
 #import "TUILayoutManager.h"
 #import "TUINSView.h"
 #import "TUINSWindow.h"
@@ -1083,16 +1083,17 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 	self.layer.hidden = h;
 }
 
-- (TUIColor *)backgroundColor
+- (NSColor *)backgroundColor
 {
-	return [TUIColor colorWithCGColor:self.layer.backgroundColor];
+	return [NSColor tui_colorWithCGColor:self.layer.backgroundColor];
 }
 
-- (void)setBackgroundColor:(TUIColor *)color
+- (void)setBackgroundColor:(NSColor *)color
 {
-	self.layer.backgroundColor = color.CGColor;
+	self.layer.backgroundColor = color.tui_CGColor;
 	if(color.alphaComponent < 1.0)
 		self.opaque = NO;
+
 	[self setNeedsDisplay];
 }
 
