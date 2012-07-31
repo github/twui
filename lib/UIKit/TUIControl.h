@@ -17,13 +17,13 @@
 #import "TUIView.h"
 
 enum {
-  TUIControlEventTouchDown           = 1 <<  0,
-  TUIControlEventTouchDownRepeat     = 1 <<  1,
-  TUIControlEventTouchUpInside       = 1 <<  6,
-  TUIControlEventTouchUpOutside      = 1 <<  7,
+  TUIControlEventMouseDown           = 1 <<  0,
+  TUIControlEventMouseDownRepeat     = 1 <<  1,
+  TUIControlEventMouseUpInside       = 1 <<  6,
+  TUIControlEventMouseUpOutside      = 1 <<  7,
   TUIControlEventValueChanged        = 1 << 12,
   TUIControlEventEditingDidEndOnExit = 1 << 19,
-  TUIControlEventAllTouchEvents      = 0x00000FFF,
+  TUIControlEventAllMouseEvents      = 0x00000FFF,
   TUIControlEventAllEditingEvents    = 0x000F0000,
   TUIControlEventApplicationReserved = 0x0F000000,
   TUIControlEventSystemReserved      = 0xF0000000,

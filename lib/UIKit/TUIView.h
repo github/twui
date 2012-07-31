@@ -148,7 +148,7 @@ extern CGRect(^TUIViewCenteredLayout)(TUIView*);
 - (id)initWithFrame:(CGRect)frame;
 
 /**
- Default is YES. if set to NO, user events (touch, keys) are ignored and removed from the event queue.
+ Default is YES. if set to NO, user events (clicks, keys) are ignored and removed from the event queue.
  */
 @property (nonatomic,getter=isUserInteractionEnabled) BOOL userInteractionEnabled;
 

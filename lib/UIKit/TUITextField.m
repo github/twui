@@ -79,7 +79,7 @@ doClear:
 {
 	TUIButton *b = [TUIButton button];
 	[b setImage:[NSImage imageNamed:@"clear-button.png"] forState:TUIControlStateNormal];
-	[b addTarget:self action:@selector(clear:) forControlEvents:TUIControlEventTouchUpInside];
+	[b addTarget:self action:@selector(clear:) forControlEvents:TUIControlEventMouseUpInside];
 	return b;
 }
 

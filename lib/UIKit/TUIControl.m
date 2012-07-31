@@ -134,9 +134,9 @@
 	
 	// handle touch down
 	if([event clickCount] < 2) {
-		[self sendActionsForControlEvents:TUIControlEventTouchDown];
+		[self sendActionsForControlEvents:TUIControlEventMouseDown];
 	} else {
-		[self sendActionsForControlEvents:TUIControlEventTouchDownRepeat];
+		[self sendActionsForControlEvents:TUIControlEventMouseDownRepeat];
 	}
   
 	// needs display
@@ -154,10 +154,10 @@
 	
 	if([self eventInside:event]) {
 		if(![self didDrag]) {
-			[self sendActionsForControlEvents:TUIControlEventTouchUpInside];
+			[self sendActionsForControlEvents:TUIControlEventMouseUpInside];
 		}
 	} else {
-		[self sendActionsForControlEvents:TUIControlEventTouchUpOutside];
+		[self sendActionsForControlEvents:TUIControlEventMouseUpOutside];
 	}
 	
 	// needs display
