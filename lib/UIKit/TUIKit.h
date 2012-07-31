@@ -29,7 +29,6 @@
 #import "TUIButton.h"
 #import "TUICGAdditions.h"
 #import "TUIColor.h"
-#import "TUIFastIndexPath.h"
 #import "TUIHostView.h"
 #import "TUIImageView.h"
 #import "TUILabel.h"

@@ -129,7 +129,7 @@
 	return 25;
 }
 
-- (CGFloat)tableView:(TUITableView *)tableView heightForRowAtIndexPath:(TUIFastIndexPath *)indexPath
+- (CGFloat)tableView:(TUITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	return 50.0;
 }
@@ -144,7 +144,7 @@
 	return view;
 }
 
-- (TUITableViewCell *)tableView:(TUITableView *)tableView cellForRowAtIndexPath:(TUIFastIndexPath *)indexPath
+- (TUITableViewCell *)tableView:(TUITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	ExampleTableViewCell *cell = reusableTableCellOfClass(tableView, ExampleTableViewCell);
 	
@@ -157,7 +157,7 @@
 	return cell;
 }
 
-- (void)tableView:(TUITableView *)tableView didClickRowAtIndexPath:(TUIFastIndexPath *)indexPath withEvent:(NSEvent *)event
+- (void)tableView:(TUITableView *)tableView didClickRowAtIndexPath:(NSIndexPath *)indexPath withEvent:(NSEvent *)event
 {
 	if([event clickCount] == 1) {
 		// do something cool
@@ -167,7 +167,7 @@
 		// show context menu
 	}
 }
-- (BOOL)tableView:(TUITableView *)tableView shouldSelectRowAtIndexPath:(TUIFastIndexPath *)indexPath forEvent:(NSEvent *)event{
+- (BOOL)tableView:(TUITableView *)tableView shouldSelectRowAtIndexPath:(NSIndexPath *)indexPath forEvent:(NSEvent *)event{
 	switch (event.type) {
 		case NSRightMouseDown:
 			return NO;
@@ -176,19 +176,19 @@
 	return YES;
 }
 
--(BOOL)tableView:(TUITableView *)tableView canMoveRowAtIndexPath:(TUIFastIndexPath *)indexPath {
+-(BOOL)tableView:(TUITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
   // return TRUE to enable row reordering by dragging; don't implement this method or return
   // FALSE to disable
   return TRUE;
 }
 
--(void)tableView:(TUITableView *)tableView moveRowAtIndexPath:(TUIFastIndexPath *)fromIndexPath toIndexPath:(TUIFastIndexPath *)toIndexPath {
+-(void)tableView:(TUITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
   // update the model to reflect the changed index paths; since this example isn't backed by
   // a "real" model, after dropping a cell the table will revert to it's previous state
   NSLog(@"Move dragged row: %@ => %@", fromIndexPath, toIndexPath);
 }
 
--(TUIFastIndexPath *)tableView:(TUITableView *)tableView targetIndexPathForMoveFromRowAtIndexPath:(TUIFastIndexPath *)fromPath toProposedIndexPath:(TUIFastIndexPath *)proposedPath {
+-(NSIndexPath *)tableView:(TUITableView *)tableView targetIndexPathForMoveFromRowAtIndexPath:(NSIndexPath *)fromPath toProposedIndexPath:(NSIndexPath *)proposedPath {
   // optionally revise the drag-to-reorder drop target index path by returning a different index path
   // than proposedPath.  if proposedPath is suitable, return that.  if this method is not implemented,
   // proposedPath is used by default.
