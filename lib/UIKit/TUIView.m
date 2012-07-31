@@ -339,10 +339,6 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 
 - (void)displayLayer:(CALayer *)layer
 {
-	if (_viewFlags.delegateWillDisplayLayer) {
-		[_viewDelegate viewWillDisplayLayer:self];
-	}
-	
 	typedef void (*DrawRectIMP)(id,SEL,CGRect);
 	SEL drawRectSEL = @selector(drawRect:);
 	DrawRectIMP drawRectIMP = (DrawRectIMP)[self methodForSelector:drawRectSEL];
@@ -353,13 +349,17 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 		return;
 	}
 
-	CGRect rectToDraw = self.bounds;
-	if (!CGRectEqualToRect(_context.dirtyRect, CGRectZero)) {
-		rectToDraw = _context.dirtyRect;
-		_context.dirtyRect = CGRectZero;
-	}
-
 	void (^drawBlock)(void) = ^{
+		if (_viewFlags.delegateWillDisplayLayer) {
+			[_viewDelegate viewWillDisplayLayer:self];
+		}
+
+		CGRect rectToDraw = self.bounds;
+		if (!CGRectEqualToRect(_context.dirtyRect, CGRectZero)) {
+			rectToDraw = _context.dirtyRect;
+			_context.dirtyRect = CGRectZero;
+		}
+
 		CGContextRef context = [self _CGContext];
 		TUIGraphicsPushContext(context);
 
@@ -407,8 +407,13 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 		} else {
 			dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), drawBlock);
 		}
-	} else {
+	} else if ([NSThread isMainThread] || dispatch_get_current_queue() == dispatch_get_main_queue()) {
 		drawBlock();
+	} else {
+		// On Mac OS X 10.6 (and possibly other versions), spinning a run loop in
+		// a background thread can result in -displayLayer: calls, so make sure we
+		// only invoke -drawRect: on the main thread.
+		dispatch_async(dispatch_get_main_queue(), drawBlock);
 	}
 }
 
