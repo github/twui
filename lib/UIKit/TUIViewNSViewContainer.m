@@ -163,7 +163,15 @@
 	}
 
 	CGContextRef context = [NSGraphicsContext currentContext].graphicsPort;
+	CGContextSaveGState(context);
+
+	if ([self.rootView isFlipped]) {
+		CGContextTranslateCTM(context, 0, self.bounds.size.height);
+		CGContextScaleCTM(context, 1, -1);
+	}
+
 	[self.rootView.layer renderInContext:context];
+	CGContextRestoreGState(context);
 }
 
 - (void)startRenderingContainedView; {
