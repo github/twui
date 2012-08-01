@@ -30,8 +30,13 @@
 {
 	if(size.width < 1 || size.height < 1)
 		return nil;
+	
+	CGFloat scale = [[NSScreen mainScreen] backingScaleFactor];
+	size = CGSizeMake(size.width * scale, size.height * scale);
 
 	CGContextRef ctx = TUICreateGraphicsContextWithOptions(size, NO);
+	CGContextScaleCTM(ctx, scale, scale);
+
 	draw(ctx);
 	NSImage *i = TUIGraphicsContextGetImage(ctx);
 	CGContextRelease(ctx);

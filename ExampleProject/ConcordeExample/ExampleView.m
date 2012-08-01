@@ -67,7 +67,7 @@
 				CGRect b = v.bounds;
 				CGContextRef ctx = TUIGraphicsGetCurrentContext();
 				
-				NSImage *image = [NSImage imageNamed:@"clock.png"];
+				NSImage *image = [NSImage imageNamed:@"clock"];
 				CGRect imageRect = ABIntegralRectWithSizeCenteredInRect([image size], b);
 
 				if([v.nsView isTrackingSubviewOfView:v]) { // simple way to check if the mouse is currently down inside of 'v'.  See the other methods in TUINSView for more.
