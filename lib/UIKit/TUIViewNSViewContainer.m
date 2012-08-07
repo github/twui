@@ -115,6 +115,8 @@
 		return nil;
 
 	self.layer.masksToBounds = NO;
+	self.clearsContextBeforeDrawing = NO;
+	self.opaque = NO;
 
 	// prevents the layer from displaying until we need to render our contained
 	// view
@@ -164,6 +166,7 @@
 
 	CGContextRef context = [NSGraphicsContext currentContext].graphicsPort;
 	CGContextSaveGState(context);
+	CGContextClearRect(context, self.bounds);
 
 	if ([self.rootView isFlipped]) {
 		CGContextTranslateCTM(context, 0, self.bounds.size.height);
