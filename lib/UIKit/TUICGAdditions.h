@@ -57,6 +57,7 @@ extern void TUIGraphicsPopContext(void);
 extern NSImage *TUIGraphicsContextGetImage(CGContextRef ctx);
 
 extern void TUIGraphicsBeginImageContext(CGSize size);
+// as in the iOS docs, "if you specify a value of 0.0, the scale factor is set to the scale factor of the device’s main screen."
 extern void TUIGraphicsBeginImageContextWithOptions(CGSize size, BOOL opaque, CGFloat scale);
 extern NSImage *TUIGraphicsGetImageFromCurrentImageContext(void);
 extern void TUIGraphicsEndImageContext(void); 
