@@ -22,8 +22,6 @@
 #import "TUINSView.h"
 #import "TUINSWindow.h"
 #import "TUITextRenderer.h"
-#import "TUIView+Private.h"
-#import "TUIView+TUIBridgedView.h"
 #import "TUIViewController.h"
 
 /*
@@ -1108,8 +1106,6 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 }
 
 @end
-
-#import "TUINSView.h"
 
 @implementation TUIView (TUIViewAppKit)
 

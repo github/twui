@@ -15,7 +15,6 @@
  */
 
 #import "TUIView.h"
-#import "TUIView+Private.h"
 #import "TUICAAction.h"
 
 @interface TUIViewAnimation : NSObject <CAAction>

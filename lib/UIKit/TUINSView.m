@@ -25,11 +25,7 @@
 #import "TUINSView+Hyperfocus.h"
 #import "TUINSView+Private.h"
 #import "TUIViewNSViewContainer.h"
-#import "TUIView.h"
-#import "TUIView+Private.h"
-#import "TUITextRenderer+Event.h"
 #import "TUITooltipWindow.h"
-#import <CoreFoundation/CoreFoundation.h>
 
 // If enabled, NSViews contained within TUIViewNSViewContainers will be clipped
 // by any TwUI ancestors that enable clipping to bounds.

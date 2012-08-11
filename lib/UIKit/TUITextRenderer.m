@@ -20,7 +20,6 @@
 #import "TUIAttributedString.h"
 #import "TUICGAdditions.h"
 #import "TUIStringDrawing.h"
-#import "TUITextRenderer+Event.h"
 #import "TUIView.h"
 
 @interface TUITextRenderer ()

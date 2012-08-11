@@ -16,9 +16,7 @@
 
 #import "TUILabel.h"
 #import "TUINSView.h"
-#import "TUIStringDrawing.h"
 #import "TUITextRenderer.h"
-#import "TUIView+Private.h"
 
 @interface TUILabel () {
 	struct {

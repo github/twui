@@ -20,11 +20,9 @@
 
 #import "TUIViewNSViewContainer.h"
 #import "CATransaction+TUIExtensions.h"
-#import "NSView+TUIExtensions.h"
 #import "TUINSView.h"
 #import "TUINSView+Private.h"
 #import "TUIViewNSViewContainer+Private.h"
-#import <QuartzCore/QuartzCore.h>
 
 @interface TUIViewNSViewContainer () {
 	/**
