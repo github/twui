@@ -214,19 +214,19 @@ static CGRect ButtonRectCenteredInRect(CGRect a, CGRect b)
 	
 	NSString *title = self.currentTitle;
 	if(title != nil) {
-		_titleView.text = title;
+		self.titleLabel.text = title;
 	}
 	
 	NSColor *color = self.currentTitleColor;
 	if(color != nil) {
-		_titleView.textColor = color;
+		self.titleLabel.textColor = color;
 	}
 	
 	NSColor *shadowColor = self.currentTitleShadowColor;
 	// they may have manually set the renderer's shadow color, in which case we 
 	// don't want to reset it to nothing
 	if(shadowColor != nil) {
-		_titleView.renderer.shadowColor = shadowColor;
+		self.titleLabel.renderer.shadowColor = shadowColor;
 	}
 	
 	CGContextRef ctx = TUIGraphicsGetCurrentContext();
@@ -236,8 +236,8 @@ static CGRect ButtonRectCenteredInRect(CGRect a, CGRect b)
 		CGContextSetAlpha(ctx, 0.5);
 	CGRect titleFrame = self.bounds;
 	titleFrame.size.width -= (_titleEdgeInsets.left + _titleEdgeInsets.right);
-	_titleView.frame = titleFrame;
-	[_titleView drawRect:_titleView.bounds];
+	self.titleLabel.frame = titleFrame;
+	[self.titleLabel drawRect:self.titleLabel.bounds];
 	CGContextRestoreGState(ctx);
 }
 

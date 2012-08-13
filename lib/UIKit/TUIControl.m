@@ -41,7 +41,10 @@
 
 - (void)setEnabled:(BOOL)e
 {
+	[self _stateWillChange];
 	_controlFlags.disabled = !e;
+	[self _stateDidChange];
+	[self setNeedsDisplay];
 }
 
 - (BOOL)isTracking
@@ -124,6 +127,10 @@
 - (void)mouseDown:(NSEvent *)event
 {
 	[super mouseDown:event];
+
+	if (self.state & TUIControlStateDisabled) {
+		return;
+	}
 	
 	// handle state change
 	[self _stateWillChange];
@@ -144,6 +151,10 @@
 - (void)mouseUp:(NSEvent *)event
 {
 	[super mouseUp:event];
+
+	if (self.state & TUIControlStateDisabled) {
+		return;
+	}
 	
 	// handle state change
 	[self _stateWillChange];
