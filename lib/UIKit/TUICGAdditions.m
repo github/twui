@@ -206,7 +206,7 @@ NSImage *TUIGraphicsContextGetImage(CGContextRef ctx)
 void TUIGraphicsBeginImageContextWithOptions(CGSize size, BOOL opaque, CGFloat scale)
 {
 	if (scale == 0.0) {
-		scale = [[NSScreen mainScreen] backingScaleFactor];
+		scale = [NSScreen instancesRespondToSelector:@selector(backingScaleFactor)] ? [[NSScreen mainScreen] backingScaleFactor] : 1.0;
 	}
     
 	size.width *= scale;

@@ -31,7 +31,7 @@
 	if(size.width < 1 || size.height < 1)
 		return nil;
 	
-	CGFloat scale = [[NSScreen mainScreen] backingScaleFactor];
+	CGFloat scale = [[NSScreen mainScreen] respondsToSelector:@selector(backingScaleFactor)] ? [[NSScreen mainScreen] backingScaleFactor] : 1.0f;
 	size = CGSizeMake(size.width * scale, size.height * scale);
 
 	CGContextRef ctx = TUICreateGraphicsContextWithOptions(size, NO);
