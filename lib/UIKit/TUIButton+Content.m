@@ -38,12 +38,19 @@
 
 - (TUIButtonContent *)_contentForState:(TUIControlState)state
 {
-	id key = [NSNumber numberWithInteger:state];
+	id key = @(state);
 	TUIButtonContent *c = [_contentLookup objectForKey:key];
-	if(!c) {
+
+	if (c == nil && (state & TUIControlStateNotKey)) {
+		// Try matching without the NotKey state.
+		c = [_contentLookup objectForKey:@(state & ~TUIControlStateNotKey)];
+	}
+
+	if (c == nil) {
 		c = [[TUIButtonContent alloc] init];
 		[_contentLookup setObject:c forKey:key];
 	}
+
 	return c;
 }
 
