@@ -221,7 +221,7 @@ void TUIGraphicsBeginImageContextWithOptions(CGSize size, BOOL opaque, CGFloat s
 
 void TUIGraphicsBeginImageContext(CGSize size)
 {
-	TUIGraphicsBeginImageContextWithOptions(size, NO, 0.0);
+	TUIGraphicsBeginImageContextWithOptions(size, NO, 1.0);
 }
 
 NSImage *TUIGraphicsGetImageFromCurrentImageContext(void)
