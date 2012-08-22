@@ -227,6 +227,7 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	
 	[_rootView setNextResponder:self];
 	
+	[self setWantsLayer:YES];
 	CALayer *layer = [self layer];
 	[layer setDelegate:self];
 	CGSize s = [self frame].size;
