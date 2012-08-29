@@ -21,8 +21,21 @@
 NSString *GHUIProgressBarSetNeedsDisplayObservationContext = @"GHUIProgressBarSetNeedsDisplayObservationContext";
 
 CGFloat const GHUIProgressBarBarberPoleAnimationDuration = 5.0;
-CGFloat const GHUIProgressBarBarberPolePatternWidth = 8.0;
+CGFloat const GHUIProgressBarBarberPolePatternWidth = 16.0;
 CGFloat const GHUIProgressBarIdealTrackHeight = 12.0;
+
+// Simple struct used to pass information from the overlay drawing into the
+// pattern that it uses.
+//
+// bounds - the bounds of the pattern segment
+// contentsScale - the backing contents scale, necessary to correctly scale the
+// drawing of the pattern to match the backing scale factor.
+//
+
+struct TUIProgressBarPatternInfoStruct {
+	CGRect bounds;
+	CGFloat contentsScale;
+};
 
 void GHUIProgressPatternDrawCallback(void *info, CGContextRef context);
 
@@ -247,7 +260,7 @@ void GHUIProgressPatternDrawCallback(void *info, CGContextRef context);
 
 - (CGPoint)farLeftAnimatingPosition
 {
-	return CGPointMake((NSMidX(self.animationView.superview.bounds) - (NSWidth(self.animationView.superview.bounds) / 2.0)) + 1.0, NSMidY(self.animationView.superview.bounds));
+	return CGPointMake(NSMinX(self.animationView.superview.bounds) + 9.0, NSMidY(self.animationView.superview.bounds));
 }
 
 - (CGPoint)farRightAnimatingPosition
@@ -301,10 +314,11 @@ void GHUIProgressPatternDrawCallback(void *info, CGContextRef context);
 		CGContextSetFillColorSpace(currentContext, patternColorSpace);
 		CGColorSpaceRelease(patternColorSpace);
 		
+		const struct TUIProgressBarPatternInfoStruct info = {.bounds = patternBounds, .contentsScale = view.layer.contentsScale};
 		const struct CGPatternCallbacks callbacks = {0, &GHUIProgressPatternDrawCallback, NULL};
-		CGPatternRef pattern = CGPatternCreate((__bridge void *)[NSValue valueWithRect:patternBounds], patternBounds, CGAffineTransformIdentity, GHUIProgressBarBarberPolePatternWidth, NSHeight(view.bounds), kCGPatternTilingConstantSpacing, true, &callbacks);
+		CGPatternRef pattern = CGPatternCreate((void *)&info, patternBounds, CGAffineTransformIdentity, (GHUIProgressBarBarberPolePatternWidth * self.layer.contentsScale), (NSHeight(view.bounds) * self.layer.contentsScale), kCGPatternTilingConstantSpacing, true, &callbacks);
 		CGFloat components = 1.0; //It's a coloured pattern so just alpha is fine
-		CGContextSetFillPattern(currentContext, pattern, &components); 
+		CGContextSetFillPattern(currentContext, pattern, &components);
 		CGContextFillRect(currentContext, view.bounds);
 		CGPatternRelease(pattern);
 		[NSGraphicsContext restoreGraphicsState];
@@ -340,27 +354,27 @@ void GHUIProgressPatternDrawCallback(void *info, CGContextRef context);
 
 void GHUIProgressPatternDrawCallback(void *info, CGContextRef context)
 {
-	[NSGraphicsContext saveGraphicsState];
-	CGRect bounds = [(__bridge NSValue *)info rectValue];
+	const struct TUIProgressBarPatternInfoStruct *passedInfo = info;
+	CGFloat contentsScale = passedInfo->contentsScale;
+	CGContextScaleCTM(context, contentsScale, contentsScale);
+	
+	CGRect bounds = passedInfo->bounds;
 	CGContextSetBlendMode([[NSGraphicsContext currentContext] graphicsPort], kCGBlendModeOverlay);
-	[[NSColor colorWithCalibratedWhite:1.0 alpha:0.24] set];
-
-	// I have _no_ idea why the save/restore of graphics state is fucking this up… working around it with this crap for now
-	CGFloat previousLineWidth = [NSBezierPath defaultLineWidth];
-	NSLineCapStyle previousLineCapStyle = [NSBezierPath defaultLineCapStyle];
-	//
 	
-	[NSBezierPath setDefaultLineWidth:3.0];
-	[NSBezierPath setDefaultLineCapStyle:NSSquareLineCapStyle];
-	[NSBezierPath strokeLineFromPoint:NSMakePoint(NSMinX(bounds), NSMidY(bounds)) toPoint:NSMakePoint(NSMaxX(bounds), NSMaxY(bounds))];
-	[NSBezierPath strokeLineFromPoint:NSMakePoint(NSMidX(bounds), NSMinY(bounds)) toPoint:NSMakePoint((NSMaxX(bounds) + 1.0), NSMidY(bounds))];
+	CGMutablePathRef fillPath = CGPathCreateMutable();
+	CGPathMoveToPoint(fillPath, NULL, NSMinX(bounds), NSMinY(bounds));
+	CGPathAddLineToPoint(fillPath, NULL, NSMidX(bounds), NSMaxY(bounds));
+	CGPathAddLineToPoint(fillPath, NULL, NSMaxX(bounds), NSMaxY(bounds));
+	CGPathAddLineToPoint(fillPath, NULL, NSMidX(bounds), NSMinY(bounds));
+	CGPathCloseSubpath(fillPath);
 	
-	// Fuck AppKit
-	[NSBezierPath setDefaultLineWidth:previousLineWidth];
-	[NSBezierPath setDefaultLineCapStyle:previousLineCapStyle];
-	//
+	CGContextAddPath(context, fillPath);
+	CGColorRef fillColor = CGColorCreateGenericGray(1.0, 0.24);
+	CGContextSetFillColorWithColor(context, fillColor);
+	CGColorRelease(fillColor);
+	CGContextFillPath(context);
 	
-	[NSGraphicsContext restoreGraphicsState];
+	CGPathRelease(fillPath);
 }
 
 @end
