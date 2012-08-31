@@ -41,10 +41,11 @@
 		 we don't, so it could potentially save us some rendering costs.
 		 */
 		_tableView = [[TUITableView alloc] initWithFrame:b];
+		_tableView.alwaysBounceVertical = YES;
 		_tableView.autoresizingMask = TUIViewAutoresizingFlexibleSize;
 		_tableView.dataSource = self;
 		_tableView.delegate = self;
-		_tableView.maintainContentOffsetAfterReload = TRUE;
+		_tableView.maintainContentOffsetAfterReload = YES;
 		[self addSubview:_tableView];
 		
 		_tabBar = [[ExampleTabBar alloc] initWithNumberOfTabs:5];
