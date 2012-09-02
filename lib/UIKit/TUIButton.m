@@ -14,11 +14,14 @@
  limitations under the License.
  */
 
-#import "TUIImage.h"
 #import "TUIButton.h"
+#import "TUICGAdditions.h"
+#import "TUIControl+Private.h"
+#import "TUIImageView.h"
 #import "TUILabel.h"
 #import "TUINSView.h"
-#import "TUIControl+Private.h"
+#import "TUIStretchableImage.h"
+#import "TUITextRenderer.h"
 
 @interface TUIButton ()
 
@@ -39,7 +42,7 @@
 		_buttonFlags.buttonType = TUIButtonTypeCustom;
 		_buttonFlags.dimsInBackground = 1;
 		_buttonFlags.firstDraw = 1;
-		self.backgroundColor = [TUIColor clearColor];
+		self.backgroundColor = [NSColor clearColor];
 		self.needsDisplayWhenWindowsKeyednessChanges = YES;
 		self.reversesTitleShadowWhenHighlighted = NO;
 	}
@@ -76,6 +79,9 @@
 - (void)setTitleEdgeInsets:(TUIEdgeInsets)i
 {
 	_titleEdgeInsets = i;
+	if (_imageView != nil) {
+		_imageView.frame = TUIEdgeInsetsInsetRect(self.bounds, self.imageEdgeInsets);
+	}
 }
 
 - (TUIEdgeInsets)titleEdgeInsets
@@ -93,7 +99,7 @@
 	if(!_titleView) {
 		_titleView = [[TUILabel alloc] initWithFrame:CGRectZero];
 		_titleView.userInteractionEnabled = NO;
-		_titleView.backgroundColor = [TUIColor clearColor];
+		_titleView.backgroundColor = [NSColor clearColor];
 		_titleView.hidden = YES; // we'll be drawing it ourselves
 		[self addSubview:_titleView];
 	}
@@ -103,9 +109,9 @@
 - (TUIImageView *)imageView
 {
 	if(!_imageView) {
-		_imageView = [[TUIImageView alloc] initWithFrame:CGRectZero];
-		_imageView.backgroundColor = [TUIColor clearColor];
-		_imageView.hidden = YES;
+		_imageView = [[TUIImageView alloc] initWithFrame:TUIEdgeInsetsInsetRect(self.bounds, self.imageEdgeInsets)];
+		_imageView.backgroundColor = [NSColor clearColor];
+		[self addSubview:_imageView];
 	}
 	return _imageView;
 }
@@ -181,14 +187,14 @@ static CGRect ButtonRectCenteredInRect(CGRect a, CGRect b)
 		CGContextFillRect(TUIGraphicsGetCurrentContext(), self.bounds);
 	}
 	
-	TUIImage *backgroundImage = self.currentBackgroundImage;
-	TUIImage *image = self.currentImage;
+	NSImage *backgroundImage = self.currentBackgroundImage;
+	NSImage *image = self.currentImage;
 	
-	[backgroundImage drawInRect:[self backgroundRectForBounds:bounds] blendMode:kCGBlendModeNormal alpha:1.0];
+	[backgroundImage drawInRect:[self backgroundRectForBounds:bounds] fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
 	
 	if(image) {
 		CGRect imageRect;
-		if(image.leftCapWidth || image.topCapHeight) {
+		if([image isKindOfClass:[TUIStretchableImage class]]) {
 			// stretchable
 			imageRect = self.bounds;
 		} else {
@@ -202,24 +208,25 @@ static CGRect ButtonRectCenteredInRect(CGRect a, CGRect b)
 			b.size.height -= _imageEdgeInsets.bottom + _imageEdgeInsets.top;
 			imageRect = ButtonRectRoundOrigin(ButtonRectCenteredInRect(imageRect, b));
 		}
-		[image drawInRect:imageRect blendMode:kCGBlendModeNormal alpha:alpha];
+
+		[image drawInRect:imageRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:alpha];
 	}
 	
 	NSString *title = self.currentTitle;
 	if(title != nil) {
-		_titleView.text = title;
+		self.titleLabel.text = title;
 	}
 	
-	TUIColor *color = self.currentTitleColor;
+	NSColor *color = self.currentTitleColor;
 	if(color != nil) {
-		_titleView.textColor = color;
+		self.titleLabel.textColor = color;
 	}
 	
-	TUIColor *shadowColor = self.currentTitleShadowColor;
+	NSColor *shadowColor = self.currentTitleShadowColor;
 	// they may have manually set the renderer's shadow color, in which case we 
 	// don't want to reset it to nothing
 	if(shadowColor != nil) {
-		_titleView.renderer.shadowColor = shadowColor;
+		self.titleLabel.renderer.shadowColor = shadowColor;
 	}
 	
 	CGContextRef ctx = TUIGraphicsGetCurrentContext();
@@ -229,8 +236,8 @@ static CGRect ButtonRectCenteredInRect(CGRect a, CGRect b)
 		CGContextSetAlpha(ctx, 0.5);
 	CGRect titleFrame = self.bounds;
 	titleFrame.size.width -= (_titleEdgeInsets.left + _titleEdgeInsets.right);
-	_titleView.frame = titleFrame;
-	[_titleView drawRect:_titleView.bounds];
+	self.titleLabel.frame = titleFrame;
+	[self.titleLabel drawRect:self.titleLabel.bounds];
 	CGContextRestoreGState(ctx);
 }
 

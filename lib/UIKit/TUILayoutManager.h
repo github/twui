@@ -1,6 +1,5 @@
-#import "TUIView.h"
-
 @class TUILayoutConstraint;
+@class TUIView;
 
 /*
  

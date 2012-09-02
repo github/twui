@@ -14,10 +14,12 @@
  limitations under the License.
  */
 
-#import "TUIKit.h"
 #import "TUITextView.h"
+#import "TUICGAdditions.h"
+#import "TUINSView.h"
+#import "TUINSWindow.h"
 #import "TUITextViewEditor.h"
-#import "TUITextRenderer+Event.h"
+#import "NSColor+TUIExtensions.h"
 
 @interface TUITextViewAutocorrectedPair : NSObject <NSCopying> {
 	NSTextCheckingResult *correctionResult;
@@ -79,22 +81,33 @@
 @synthesize autocorrectedResults;
 @synthesize placeholderRenderer;
 
+- (NSFont *)font {
+	// Fall back to the system font if none (or an invalid one) was set.
+	// Otherwise, text rendering becomes dog slow.
+	return font ?: [NSFont systemFontOfSize:[NSFont systemFontSize]];
+}
+
 - (void)dealloc {
 	renderer.delegate = nil;
 }
 
 - (void)_updateDefaultAttributes
 {
-	renderer.defaultAttributes = [NSDictionary dictionaryWithObjectsAndKeys:
-						 (id)[self.font ctFont], kCTFontAttributeName,
-						 [self.textColor CGColor], kCTForegroundColorAttributeName,
-						 ABNSParagraphStyleForTextAlignment(textAlignment), NSParagraphStyleAttributeName,
-						 nil];
-	renderer.markedAttributes = [NSDictionary dictionaryWithObjectsAndKeys:
-						[NSFont fontWithName:self.font.fontName size:self.font.pointSize], kCTFontAttributeName, // NSFont and CTFont are toll-free bridged. *BUT* for reasons beyond my understanding, advanced input methods like Japanese and simplified Pinyin break unless this is an NSFont. So there we go.
-						[self.textColor CGColor], kCTForegroundColorAttributeName,
-						ABNSParagraphStyleForTextAlignment(textAlignment), NSParagraphStyleAttributeName,
-						nil];
+	NSMutableDictionary *attributes = [NSMutableDictionary dictionary];
+	
+	if (self.textColor != nil) {
+		[attributes setObject:(__bridge id)self.textColor.tui_CGColor forKey:(__bridge id)kCTForegroundColorAttributeName];
+	}
+
+	NSParagraphStyle *style = ABNSParagraphStyleForTextAlignment(textAlignment);
+	if (style != nil) {
+		[attributes setObject:style forKey:NSParagraphStyleAttributeName];
+	}
+
+	[attributes setObject:self.font forKey:(__bridge id)kCTFontAttributeName];
+
+	renderer.defaultAttributes = attributes;
+	renderer.markedAttributes = attributes;
 }
 
 - (Class)textEditorClass
@@ -105,7 +118,7 @@
 - (id)initWithFrame:(CGRect)frame
 {
 	if((self = [super initWithFrame:frame])) {
-		self.backgroundColor = [TUIColor clearColor];
+		self.backgroundColor = [NSColor clearColor];
 		
 		renderer = [[[self textEditorClass] alloc] init];
 		renderer.delegate = self;
@@ -113,13 +126,13 @@
 		
 		cursor = [[TUIView alloc] initWithFrame:CGRectZero];
 		cursor.userInteractionEnabled = NO;
-		cursor.backgroundColor = [TUIColor linkColor];
+		cursor.backgroundColor = [NSColor colorWithCalibratedRed:13 / 255.0 green:140 / 255.0 blue:231 / 255.0 alpha:1];
 		[self addSubview:cursor];
 		
 		self.autocorrectedResults = [NSMutableDictionary dictionary];
 		
-		self.font = [TUIFont fontWithName:@"HelveticaNeue" size:12];
-		self.textColor = [TUIColor blackColor];
+		self.font = [NSFont fontWithName:@"HelveticaNeue" size:12];
+		self.textColor = [NSColor blackColor];
 		[self _updateDefaultAttributes];
 		
 		self.drawFrame = TUITextViewStandardFrame();
@@ -162,13 +175,13 @@
 	return renderer.initialFirstResponder;
 }
 
-- (void)setFont:(TUIFont *)f
+- (void)setFont:(NSFont *)f
 {
 	font = f;
 	[self _updateDefaultAttributes];
 }
 
-- (void)setTextColor:(TUIColor *)c
+- (void)setTextColor:(NSColor *)c
 {
 	textColor = c;
 	[self _updateDefaultAttributes];
@@ -319,7 +332,7 @@ static CAAnimation *ThrobAnimation()
 	// Ugh. So this seems to be a decent approximation for the height of the cursor. It doesn't always match the native cursor but what ev.
 	CGRect r = CGRectIntegral([renderer firstRectForCharacterRange:ABCFRangeFromNSRange(selection)]);
 	r.size.width = 2.0f;
-	CGRect fontBoundingBox = CTFontGetBoundingBox(self.font.ctFont);
+	CGRect fontBoundingBox = CTFontGetBoundingBox((__bridge CTFontRef)self.font);
 	r.size.height = round(fontBoundingBox.origin.y + fontBoundingBox.size.height);
 	r.origin.y += floor(self.font.leading);
 	//NSLog(@"ascent: %f, descent: %f, leading: %f, cap height: %f, x-height: %f, bounding: %@", self.font.ascender, self.font.descender, self.font.leading, self.font.capHeight, self.font.xHeight, NSStringFromRect(CTFontGetBoundingBox(self.font.ctFont)));
@@ -418,7 +431,7 @@ static CAAnimation *ThrobAnimation()
 						NSLog(@"Autocorrection result that's out of range: %@", result);
 					}
 				} else if(result.resultType == NSTextCheckingTypeSpelling) {
-					[[renderer backingStore] addAttribute:(id)kCTUnderlineColorAttributeName value:(id)[TUIColor redColor].CGColor range:result.range];
+					[[renderer backingStore] addAttribute:NSUnderlineColorAttributeName value:[NSColor redColor] range:result.range];
 					[[renderer backingStore] addAttribute:(id)kCTUnderlineStyleAttributeName value:[NSNumber numberWithInteger:kCTUnderlineStyleThick | kCTUnderlinePatternDot] range:result.range];
 				}
 			}

@@ -15,7 +15,8 @@
  */
 
 #import "TUIView.h"
-#import "TUITextRenderer.h"
+
+@class TUITextRenderer;
 
 @interface TUIView ()
 @property (nonatomic, retain) NSArray *textRenderers;

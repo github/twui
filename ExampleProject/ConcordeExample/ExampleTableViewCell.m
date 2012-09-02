@@ -40,7 +40,7 @@
 		[textField.cell setScrollable:YES];
 
 		self.textFieldContainer = [[TUIViewNSViewContainer alloc] initWithNSView:textField];
-		self.textFieldContainer.backgroundColor = [TUIColor blueColor];
+		self.textFieldContainer.backgroundColor = [NSColor blueColor];
 		[self addSubview:self.textFieldContainer];
 	}
 	return self;

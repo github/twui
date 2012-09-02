@@ -15,6 +15,7 @@
  */
 
 #import "TUICGAdditions.h"
+#import "TUIView.h"
 
 CGContextRef TUICreateOpaqueGraphicsContext(CGSize size)
 {
@@ -173,4 +174,98 @@ void CGContextDrawLinearGradientBetweenPoints(CGContextRef context, CGPoint a, C
 	CGContextDrawLinearGradient(context, gradient, a, b, 0);
 	CGColorSpaceRelease(colorspace);
 	CGGradientRelease(gradient);
+}
+
+CGContextRef TUIGraphicsGetCurrentContext(void)
+{
+	return (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+}
+
+void TUIGraphicsPushContext(CGContextRef context)
+{
+	NSGraphicsContext *c = [NSGraphicsContext graphicsContextWithGraphicsPort:context flipped:NO];
+	[NSGraphicsContext saveGraphicsState];
+	[NSGraphicsContext setCurrentContext:c];
+}
+
+void TUIGraphicsPopContext(void)
+{
+	[NSGraphicsContext restoreGraphicsState];
+}
+
+NSImage *TUIGraphicsContextGetImage(CGContextRef ctx)
+{
+	CGImageRef CGImage = TUICreateCGImageFromBitmapContext(ctx);
+	CGSize size = CGSizeMake(CGImageGetWidth(CGImage), CGImageGetHeight(CGImage));
+	NSImage *image = [[NSImage alloc] initWithCGImage:CGImage size:size];
+	CGImageRelease(CGImage);
+    
+	return image;
+}
+
+void TUIGraphicsBeginImageContextWithOptions(CGSize size, BOOL opaque, CGFloat scale)
+{
+	if (scale == 0.0) {
+		scale = [NSScreen instancesRespondToSelector:@selector(backingScaleFactor)] ? [[NSScreen mainScreen] backingScaleFactor] : 1.0;
+	}
+    
+	size.width *= scale;
+	size.height *= scale;
+	if(size.width < 1) size.width = 1;
+	if(size.height < 1) size.height = 1;
+	CGContextRef ctx = TUICreateGraphicsContextWithOptions(size, opaque);
+	CGContextScaleCTM(ctx, scale, scale);
+	TUIGraphicsPushContext(ctx);
+	CGContextRelease(ctx);
+}
+
+void TUIGraphicsBeginImageContext(CGSize size)
+{
+	TUIGraphicsBeginImageContextWithOptions(size, NO, 1.0);
+}
+
+NSImage *TUIGraphicsGetImageFromCurrentImageContext(void)
+{
+	return TUIGraphicsContextGetImage(TUIGraphicsGetCurrentContext());
+}
+
+NSImage *TUIGraphicsGetImageForView(TUIView *view)
+{
+	TUIGraphicsBeginImageContext(view.frame.size);
+	[view.layer renderInContext:TUIGraphicsGetCurrentContext()];
+	NSImage *image = TUIGraphicsGetImageFromCurrentImageContext();
+	TUIGraphicsEndImageContext();
+    
+	return image;
+}
+
+void TUIGraphicsEndImageContext(void)
+{
+	TUIGraphicsPopContext();
+}
+
+NSImage *TUIGraphicsDrawAsImage(CGSize size, void(^draw)(void))
+{
+	TUIGraphicsBeginImageContext(size);
+	draw();
+	NSImage *image = TUIGraphicsGetImageFromCurrentImageContext();
+	TUIGraphicsEndImageContext();
+    
+	return image;
+}
+
+NSData* TUIGraphicsDrawAsPDF(CGRect *optionalMediaBox, void(^draw)(CGContextRef))
+{
+	NSMutableData *data = [NSMutableData data];
+	CGDataConsumerRef dataConsumer = CGDataConsumerCreateWithCFData((__bridge CFMutableDataRef)data);
+	CGContextRef ctx = CGPDFContextCreate(dataConsumer, optionalMediaBox, NULL);
+	CGPDFContextBeginPage(ctx, NULL);
+	TUIGraphicsPushContext(ctx);
+	draw(ctx);
+	TUIGraphicsPopContext();
+	CGPDFContextEndPage(ctx);
+	CGPDFContextClose(ctx);
+	CGContextRelease(ctx);
+	CGDataConsumerRelease(dataConsumer);
+	return data;
 }

@@ -15,12 +15,9 @@
  */
 
 #import "TUIView.h"
-#import "TUIView+Event.h"
-#import "TUITextRenderer.h"
-#import "TUITextRenderer+Event.h"
-#import "TUIView+Private.h"
-#import "TUIView+PasteboardDragging.h"
+#import "TUINSView.h"
 #import "TUINSWindow.h"
+#import "TUITextRenderer+Event.h"
 
 @implementation TUIView (Event)
 

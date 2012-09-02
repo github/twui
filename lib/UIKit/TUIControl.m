@@ -17,9 +17,7 @@
 #import "TUIControl.h"
 #import "TUIControl+Private.h"
 #import "TUIView+Accessibility.h"
-#import "TUIAccessibility.h"
 #import "TUINSView.h"
-#import "TUINSWindow.h"
 
 @implementation TUIControl
 
@@ -43,7 +41,10 @@
 
 - (void)setEnabled:(BOOL)e
 {
+	[self _stateWillChange];
 	_controlFlags.disabled = !e;
+	[self _stateDidChange];
+	[self setNeedsDisplay];
 }
 
 - (BOOL)isTracking
@@ -126,6 +127,10 @@
 - (void)mouseDown:(NSEvent *)event
 {
 	[super mouseDown:event];
+
+	if (self.state & TUIControlStateDisabled) {
+		return;
+	}
 	
 	// handle state change
 	[self _stateWillChange];
@@ -134,9 +139,9 @@
 	
 	// handle touch down
 	if([event clickCount] < 2) {
-		[self sendActionsForControlEvents:TUIControlEventTouchDown];
+		[self sendActionsForControlEvents:TUIControlEventMouseDown];
 	} else {
-		[self sendActionsForControlEvents:TUIControlEventTouchDownRepeat];
+		[self sendActionsForControlEvents:TUIControlEventMouseDownRepeat];
 	}
   
 	// needs display
@@ -146,6 +151,10 @@
 - (void)mouseUp:(NSEvent *)event
 {
 	[super mouseUp:event];
+
+	if (self.state & TUIControlStateDisabled) {
+		return;
+	}
 	
 	// handle state change
 	[self _stateWillChange];
@@ -154,10 +163,10 @@
 	
 	if([self eventInside:event]) {
 		if(![self didDrag]) {
-			[self sendActionsForControlEvents:TUIControlEventTouchUpInside];
+			[self sendActionsForControlEvents:TUIControlEventMouseUpInside];
 		}
 	} else {
-		[self sendActionsForControlEvents:TUIControlEventTouchUpOutside];
+		[self sendActionsForControlEvents:TUIControlEventMouseUpOutside];
 	}
 	
 	// needs display

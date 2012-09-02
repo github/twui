@@ -7,7 +7,6 @@
 //
 
 #import "TUINSView+Accessibility.h"
-#import "TUIView+Accessibility.h"
 
 
 @implementation TUINSView (Accessibility)

@@ -20,11 +20,9 @@
 
 #import "TUIViewNSViewContainer.h"
 #import "CATransaction+TUIExtensions.h"
-#import "NSView+TUIExtensions.h"
 #import "TUINSView.h"
 #import "TUINSView+Private.h"
 #import "TUIViewNSViewContainer+Private.h"
-#import <QuartzCore/QuartzCore.h>
 
 @interface TUIViewNSViewContainer () {
 	/**
@@ -44,6 +42,7 @@
 #pragma mark Properties
 
 @dynamic hostView;
+@synthesize rootView = _rootView;
 
 - (void)setRootView:(NSView *)view {
 	NSAssert1([NSThread isMainThread], @"%s should only be called from the main thread", __func__);
@@ -82,6 +81,16 @@
 	return [self convertRect:self.bounds toView:self.ancestorTUINSView.rootView];
 }
 
+- (void)setFrame:(CGRect)frame {
+	[super setFrame:frame];
+	[self synchronizeNSViewGeometry];
+}
+
+- (void)setBounds:(CGRect)bounds {
+	[super setBounds:bounds];
+	[self synchronizeNSViewGeometry];
+}
+
 - (void)setCenter:(CGPoint)center {
 	[super setCenter:center];
 	[self synchronizeNSViewGeometry];
@@ -98,12 +107,14 @@
 
 #pragma mark Lifecycle
 
-- (id)init {
-	self = [super init];
+- (id)initWithFrame:(CGRect)frame {
+	self = [super initWithFrame:frame];
 	if (!self)
 		return nil;
 
 	self.layer.masksToBounds = NO;
+	self.clearsContextBeforeDrawing = NO;
+	self.opaque = NO;
 
 	// prevents the layer from displaying until we need to render our contained
 	// view
@@ -114,12 +125,11 @@
 - (id)initWithNSView:(NSView *)view; {
 	NSAssert1([NSThread isMainThread], @"%s should only be called from the main thread", __func__);
 
-	self = [self init];
+	self = [self initWithFrame:view.frame];
 	if (!self)
 		return nil;
 
 	self.rootView = view;
-	self.frame = view.frame;
 	return self;
 }
 
@@ -153,7 +163,16 @@
 	}
 
 	CGContextRef context = [NSGraphicsContext currentContext].graphicsPort;
+	CGContextSaveGState(context);
+	CGContextClearRect(context, self.bounds);
+
+	if ([self.rootView isFlipped]) {
+		CGContextTranslateCTM(context, 0, self.bounds.size.height);
+		CGContextScaleCTM(context, 1, -1);
+	}
+
 	[self.rootView.layer renderInContext:context];
+	CGContextRestoreGState(context);
 }
 
 - (void)startRenderingContainedView; {
@@ -267,6 +286,16 @@
 	}
 
 	return cellSize;
+}
+
+- (void)sizeToFit {
+	if ([self.rootView respondsToSelector:@selector(sizeToFit)]) {
+		[self.rootView performSelector:@selector(sizeToFit)];
+
+		self.bounds = self.rootView.bounds;
+	} else {
+		[super sizeToFit];
+	}
 }
 
 #pragma mark NSObject overrides

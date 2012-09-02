@@ -15,7 +15,6 @@
  */
 
 #import "TUIResponder.h"
-#import "TUIColor.h"
 #import "TUIAccessibility.h"
 
 extern NSString * const TUIViewWillMoveToWindowNotification; // both notification's userInfo will contain the new window under the key TUIViewWindow
@@ -62,9 +61,9 @@ typedef enum {
     TUIViewContentModeScaleAspectFill,
 } TUIViewContentMode;
 
-@class TUIView;
 @class TUINSView;
 @class TUINSWindow;
+@class TUIView;
 
 typedef void(^TUIViewDrawRect)(TUIView *, CGRect);
 typedef CGRect(^TUIViewLayout)(TUIView *);
@@ -148,7 +147,7 @@ extern CGRect(^TUIViewCenteredLayout)(TUIView*);
 - (id)initWithFrame:(CGRect)frame;
 
 /**
- Default is YES. if set to NO, user events (touch, keys) are ignored and removed from the event queue.
+ Default is YES. if set to NO, user events (clicks, keys) are ignored and removed from the event queue.
  */
 @property (nonatomic,getter=isUserInteractionEnabled) BOOL userInteractionEnabled;
 
@@ -373,7 +372,7 @@ extern CGRect(^TUIViewCenteredLayout)(TUIView*);
 /**
  default is nil.  Setting this with a color with <1.0 alpha will also set opaque=NO
  */
-@property (nonatomic,copy) TUIColor *backgroundColor;
+@property (nonatomic,copy) NSColor *backgroundColor;
 
 /**
  animatable. default is 1.0

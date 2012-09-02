@@ -11,9 +11,9 @@
 
 #import <AppKit/AppKit.h>
 #import "TUIBridgedView.h"
-#import "TUIHostView.h"
 
 @class TUIViewNSViewContainer;
+@protocol TUIHostView;
 
 /**
  * Implements <TUIBridgedView> for NSView.

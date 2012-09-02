@@ -7,11 +7,10 @@
 //
 
 #import "TUIStyledView.h"
-#import "TUIKit.h"
-
+#import "TUICGAdditions.h"
+#import "TUITextRenderer.h"
 
 @implementation TUIStyledView
-
 
 #pragma mark TUIView
 

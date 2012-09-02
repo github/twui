@@ -1,4 +1,5 @@
 #import "TUIView.h"
+#import "TUILayoutConstraint.h"
 #import "TUILayoutManager.h"
 
 #define TUIScalarRect(_s) (NSMakeRect((_s), 0, 0, 0))

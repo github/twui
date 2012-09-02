@@ -11,7 +11,6 @@
 
 #import "TUIScrollView+TUIBridgedScrollView.h"
 #import "TUIView+TUIBridgedView.h"
-#import <objc/runtime.h>
 
 @implementation TUIScrollView (TUIBridgedScrollView)
 

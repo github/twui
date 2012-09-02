@@ -15,7 +15,6 @@
  */
 
 #import "TUIView.h"
-#import "TUIView+Private.h"
 #import "TUICAAction.h"
 
 @interface TUIViewAnimation : NSObject <CAAction>
@@ -73,8 +72,6 @@
 	if(animationCompletionBlock != nil) {
 		animationCompletionBlock(NO);
 		NSLog(@"Error: completion block didn't complete! %@", self);
-		
-		NSAssert(animationCompletionBlock == nil, @"animationCompletionBlock should be nil after executing from dealloc");
 	}
 }
 
@@ -145,6 +142,8 @@ static NSMutableArray *AnimationStack = nil;
 
 + (void)beginAnimations:(NSString *)animationID context:(void *)context
 {
+	[NSAnimationContext beginGrouping];
+
 	TUIViewAnimation *animation = [[TUIViewAnimation alloc] init];
 	animation.context = context;
 	animation.animationID = animationID;
@@ -160,6 +159,7 @@ static NSMutableArray *AnimationStack = nil;
 + (void)commitAnimations
 {
 	[[self _animationStack] removeLastObject];
+	[NSAnimationContext endGrouping];
 	
 //	NSLog(@"--- %d", [[self _animationStack] count]);
 }
@@ -188,7 +188,9 @@ static CGFloat SlomoTime()
 
 + (void)setAnimationDuration:(NSTimeInterval)duration
 {
-	[self _currentAnimation].basicAnimation.duration = duration * SlomoTime();
+	duration *= SlomoTime();
+	[self _currentAnimation].basicAnimation.duration = duration;
+	[NSAnimationContext currentContext].duration = duration;
 }
 
 + (void)setAnimationDelay:(NSTimeInterval)delay                    // default = 0.0

@@ -15,6 +15,7 @@
  */
 
 #import "TUINSView.h"
+#import "TUICGAdditions.h"
 #import "TUINSView+Hyperfocus.h"
 
 @implementation TUINSView (Hyperfocus)
