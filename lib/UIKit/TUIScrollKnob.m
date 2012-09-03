@@ -103,17 +103,22 @@
         frame = ABRectRoundOrigin(CGRectInset(frame, 2, 4));
         
         if(!CGRectEqualToRect(frame, knob.frame) && [NSScroller preferredScrollerStyle] == NSScrollerStyleOverlay) {
-            if(_hideKnobTimer)
-                [_hideKnobTimer invalidate], _hideKnobTimer = nil;
-            _hideKnobTimer = [NSTimer scheduledTimerWithTimeInterval:1
-                                                              target:self
-                                                            selector:@selector(_hideKnob)
-                                                            userInfo:nil
-                                                             repeats:NO];
-            _knobHidden = NO;
-            [self _updateKnobColor:0.01];
+            if(scrollView.scrollIndicatorStyle != TUIScrollViewIndicatorVisibleNever) {
+                if(_hideKnobTimer)
+                    [_hideKnobTimer invalidate], _hideKnobTimer = nil;
+                
+                _hideKnobTimer = [NSTimer scheduledTimerWithTimeInterval:1
+                                                                  target:self
+                                                                selector:@selector(_hideKnob)
+                                                                userInfo:nil
+                                                                 repeats:NO];
+                _knobHidden = NO;
+                [self _updateKnobColor:0.01];
+            } else {
+                _knobHidden = YES;
+                [self _updateKnobColor:0.01];
+            }
         }
-        
         knob.frame = frame;
 	} else {
 		KNOB_CALCULATIONS(x, width, DEFAULT_MIN_KNOB_SIZE)
@@ -125,17 +130,22 @@
         frame = ABRectRoundOrigin(CGRectInset(frame, 4, 2));
         
         if(!CGRectEqualToRect(frame, knob.frame) && [NSScroller preferredScrollerStyle] == NSScrollerStyleOverlay) {
-            if(_hideKnobTimer)
-                [_hideKnobTimer invalidate], _hideKnobTimer = nil;
-            _hideKnobTimer = [NSTimer scheduledTimerWithTimeInterval:1
-                                                              target:self
-                                                            selector:@selector(_hideKnob)
-                                                            userInfo:nil
-                                                             repeats:NO];
-            _knobHidden = NO;
-            [self _updateKnobColor:0.01];
+            if(scrollView.scrollIndicatorStyle != TUIScrollViewIndicatorVisibleNever) {
+                if(_hideKnobTimer)
+                    [_hideKnobTimer invalidate], _hideKnobTimer = nil;
+                
+                _hideKnobTimer = [NSTimer scheduledTimerWithTimeInterval:1
+                                                                  target:self
+                                                                selector:@selector(_hideKnob)
+                                                                userInfo:nil
+                                                                 repeats:NO];
+                _knobHidden = NO;
+                [self _updateKnobColor:0.01];
+            } else {
+                _knobHidden = YES;
+                [self _updateKnobColor:0.01];
+            }
         }
-        
         knob.frame = frame;
 	}
 	
