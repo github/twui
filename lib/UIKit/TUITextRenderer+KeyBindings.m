@@ -218,6 +218,26 @@
 	[self.view setNeedsDisplay];
 }
 
+- (void)moveToBeginningOfParagraphAndModifySelection:(id)sender
+{
+    [self moveToBeginningOfLineAndModifySelection:sender];
+}
+
+- (void)moveToEndOfParagraphAndModifySelection:(id)sender
+{
+    [self moveToEndOfLineAndModifySelection:sender];
+}
+
+- (void)moveToBeginningOfDocumentAndModifySelection:(id)sender
+{
+    [self moveToBeginningOfLineAndModifySelection:sender];
+}
+
+- (void)moveToEndOfDocumentAndModifySelection:(id)sender
+{
+    [self moveToEndOfLineAndModifySelection:sender];
+}
+
 - (void)insertNewline:(id)sender
 {
 	[[self _textEditor] insertText:@"\n"];
