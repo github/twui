@@ -90,6 +90,9 @@ static NSAttributedString *killBuffer = nil;
             AB_CTFrameGetRectsForRange([self ctFrame], r, rects, &nRects);
             if(nRects == 1)
                 [scrollView scrollRectToVisible:rects[0] animated:YES];
+            else if(nRects == 0)
+                [scrollView scrollRectToVisible:CGRectMake(0, self.view.frame.size.height / 2, 0, 1)
+                                       animated:YES];
         }
 }
 
