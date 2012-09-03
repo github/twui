@@ -104,6 +104,8 @@ typedef enum {
 - (CGSize)sizeConstrainedToWidth:(CGFloat)width numberOfLines:(NSUInteger)numberOfLines;
 - (void)reset;
 
+- (NSAttributedString*)drawingAttributedString;
+
 - (NSRange)selectedRange;
 - (void)setSelection:(NSRange)selection;
 - (NSString *)selectedString;

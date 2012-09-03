@@ -20,6 +20,7 @@
 
 @interface TUITextRenderer ()
 - (void)_scrollToIndex:(long)index;
+- (void)_resetFramesetter;
 @end
 
 @implementation TUITextEditor
@@ -27,6 +28,7 @@
 @synthesize defaultAttributes;
 @synthesize markedAttributes;
 @dynamic selectedRange; // getter in TUITextRenderer
+@synthesize secure = _secure;
 
 - (id)init
 {
@@ -35,13 +37,39 @@
 		backingStore = [[NSMutableAttributedString alloc] initWithString:@""];
 		markedRange = NSMakeRange(NSNotFound, 0);
 		inputContext = [[NSTextInputContext alloc] initWithClient:self];
-		inputContext.acceptsGlyphInfo = YES; // fucker
-		
+		inputContext.acceptsGlyphInfo = YES;
+        
+		_secure = NO;
 		self.attributedString = backingStore;
 	}
 	return self;
 }
 
+- (void)setSecure:(BOOL)secured {
+    if(_secure == secured)
+        return;
+    _secure = secured;
+    [self _resetFramesetter];
+}
+
+- (BOOL)isSecure {
+    return _secure;
+}
+
+- (NSAttributedString*)drawingAttributedString {
+    if(_secure) {
+        NSString *placeholder = @"•";
+        long backingStoreLength = backingStore.length;
+        NSMutableString *string = [NSMutableString string];
+        for(int i=0;i<backingStoreLength;i++)
+            [string appendString:placeholder];
+        NSAttributedString *securePlaceHolder = [[NSAttributedString alloc] initWithString:string
+                                                                                attributes:defaultAttributes];
+        return securePlaceHolder;
+    }
+    
+    return [super drawingAttributedString];
+}
 
 - (NSTextInputContext *)inputContext
 {
@@ -94,6 +122,19 @@
     [self unmarkText];
 	self.selectedRange = NSMakeRange([aString length], 0);
 	[self _textDidChange];
+}
+
+- (BOOL)respondsToSelector:(SEL)aSelector
+{
+    if(aSelector == @selector(copy:) || aSelector == @selector(cut:))
+        return !_secure;
+    return [super respondsToSelector:aSelector];
+}
+
+- (void)copy:(id)sender
+{
+    if(_secure) return;
+    [super copy:sender];
 }
 
 - (void)cut:(id)sender
