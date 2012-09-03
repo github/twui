@@ -22,6 +22,9 @@
 #import "TUIStringDrawing.h"
 #import "TUIView.h"
 
+NSString *TUITextRendererDidBecomeFirstResponder = @"TUITextRendererDidBecomeFirstResponder";
+NSString *TUITextRendererDidResignFirstResponder = @"TUITextRendererDidResignFirstResponder";
+
 @interface TUITextRenderer ()
 @property (nonatomic, retain) NSMutableDictionary *lineRects;
 @end
@@ -454,6 +457,18 @@
 - (void)setNeedsDisplay {
 	[self _resetFramesetter];
 	[view setNeedsDisplay];
+}
+
+- (BOOL)becomeFirstResponder {
+    [[NSNotificationCenter defaultCenter] postNotificationName:TUITextRendererDidBecomeFirstResponder
+                                                        object:self];
+    return [super becomeFirstResponder];
+}
+
+- (BOOL)resignFirstResponder {
+    [[NSNotificationCenter defaultCenter] postNotificationName:TUITextRendererDidResignFirstResponder
+                                                        object:self];
+    return [super resignFirstResponder];
 }
 
 @end
