@@ -178,6 +178,10 @@ typedef enum {
 
 - (BOOL)isScrollingToTop;
 
+// Scroll knob accessors.
+@property (nonatomic, readonly) TUIScrollKnob *verticalScrollKnob;
+@property (nonatomic, readonly) TUIScrollKnob *horizontalScrollKnob;
+
 @property (nonatomic, readonly) CGPoint pullOffset;
 @property (nonatomic, readonly) CGPoint bounceOffset;
 
