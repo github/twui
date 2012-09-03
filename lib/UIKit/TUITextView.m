@@ -478,7 +478,8 @@ static CAAnimation *ThrobAnimation()
 		}
 	}
 	
-	if(selectedTextCheckingResult == nil) return nil;
+	if(selectedTextCheckingResult == nil)
+        return [[self.textRenderers objectAtIndex:0] menuForEvent:event];
 		
 	NSMenu *menu = [[NSMenu alloc] initWithTitle:@""];
 	if(selectedTextCheckingResult.resultType == NSTextCheckingTypeCorrection && matchingAutocorrectPair != nil) {
@@ -611,7 +612,7 @@ static CAAnimation *ThrobAnimation()
 
 - (BOOL)acceptsFirstResponder
 {
-    return YES;
+    return !self.shouldRefuseFirstResponder;
 }
 
 - (BOOL)performKeyEquivalent:(NSEvent *)event {

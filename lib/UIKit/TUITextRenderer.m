@@ -41,6 +41,7 @@ NSString *TUITextRendererDidResignFirstResponder = @"TUITextRendererDidResignFir
 @synthesize selectionColor;
 @synthesize verticalAlignment;
 @synthesize lineRects;
+@synthesize shouldRefuseFirstResponder;
 
 - (void)_resetFrame
 {

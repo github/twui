@@ -94,6 +94,9 @@ typedef enum {
 @property (nonatomic, assign) BOOL preDrawBlocksEnabled; // default = NO
 @property (nonatomic, assign) BOOL drawOverflowEllipses; // default = NO
 
+// Don't become first responder.
+@property (nonatomic, assign) BOOL shouldRefuseFirstResponder;
+
 - (void)draw;
 - (void)drawInContext:(CGContextRef)context;
 - (CGSize)size; // calculates vertical size based on frame width
