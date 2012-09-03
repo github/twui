@@ -100,7 +100,7 @@
 	if(_viewFlags.moveWindowByDragging) {
         startDrag = [self localPointForEvent:event];
 		NSWindow *window = [self nsWindow];
-		NSPoint o = [window frame].origin;
+		NSPoint o;// = [window frame].origin;
 		//o.x += p.x - startDrag.x;
 		//o.y += p.y - startDrag.y;
 		

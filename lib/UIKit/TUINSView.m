@@ -426,6 +426,7 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 		;
 		_trackingView = [self viewForEvent:event];
 		[_trackingView mouseDown:event];
+        _trackingViewInside = YES;
 	}
 	
 	[TUITooltipWindow endTooltip];
@@ -436,15 +437,43 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	TUIView *lastTrackingView = _trackingView;
 
 	_trackingView = nil;
+    _trackingViewInside = NO;
 
 	[lastTrackingView mouseUp:event]; // after _trackingView set to nil, will call mouseUp:fromSubview:
 	
 	[self _updateHoverViewWithEvent:event];
 }
 
+- (void)updateTrackingViewMouseEnteredExitedFromEvent:(NSEvent*)event
+{
+    if(_trackingView)
+    {
+        CGPoint point = event.locationInWindow;
+        point = [self convertPoint:point fromView:nil];
+        point = [_trackingView convertPoint:point fromView:nil];
+        if(CGRectContainsPoint(_trackingView.bounds, point))
+        {
+            if(!_trackingViewInside)
+            {
+                _trackingViewInside = YES;
+                [_trackingView mouseEntered:event];
+            }
+        }
+        else
+        {
+            if(_trackingViewInside)
+            {
+                _trackingViewInside = NO;
+                [_trackingView mouseExited:event];
+            }
+        }
+    }
+}
+
 - (void)mouseDragged:(NSEvent *)event
 {
 	[_trackingView mouseDragged:event];
+    [self updateTrackingViewMouseEnteredExitedFromEvent:event];
 }
 
 - (void)mouseMoved:(NSEvent *)event
@@ -452,12 +481,17 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	[self _updateHoverViewWithEvent:event];
 }
 
--(void)mouseEntered:(NSEvent *)event {
-  [self _updateHoverViewWithEvent:event];
+- (void)mouseEntered:(NSEvent *)event {
+    [self _updateHoverViewWithEvent:event];
+    [self updateTrackingViewMouseEnteredExitedFromEvent:event];
 }
 
--(void)mouseExited:(NSEvent *)event {
-  [self _updateHoverViewWithEvent:event];
+- (void)mouseExited:(NSEvent *)event {
+    [self _updateHoverViewWithEvent:event];
+    if(_trackingView && _trackingViewInside) {
+        _trackingViewInside = NO;
+        [_trackingView mouseExited:event];
+    }
 }
 
 - (void)rightMouseDown:(NSEvent *)event
