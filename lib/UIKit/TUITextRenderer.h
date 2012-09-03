@@ -88,9 +88,10 @@ typedef enum {
 
 @property (nonatomic, assign) TUITextVerticalAlignment verticalAlignment;
 
-// These are both advanced features that carry with them a potential performance hit.
+// These are advanced features that carry with them a potential performance hit.
 @property (nonatomic, assign) BOOL backgroundDrawingEnabled; // default = NO
 @property (nonatomic, assign) BOOL preDrawBlocksEnabled; // default = NO
+@property (nonatomic, assign) BOOL drawOverflowEllipses; // default = NO
 
 - (void)draw;
 - (void)drawInContext:(CGContextRef)context;

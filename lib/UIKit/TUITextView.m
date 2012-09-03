@@ -70,6 +70,7 @@
 @synthesize drawFrame;
 @synthesize font;
 @synthesize textColor;
+@synthesize cursorColor;
 @synthesize textAlignment;
 @synthesize editable;
 @synthesize contentInset;
@@ -126,7 +127,8 @@
 		
 		cursor = [[TUIView alloc] initWithFrame:CGRectZero];
 		cursor.userInteractionEnabled = NO;
-		cursor.backgroundColor = [NSColor colorWithCalibratedRed:13 / 255.0 green:140 / 255.0 blue:231 / 255.0 alpha:1];
+        cursorColor = [NSColor colorWithCalibratedRed:13 / 255.0 green:140 / 255.0 blue:231 / 255.0 alpha:1];
+		cursor.backgroundColor = cursorColor;
 		[self addSubview:cursor];
 		
 		self.autocorrectedResults = [NSMutableDictionary dictionary];
@@ -186,6 +188,12 @@
 	textColor = c;
 	[self _updateDefaultAttributes];
 }	
+
+- (void)setCursorColor:(NSColor *)c {
+    cursorColor = c;
+    cursor.backgroundColor = c;
+    [cursor setNeedsDisplay];
+}
 
 - (void)setTextAlignment:(TUITextAlignment)t
 {
