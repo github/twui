@@ -829,16 +829,25 @@ static float clampBounce(float x) {
 	}
 }
 
-- (void)scrollRectToVisible:(CGRect)rect animated:(BOOL)animated
-{
+- (void)scrollRectToVisible:(CGRect)rect animated:(BOOL)animated {
 	CGRect visible = self.visibleRect;
 	if(rect.origin.y < visible.origin.y) {
 		// scroll down, have rect be flush with bottom of visible view
-		[self setContentOffset:CGPointMake(0, -rect.origin.y) animated:animated];
+		[self setContentOffset:CGPointMake(self.contentOffset.x, -rect.origin.y)
+                      animated:animated];
 	} else if(rect.origin.y + rect.size.height > visible.origin.y + visible.size.height) {
 		// scroll up, rect to be flush with top of view
-		[self setContentOffset:CGPointMake(0, -rect.origin.y + visible.size.height - rect.size.height) animated:animated];
-	}
+		[self setContentOffset:CGPointMake(self.contentOffset.x, -rect.origin.y + visible.size.height - rect.size.height)
+                      animated:animated];
+	} else if(rect.origin.x < visible.origin.x) {
+        // scroll right
+        [self setContentOffset:CGPointMake(-rect.origin.x, self.contentOffset.y)
+                      animated:animated];
+    } else if(rect.origin.x + rect.size.width > visible.origin.x + visible.size.width) {
+        // scroll left
+        [self setContentOffset:CGPointMake(-rect.origin.x + visible.size.width - rect.size.width, self.contentOffset.y)
+                      animated:animated];
+    }
 	[self.nsView invalidateHoverForView:self];
 }
 

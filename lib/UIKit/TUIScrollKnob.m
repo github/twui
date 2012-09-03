@@ -18,7 +18,12 @@
 #import "TUICGAdditions.h"
 #import "TUIScrollView.h"
 
-@interface TUIScrollKnob ()
+@interface TUIScrollKnob () {
+    NSTimer *_hideKnobTimer;
+    BOOL _knobHidden;
+}
+
+- (void)_hideKnob;
 - (void)_updateKnob;
 - (void)_updateKnobColor:(CGFloat)duration;
 - (void)_endFlashing;
@@ -34,16 +39,32 @@
 	if((self = [super initWithFrame:frame]))
 	{
 		knob = [[TUIView alloc] initWithFrame:CGRectMake(0, 0, 12, 12)];
-		knob.layer.cornerRadius = 4.0;
+		knob.layer.cornerRadius = 3.5;
 		knob.userInteractionEnabled = NO;
 		knob.backgroundColor = [NSColor blackColor];
 		[self addSubview:knob];
 		[self _updateKnob];
 		[self _updateKnobColor:0.0];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(preferredScrollerStyleChanged)
+                                                     name:NSPreferredScrollerStyleDidChangeNotification
+                                                   object:nil];
 	}
 	return self;
 }
 
+- (void)preferredScrollerStyleChanged {
+    if(_hideKnobTimer)
+        [_hideKnobTimer invalidate], _hideKnobTimer = nil;
+    
+    if([NSScroller preferredScrollerStyle] == NSScrollerStyleOverlay)
+        [self _hideKnob];
+    else {
+        _knobHidden = NO;
+        [self _updateKnobColor:0.2];
+    }
+}
 
 - (BOOL)isVertical
 {
@@ -73,22 +94,57 @@
 	
 	if([self isVertical]) {
 		KNOB_CALCULATIONS(y, height, DEFAULT_MIN_KNOB_SIZE)
+        
 		CGRect frame;
 		frame.origin.x = 0.0;
 		frame.origin.y = knobOffset;
 		frame.size.height = MIN(2000, knobLength);
-		frame.size.width = trackBounds.size.width;
-		knob.frame = ABRectRoundOrigin(CGRectInset(frame, 2, 4));
+        frame.size.width = 11; //trackBounds.size.width;
+        frame = ABRectRoundOrigin(CGRectInset(frame, 2, 4));
+        
+        if(!CGRectEqualToRect(frame, knob.frame) && [NSScroller preferredScrollerStyle] == NSScrollerStyleOverlay) {
+            if(_hideKnobTimer)
+                [_hideKnobTimer invalidate], _hideKnobTimer = nil;
+            _hideKnobTimer = [NSTimer scheduledTimerWithTimeInterval:1
+                                                              target:self
+                                                            selector:@selector(_hideKnob)
+                                                            userInfo:nil
+                                                             repeats:NO];
+            _knobHidden = NO;
+            [self _updateKnobColor:0.01];
+        }
+        
+        knob.frame = frame;
 	} else {
 		KNOB_CALCULATIONS(x, width, DEFAULT_MIN_KNOB_SIZE)
 		CGRect frame;
 		frame.origin.x = knobOffset;
 		frame.origin.y = 0.0;
 		frame.size.width = MIN(2000, knobLength);
-		frame.size.height = trackBounds.size.height;
-		knob.frame = ABRectRoundOrigin(CGRectInset(frame, 4, 2));
+        frame.size.height = 11; //trackBounds.size.height;
+        frame = ABRectRoundOrigin(CGRectInset(frame, 4, 2));
+        
+        if(!CGRectEqualToRect(frame, knob.frame) && [NSScroller preferredScrollerStyle] == NSScrollerStyleOverlay) {
+            if(_hideKnobTimer)
+                [_hideKnobTimer invalidate], _hideKnobTimer = nil;
+            _hideKnobTimer = [NSTimer scheduledTimerWithTimeInterval:1
+                                                              target:self
+                                                            selector:@selector(_hideKnob)
+                                                            userInfo:nil
+                                                             repeats:NO];
+            _knobHidden = NO;
+            [self _updateKnobColor:0.01];
+        }
+        
+        knob.frame = frame;
 	}
 	
+}
+
+- (void)_hideKnob {
+    _hideKnobTimer = nil;
+    _knobHidden = YES;
+    [self _updateKnobColor:0.2];
 }
 
 - (void)layoutSubviews
@@ -141,7 +197,7 @@
 {
 	[TUIView beginAnimations:nil context:NULL];
 	[TUIView setAnimationDuration:duration];
-	knob.alpha = _scrollKnobFlags.active?0.6:_scrollKnobFlags.hover?0.33:0.18;
+	knob.alpha = _knobHidden ? 0.0 : _scrollKnobFlags.hover ? 0.6 : 0.5;
 	[TUIView commitAnimations];
 }
 
