@@ -38,6 +38,7 @@ NSString *TUITextRendererDidResignFirstResponder = @"TUITextRendererDidResignFir
 @synthesize shadowColor;
 @synthesize shadowOffset;
 @synthesize shadowBlur;
+@synthesize selectionColor;
 @synthesize verticalAlignment;
 @synthesize lineRects;
 
@@ -300,7 +301,9 @@ NSString *TUITextRendererDidResignFirstResponder = @"TUITextRendererDidResignFir
 		
 		CFRange selectedRange = [self _selectedRange];
 		if(selectedRange.length > 0) {
-			[[NSColor selectedTextBackgroundColor] set];
+            if(self.selectionColor)
+                 [self.selectionColor set];
+            else [[NSColor selectedTextBackgroundColor] set];
 			// draw (or mask) selection
 			CFIndex rectCount = 100;
 			CGRect rects[rectCount];
