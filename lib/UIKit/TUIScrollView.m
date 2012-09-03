@@ -565,6 +565,19 @@ static CGPoint PointLerp(CGPoint a, CGPoint b, CGFloat t)
 	return -self.contentSize.height + visible.size.height;
 }
 
+- (BOOL)isBouncing {
+    return _bounce.bouncing;
+}
+
+- (void)stopThrowing {
+    // otherwise we may have started a scrollToTop:animated:, don't want to stop that)
+    if(_scrollViewFlags.animationMode == AnimationModeThrow) {
+        // ignore - let the bounce finish (_updateBounce will kill the timer when it's ready)
+        if(_bounce.bouncing) {}
+        else [self _stopTimer];
+    }
+}
+
 /**
  * @brief Whether the scroll view bounces past the edge of content and back again
  * 
