@@ -87,12 +87,12 @@
 	NSPoint p = [self localPointForEvent:event];
 	
 	if(_viewFlags.dragDistanceLock) {
-		CGFloat dx = p.x - startDrag.x;
-		CGFloat dy = p.y - startDrag.y;
-		CGFloat dragDist = sqrt(dx*dx+dy*dy);
-		if(dragDist > 2.5) {
+		//CGFloat dx = p.x - startDrag.x;
+		//CGFloat dy = p.y - startDrag.y;
+		//CGFloat dragDist = sqrt(dx*dx+dy*dy);
+		//if(dragDist > 2.5) {
 			_viewFlags.dragDistanceLock = 0;
-		}
+		//}
 	}
 	if(_viewFlags.dragDistanceLock == 1)
 		return; // ignore
