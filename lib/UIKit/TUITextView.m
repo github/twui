@@ -612,7 +612,7 @@ static CAAnimation *ThrobAnimation()
 
 - (BOOL)acceptsFirstResponder
 {
-    return !self.shouldRefuseFirstResponder;
+    return YES;
 }
 
 - (BOOL)performKeyEquivalent:(NSEvent *)event {

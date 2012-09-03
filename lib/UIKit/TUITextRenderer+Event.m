@@ -301,7 +301,7 @@ normal:
 
 - (BOOL)acceptsFirstResponder
 {
-	return YES;
+	return !self.shouldRefuseFirstResponder;
 }
 
 - (BOOL)becomeFirstResponder
