@@ -114,6 +114,27 @@
 			_viewFlags.didStartMovingByDragging = 1;
 		}
 		[window setFrameOrigin:o];
+        
+        BOOL keepTracking = YES;
+        NSEvent *nextEvent = event;
+        while(keepTracking) {
+            switch([nextEvent type]) {
+                case NSLeftMouseDragged:
+                    p = [self localPointForEvent:nextEvent];
+                    o = [window frame].origin;
+                    o.x += p.x - startDrag.x;
+                    o.y += p.y - startDrag.y;
+                    [window setFrameOrigin:o];
+                    break;
+                case NSLeftMouseUp:
+                    return;
+                    break;
+                default:
+                    break;
+            }
+            
+            nextEvent = [window nextEventMatchingMask:NSLeftMouseDraggedMask | NSLeftMouseUpMask];
+        }
 	} else if(_viewFlags.resizeWindowByDragging) {
 		if(!_viewFlags.didStartResizeByDragging) {
 			_viewFlags.didStartResizeByDragging = 1;
