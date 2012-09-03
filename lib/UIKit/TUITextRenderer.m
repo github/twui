@@ -459,16 +459,4 @@ NSString *TUITextRendererDidResignFirstResponder = @"TUITextRendererDidResignFir
 	[view setNeedsDisplay];
 }
 
-- (BOOL)becomeFirstResponder {
-    [[NSNotificationCenter defaultCenter] postNotificationName:TUITextRendererDidBecomeFirstResponder
-                                                        object:self];
-    return [super becomeFirstResponder];
-}
-
-- (BOOL)resignFirstResponder {
-    [[NSNotificationCenter defaultCenter] postNotificationName:TUITextRendererDidResignFirstResponder
-                                                        object:self];
-    return [super resignFirstResponder];
-}
-
 @end

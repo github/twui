@@ -246,7 +246,6 @@ static CAAnimation *ThrobAnimation()
 	NSResponder *firstResponder = [self.nsWindow firstResponder];
 	if(firstResponder == self) {
 		// responder should be on the renderer
-		NSLog(@"making renderer first responder");
 		[self.nsWindow tui_makeFirstResponder:renderer];
 		firstResponder = renderer;
 	}
@@ -257,18 +256,13 @@ static CAAnimation *ThrobAnimation()
 {
 	static const CGFloat singleLineWidth = 20000.0f;
 	
-	CGContextRef ctx = TUIGraphicsGetCurrentContext();
-	
 	if(drawFrame)
 		drawFrame(self, rect);
 	
-	BOOL singleLine = [self singleLine];
 	CGRect textRect = [self textRect];
 	CGRect rendererFrame = textRect;
-	if(singleLine) {
+	if([self singleLine])
 		rendererFrame.size.width = singleLineWidth;
-	}
-	
 	renderer.frame = rendererFrame;
 	
 	BOOL showCursor = [self _isKey] && [renderer selectedRange].length == 0;
@@ -283,7 +277,7 @@ static CAAnimation *ThrobAnimation()
 	// Single-line text views scroll horizontally with the cursor.
 	CGRect cursorFrame = [self _cursorRect];
 	CGFloat offset = 0.0f;
-	if(singleLine) {
+	if([self singleLine]) {
 		if(CGRectGetMaxX(cursorFrame) > CGRectGetWidth(textRect)) {
 			offset = CGRectGetMinX(cursorFrame) - CGRectGetWidth(textRect);
 			rendererFrame = CGRectMake(-offset, rendererFrame.origin.y, CGRectGetWidth(rendererFrame), CGRectGetHeight(rendererFrame));
@@ -299,13 +293,6 @@ static CAAnimation *ThrobAnimation()
 		}];
 	}
 	
-	BOOL doMask = singleLine;
-	if(doMask) {
-		CGContextSaveGState(ctx);
-		CGFloat radius = floor(rect.size.height / 2);
-		CGContextClipToRoundRect(ctx, CGRectInset(textRect, 0.0f, -radius), radius);
-	}
-	
 	[renderer draw];
 	
 	if(renderer.attributedString.length < 1 && self.placeholder.length > 0) {
@@ -316,10 +303,6 @@ static CAAnimation *ThrobAnimation()
 		self.placeholderRenderer.attributedString = attributedString;
 		self.placeholderRenderer.frame = rendererFrame;
 		[self.placeholderRenderer draw];
-	}
-	
-	if(doMask) {
-		CGContextRestoreGState(ctx);
 	}
 }
 
