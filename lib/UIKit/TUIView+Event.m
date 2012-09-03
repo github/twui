@@ -103,10 +103,10 @@
 		o.x += p.x - startDrag.x;
 		o.y += p.y - startDrag.y;
 		
-		CGRect r = [window frame];
-		r.origin = o;
-		r = ABClampProposedRectToScreen(r);
-		o = r.origin;
+		//CGRect r = [window frame];
+		//r.origin = o;
+		//r = ABClampProposedRectToScreen(r);
+		//o = r.origin;
 		
 		if(!_viewFlags.didStartMovingByDragging) {
 			if([window respondsToSelector:@selector(windowWillStartLiveDrag)])
