@@ -89,6 +89,7 @@
 
 - (void)dealloc {
 	renderer.delegate = nil;
+    [self removeObserver:self forKeyPath:@"windowHasFocus"];
 }
 
 - (void)_updateDefaultAttributes
