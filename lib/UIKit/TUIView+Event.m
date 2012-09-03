@@ -98,10 +98,11 @@
 		return; // ignore
 	
 	if(_viewFlags.moveWindowByDragging) {
+        startDrag = [self localPointForEvent:event];
 		NSWindow *window = [self nsWindow];
 		NSPoint o = [window frame].origin;
-		o.x += p.x - startDrag.x;
-		o.y += p.y - startDrag.y;
+		//o.x += p.x - startDrag.x;
+		//o.y += p.y - startDrag.y;
 		
 		//CGRect r = [window frame];
 		//r.origin = o;
@@ -113,7 +114,7 @@
 				[window performSelector:@selector(windowWillStartLiveDrag)];
 			_viewFlags.didStartMovingByDragging = 1;
 		}
-		[window setFrameOrigin:o];
+		//[window setFrameOrigin:o];
         
         BOOL keepTracking = YES;
         NSEvent *nextEvent = event;
