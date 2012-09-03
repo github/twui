@@ -145,6 +145,42 @@ static inline BOOL RangeContainsIndex(CFRange range, CFIndex index)
 	return (a && b);
 }
 
+void AB_CTFrameGetIndexForPositionInLine(NSString *string, CTFrameRef frame, CFIndex lineIndex, float xPosition, CFIndex *index)
+{
+    NSArray *lines = (__bridge NSArray *)CTFrameGetLines(frame);
+    CFIndex linesCount = [lines count];
+    if(lineIndex < linesCount)
+    {
+        CTLineRef line = (__bridge CTLineRef)[lines objectAtIndex:lineIndex];
+        *index = CTLineGetStringIndexForPosition(line, CGPointMake(xPosition, 0));
+    }
+    else
+        *index = 0;
+}
+
+void AB_CTFrameGetLinePositionOfIndex(NSString *string, CTFrameRef frame, int index, CFIndex *lineIndex, float *xPosition)
+{
+    NSArray *lines = (__bridge NSArray *)CTFrameGetLines(frame);
+	CFIndex linesCount = [lines count];
+    CFIndex charCount = 0;
+    CFIndex count = 0;
+    
+    for(CFIndex i = 0; i < linesCount; ++i) {
+		CTLineRef line = (__bridge CTLineRef)[lines objectAtIndex:i];
+		count = CTLineGetGlyphCount(line);
+        if((index >= charCount && index < charCount + count) || i == linesCount - 1)
+        {
+            CGFloat offset = CTLineGetOffsetForStringIndex(line, index, NULL);
+            *lineIndex = i;
+            *xPosition = offset;
+            return;
+        }
+        charCount += count;
+    }
+    *lineIndex = -1;
+    *xPosition = 0;
+}
+
 void AB_CTFrameGetRectsForRange(CTFrameRef frame, CFRange range, CGRect rects[], CFIndex *rectCount)
 {
 	AB_CTFrameGetRectsForRangeWithAggregationType(frame, range, AB_CTLineRectAggregationTypeInline, rects, rectCount);

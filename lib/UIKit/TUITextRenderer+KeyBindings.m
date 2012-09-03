@@ -17,6 +17,7 @@
 #import "TUITextRenderer.h"
 #import "TUITextEditor.h"
 #import "TUIView.h"
+#import "CoreText+Additions.h"
 
 @interface NSString (ABTokenizerAdditions)
 @end
@@ -61,6 +62,9 @@
 
 @end
 
+@interface TUITextRenderer ()
+- (CTFrameRef)ctFrame;
+@end
 
 @implementation TUITextRenderer (KeyBindings)
 
@@ -71,6 +75,69 @@
 	if([self isKindOfClass:[TUITextEditor class]])
 		return (TUITextEditor *)self;
 	return nil;
+}
+
+- (int)_indexByMovingIndex:(int)index
+                        by:(int)incr
+{
+    CFIndex lineIndex;
+    float xPosition;
+    AB_CTFrameGetLinePositionOfIndex(TEXT, [self ctFrame], index, &lineIndex, &xPosition);
+    if(lineIndex >= 0)
+    {
+        NSArray *lines = (__bridge NSArray *)CTFrameGetLines([self ctFrame]);
+        CFIndex linesCount = [lines count];
+        if(incr < 0 && lineIndex == 0)
+        {
+            return 0;
+        }
+        else if(lineIndex + incr >= linesCount)
+        {
+            return (int)[TEXT length];
+        }
+        else if(lineIndex + incr >= 0) {
+            CFIndex index;
+            AB_CTFrameGetIndexForPositionInLine(TEXT, [self ctFrame], lineIndex + incr, xPosition, &index);
+            return (int)index;
+        }
+    }
+    return -1;
+}
+
+- (void)moveUp:(id)sender
+{
+    NSInteger selectionLength = abs((int)(_selectionStart - _selectionEnd));
+    if(selectionLength)
+        _selectionStart = _selectionEnd = (MIN(_selectionEnd,_selectionStart));
+    else
+        _selectionEnd = _selectionStart = [self _indexByMovingIndex:(int)MIN(_selectionStart,_selectionEnd)
+                                                                 by:-1];
+    [self.view setNeedsDisplay];
+}
+
+- (void)moveUpAndModifySelection:(id)sender
+{
+    _selectionEnd = [self _indexByMovingIndex:(int)MIN(_selectionStart,_selectionEnd)
+                                           by:-1];
+    [self.view setNeedsDisplay];
+}
+
+- (void)moveDown:(id)sender
+{
+    NSInteger selectionLength = abs((int)(_selectionStart - _selectionEnd));
+    if(selectionLength)
+        _selectionStart = _selectionEnd = (MAX(_selectionEnd,_selectionStart));
+    else
+        _selectionEnd = _selectionStart = [self _indexByMovingIndex:(int)MAX(_selectionStart,_selectionEnd)
+                                                                 by:1];
+    [self.view setNeedsDisplay];
+}
+
+- (void)moveDownAndModifySelection:(id)sender
+{
+    _selectionEnd = [self _indexByMovingIndex:(int)MAX(_selectionStart,_selectionEnd)
+                                           by:1];
+    [self.view setNeedsDisplay];
 }
 
 - (void)moveRight:(id)sender
@@ -154,6 +221,11 @@
 - (void)insertNewline:(id)sender
 {
 	[[self _textEditor] insertText:@"\n"];
+}
+
+- (void)insertNewlineIgnoringFieldEditor:(id)sender
+{
+    [[self _textEditor] insertText:@"\n"];
 }
 
 - (void)deleteBackward:(id)sender
