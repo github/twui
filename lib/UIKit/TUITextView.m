@@ -129,8 +129,15 @@
 		cursor.userInteractionEnabled = NO;
         cursorColor = [NSColor colorWithCalibratedRed:13 / 255.0 green:140 / 255.0 blue:231 / 255.0 alpha:1];
 		cursor.backgroundColor = cursorColor;
-		[self addSubview:cursor];
+        if(self.windowHasFocus)
+            [self addSubview:cursor];
 		
+        self.needsDisplayWhenWindowsKeyednessChanges = YES;
+        [self addObserver:self
+               forKeyPath:@"windowHasFocus"
+                  options:NSKeyValueObservingOptionNew
+                  context:NULL];
+        
 		self.autocorrectedResults = [NSMutableDictionary dictionary];
 		
 		self.font = [NSFont fontWithName:@"HelveticaNeue" size:12];
@@ -140,6 +147,17 @@
 		self.drawFrame = TUITextViewStandardFrame();
 	}
 	return self;
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary *)change
+                       context:(void *)context {
+    if([keyPath isEqualToString:@"windowHasFocus"]) {
+        if(self.windowHasFocus)
+             [self addSubview:cursor];
+        else [cursor removeFromSuperview];
+    }
 }
 
 - (id)forwardingTargetForSelector:(SEL)sel
