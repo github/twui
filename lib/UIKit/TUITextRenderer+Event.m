@@ -19,6 +19,7 @@
 #import "TUICGAdditions.h"
 #import "TUINSView.h"
 #import "TUINSWindow.h"
+#import "TUITextEditor.h"
 
 @interface TUITextRenderer()
 - (CTFramesetterRef)ctFramesetter;
@@ -319,6 +320,8 @@ normal:
 {
 	// TODO: obviously these shouldn't be called at exactly the same time...
 	if(_flags.delegateWillResignFirstResponder) [delegate textRendererWillResignFirstResponder:self];
+    if([self isKindOfClass:[TUITextEditor class]])
+        [self setSelection:NSMakeRange(0, 0)];
 	[self resetSelection];
 	if(_flags.delegateDidResignFirstResponder) [delegate textRendererDidResignFirstResponder:self];
     
