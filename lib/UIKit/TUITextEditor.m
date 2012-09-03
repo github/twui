@@ -18,6 +18,10 @@
 #import "TUINSView.h"
 #import "TUINSWindow.h"
 
+@interface TUITextRenderer ()
+- (void)_scrollToIndex:(long)index;
+@end
+
 @implementation TUITextEditor
 
 @synthesize defaultAttributes;
@@ -101,6 +105,7 @@
 - (void)paste:(id)sender
 {
 	[self insertText:[[NSPasteboard generalPasteboard] stringForType:NSPasteboardTypeString]];
+    [self _scrollToIndex:MAX(_selectionStart, _selectionEnd)];
 }
 
 - (void)patchMenuWithStandardEditingMenuItems:(NSMenu *)menu
@@ -167,6 +172,7 @@
 	selectedRange.length = 0;
 	self.selectedRange = selectedRange;
 	[self _textDidChange];
+    [self _scrollToIndex:MAX(_selectionStart, _selectionEnd)];
 }
 
 
@@ -229,6 +235,7 @@
     [self unmarkText];
 	self.selectedRange = selectedRange;
 	[self _textDidChange];
+    [self _scrollToIndex:MAX(_selectionStart, _selectionEnd)];
 }
 
 /* The receiver inserts aString replacing the content specified by replacementRange. 
