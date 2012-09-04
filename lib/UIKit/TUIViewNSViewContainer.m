@@ -23,6 +23,7 @@
 #import "TUINSView.h"
 #import "TUINSView+Private.h"
 #import "TUIViewNSViewContainer+Private.h"
+#import <CoreServices/CoreServices.h>
 
 @interface TUIViewNSViewContainer () {
 	/**
@@ -166,7 +167,15 @@
 	CGContextSaveGState(context);
 	CGContextClearRect(context, self.bounds);
 
-	if ([self.rootView isFlipped]) {
+	SInt32 major, minor;
+	Gestalt(gestaltSystemVersionMajor, &major);
+	Gestalt(gestaltSystemVersionMinor, &minor);
+
+	// 10.8 seems to have changed whether -renderInContext: renders the NSView
+	// flipped or not.
+	BOOL needsToFlip = (major > 10 || (major == 10 && minor >= 8)) ? [self.rootView isFlipped] : ![self.rootView isFlipped];
+
+	if (needsToFlip) {
 		CGContextTranslateCTM(context, 0, self.bounds.size.height);
 		CGContextScaleCTM(context, 1, -1);
 	}
