@@ -220,6 +220,7 @@ extern CGRect(^TUIViewCenteredLayout)(TUIView*);
  * Does this view need to be redisplayed when the view's window's keyedness changes? If YES, the view will get automatically marked as needing display when the window's keyedness changes. Defaults to NO.
  */
 @property (nonatomic, assign) BOOL needsDisplayWhenWindowsKeyednessChanges;
+@property (nonatomic, assign) BOOL windowHasFocus;
 
 @end
 

@@ -27,13 +27,14 @@
 {
 	TUIView *_hoverView;
 
-	__unsafe_unretained TUIView *_trackingView; // dragging view, weak
+    TUIView *_trackingView; // dragging view
 	__unsafe_unretained TUIView *_hyperFocusView; // weak
 
 	TUIView *_hyperFadeView;
 	void(^_hyperCompletion)(BOOL);
 	
 	NSTrackingArea *_trackingArea;
+    BOOL _trackingViewInside;
 	
 	__unsafe_unretained TUITextRenderer *_tempTextRendererForTextInputClient; // weak, set temporarily while NSTextInputClient dicks around
 	

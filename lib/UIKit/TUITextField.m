@@ -104,6 +104,13 @@ doClear:
 	[[self _textField] sendActionsForControlEvents:TUIControlEventEditingDidEndOnExit];
 }
 
+- (void)insertNewlineIgnoringFieldEditor:(id)sender
+{
+    if([self _textField]->_textFieldFlags.delegateTextFieldShouldReturn)
+		[(id<TUITextFieldDelegate>)[self _textField].delegate textFieldShouldReturn:(id)self];
+	[[self _textField] sendActionsForControlEvents:TUIControlEventEditingDidEndOnExit];
+}
+
 - (void)cancelOperation:(id)sender
 {
 	[[self _textField] clear:sender];

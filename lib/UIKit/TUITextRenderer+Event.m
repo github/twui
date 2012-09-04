@@ -19,6 +19,7 @@
 #import "TUICGAdditions.h"
 #import "TUINSView.h"
 #import "TUINSWindow.h"
+#import "TUITextEditor.h"
 
 @interface TUITextRenderer()
 - (CTFramesetterRef)ctFramesetter;
@@ -300,7 +301,7 @@ normal:
 
 - (BOOL)acceptsFirstResponder
 {
-	return YES;
+	return !self.shouldRefuseFirstResponder;
 }
 
 - (BOOL)becomeFirstResponder
@@ -309,6 +310,9 @@ normal:
 	if(_flags.delegateWillBecomeFirstResponder) [delegate textRendererWillBecomeFirstResponder:self];
 	if(_flags.delegateDidBecomeFirstResponder) [delegate textRendererDidBecomeFirstResponder:self];
 	
+    [[NSNotificationCenter defaultCenter] postNotificationName:TUITextRendererDidBecomeFirstResponder
+                                                        object:self];
+    
 	return YES;
 }
 
@@ -316,9 +320,46 @@ normal:
 {
 	// TODO: obviously these shouldn't be called at exactly the same time...
 	if(_flags.delegateWillResignFirstResponder) [delegate textRendererWillResignFirstResponder:self];
+    if([self isKindOfClass:[TUITextEditor class]])
+        [self setSelection:NSMakeRange(0, 0)];
 	[self resetSelection];
 	if(_flags.delegateDidResignFirstResponder) [delegate textRendererDidResignFirstResponder:self];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:TUITextRendererDidResignFirstResponder
+                                                        object:self];
+    
 	return YES;
+}
+
+- (NSMenu*)menuForEvent:(NSEvent *)event
+{
+    if(self.selectedRange.length > 0)
+    {
+        NSMenu *menu = [[NSMenu alloc] init];
+        NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Search with Google", @"TwUI Context Menu")
+                                                      action:@selector(menuItemSearchGoogle:)
+                                               keyEquivalent:@""];
+        item.target = self;
+        [menu addItem:item];
+        [menu addItem:[NSMenuItem separatorItem]];
+        item = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Copy", @"TwUI Context Menu")
+                                          action:@selector(copy:)
+                                   keyEquivalent:@""];
+        item.target = self;
+        [menu addItem:item];
+        return menu;
+    }
+    return nil;
+}
+
+- (void)menuItemSearchGoogle:(NSMenuItem*)menuItem
+{
+    NSString *googleString = [NSString stringWithFormat:
+                              @"http://www.google.com/search?q=%@",
+                              [self.selectedString stringByAddingPercentEscapesUsingEncoding:
+                               NSUTF8StringEncoding]];
+    NSURL *googleUrl = [NSURL URLWithString:googleString];
+    [[NSWorkspace sharedWorkspace] openURL:googleUrl];
 }
 
 // Services

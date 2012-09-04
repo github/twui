@@ -237,6 +237,7 @@ static pthread_key_t TUICurrentContextScaleFactorTLSKey;
 {
 	if(self.needsDisplayWhenWindowsKeyednessChanges) {
 		[self setNeedsDisplay];
+        self.windowHasFocus = YES;
 	}
 	
 	[self.subviews makeObjectsPerformSelector:@selector(windowDidBecomeKey)];
@@ -246,6 +247,7 @@ static pthread_key_t TUICurrentContextScaleFactorTLSKey;
 {
 	if(self.needsDisplayWhenWindowsKeyednessChanges) {
 		[self setNeedsDisplay];
+        self.windowHasFocus = NO;
 	}
 	
 	[self.subviews makeObjectsPerformSelector:@selector(windowDidResignKey)];
@@ -1114,7 +1116,9 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 	if(n != _nsView) {
 		[self willMoveToWindow:(TUINSWindow *)[n window]];
 		[[NSNotificationCenter defaultCenter] postNotificationName:TUIViewWillMoveToWindowNotification object:self userInfo:[n window] ? [NSDictionary dictionaryWithObject:[n window] forKey:TUIViewWindow] : nil];
+        [self willChangeValueForKey:@"nsView"];
 		_nsView = n;
+        [self didChangeValueForKey:@"nsView"];
 		[self.subviews makeObjectsPerformSelector:@selector(setNSView:) withObject:n];
 		[self didMoveToWindow];
 		[[NSNotificationCenter defaultCenter] postNotificationName:TUIViewDidMoveToWindowNotification object:self userInfo:[n window] ? [NSDictionary dictionaryWithObject:[n window] forKey:TUIViewWindow] : nil];

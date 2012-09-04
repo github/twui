@@ -33,6 +33,7 @@
 - (void)patchMenuWithStandardEditingMenuItems:(NSMenu *)menu;
 
 @property (nonatomic, copy) NSString *text;
+@property (nonatomic, assign, getter = isSecure) BOOL secure;
 
 @property (nonatomic, strong) NSDictionary *defaultAttributes;
 @property (nonatomic, strong) NSDictionary *markedAttributes;

@@ -21,6 +21,9 @@
 @class TUIView;
 @protocol ABActiveTextRange;
 
+extern NSString *TUITextRendererDidBecomeFirstResponder;
+extern NSString *TUITextRendererDidResignFirstResponder;
+
 typedef enum {
 	TUITextSelectionAffinityCharacter = 0,
 	TUITextSelectionAffinityWord = 1,
@@ -82,12 +85,17 @@ typedef enum {
 @property (nonatomic, assign) CGSize shadowOffset;
 @property (nonatomic, assign) CGFloat shadowBlur;
 @property (nonatomic, strong) NSColor *shadowColor; // default = nil for no shadow
+@property (strong, readwrite) NSColor *selectionColor;
 
 @property (nonatomic, assign) TUITextVerticalAlignment verticalAlignment;
 
-// These are both advanced features that carry with them a potential performance hit.
+// These are advanced features that carry with them a potential performance hit.
 @property (nonatomic, assign) BOOL backgroundDrawingEnabled; // default = NO
 @property (nonatomic, assign) BOOL preDrawBlocksEnabled; // default = NO
+@property (nonatomic, assign) BOOL drawOverflowEllipses; // default = NO
+
+// Don't become first responder.
+@property (nonatomic, assign) BOOL shouldRefuseFirstResponder;
 
 - (void)draw;
 - (void)drawInContext:(CGContextRef)context;
@@ -95,6 +103,8 @@ typedef enum {
 - (CGSize)sizeConstrainedToWidth:(CGFloat)width;
 - (CGSize)sizeConstrainedToWidth:(CGFloat)width numberOfLines:(NSUInteger)numberOfLines;
 - (void)reset;
+
+- (NSAttributedString*)drawingAttributedString;
 
 - (NSRange)selectedRange;
 - (void)setSelection:(NSRange)selection;

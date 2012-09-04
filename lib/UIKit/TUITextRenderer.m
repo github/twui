@@ -22,6 +22,9 @@
 #import "TUIStringDrawing.h"
 #import "TUIView.h"
 
+NSString *TUITextRendererDidBecomeFirstResponder = @"TUITextRendererDidBecomeFirstResponder";
+NSString *TUITextRendererDidResignFirstResponder = @"TUITextRendererDidResignFirstResponder";
+
 @interface TUITextRenderer ()
 @property (nonatomic, retain) NSMutableDictionary *lineRects;
 @end
@@ -35,8 +38,10 @@
 @synthesize shadowColor;
 @synthesize shadowOffset;
 @synthesize shadowBlur;
+@synthesize selectionColor;
 @synthesize verticalAlignment;
 @synthesize lineRects;
+@synthesize shouldRefuseFirstResponder;
 
 - (void)_resetFrame
 {
@@ -102,7 +107,7 @@
 - (void)_buildFramesetter
 {
 	if(!_ct_framesetter) {
-		_ct_framesetter = CTFramesetterCreateWithAttributedString((__bridge CFAttributedStringRef)attributedString);
+		_ct_framesetter = CTFramesetterCreateWithAttributedString((__bridge CFAttributedStringRef)self.drawingAttributedString);
 	}
 	
 	[self _buildFrame];
@@ -189,6 +194,10 @@
 	return CFRangeMake(first, last - first);
 }
 
+- (NSAttributedString*)drawingAttributedString {
+    return attributedString;
+}
+
 - (NSRange)selectedRange
 {
 	return ABNSRangeFromCFRange([self _selectedRange]);
@@ -220,12 +229,12 @@
 		CTFrameRef f = [self ctFrame];
 		
 		if(_flags.preDrawBlocksEnabled && !_flags.drawMaskDragSelection) {
-			[self.attributedString enumerateAttribute:TUIAttributedStringPreDrawBlockName inRange:NSMakeRange(0, [self.attributedString length]) options:0 usingBlock:^(id value, NSRange range, BOOL *stop) {
+			[self.drawingAttributedString enumerateAttribute:TUIAttributedStringPreDrawBlockName inRange:NSMakeRange(0, [self.drawingAttributedString length]) options:0 usingBlock:^(id value, NSRange range, BOOL *stop) {
 				if(value == NULL) return;
 				
 				CGContextSaveGState(context);
 				
-				AB_CTLineRectAggregationType aggregationType = (AB_CTLineRectAggregationType) [[self.attributedString attribute:TUIAttributedStringBackgroundFillStyleName atIndex:range.location effectiveRange:NULL] integerValue];
+				AB_CTLineRectAggregationType aggregationType = (AB_CTLineRectAggregationType) [[self.drawingAttributedString attribute:TUIAttributedStringBackgroundFillStyleName atIndex:range.location effectiveRange:NULL] integerValue];
 				NSArray *rectsArray = [self rectsForCharacterRange:CFRangeMake(range.location, range.length) aggregationType:aggregationType];
 				
 				CFIndex rectCount = rectsArray.count;
@@ -235,7 +244,7 @@
 				}
 				
 				TUIAttributedStringPreDrawBlock block = value;
-				block(self.attributedString, range, rects, rectCount);
+				block(self.drawingAttributedString, range, rects, rectCount);
 					
 				CGContextRestoreGState(context);
 			}];
@@ -244,13 +253,13 @@
 		if(_flags.backgroundDrawingEnabled && !_flags.drawMaskDragSelection) {
 			CGContextSaveGState(context);
 			
-			[self.attributedString enumerateAttribute:TUIAttributedStringBackgroundColorAttributeName inRange:NSMakeRange(0, [self.attributedString length]) options:0 usingBlock:^(id value, NSRange range, BOOL *stop) {
+			[self.drawingAttributedString enumerateAttribute:TUIAttributedStringBackgroundColorAttributeName inRange:NSMakeRange(0, [self.drawingAttributedString length]) options:0 usingBlock:^(id value, NSRange range, BOOL *stop) {
 				if(value == NULL) return;
 				
 				CGColorRef color = (__bridge CGColorRef) value;
 				CGContextSetFillColorWithColor(context, color);
 				
-				AB_CTLineRectAggregationType aggregationType = (AB_CTLineRectAggregationType) [[self.attributedString attribute:TUIAttributedStringBackgroundFillStyleName atIndex:range.location effectiveRange:NULL] integerValue];
+				AB_CTLineRectAggregationType aggregationType = (AB_CTLineRectAggregationType) [[self.drawingAttributedString attribute:TUIAttributedStringBackgroundFillStyleName atIndex:range.location effectiveRange:NULL] integerValue];
 				NSArray *rectsArray = [self rectsForCharacterRange:CFRangeMake(range.location, range.length) aggregationType:aggregationType];
 				
 				CFIndex rectCount = rectsArray.count;
@@ -297,7 +306,9 @@
 		
 		CFRange selectedRange = [self _selectedRange];
 		if(selectedRange.length > 0) {
-			[[NSColor selectedTextBackgroundColor] set];
+            if(self.selectionColor)
+                 [self.selectionColor set];
+            else [[NSColor selectedTextBackgroundColor] set];
 			// draw (or mask) selection
 			CFIndex rectCount = 100;
 			CGRect rects[rectCount];
@@ -314,7 +325,26 @@
 		if(shadowColor)
 			CGContextSetShadowWithColor(context, shadowOffset, shadowBlur, shadowColor.tui_CGColor);
 
-		CTFrameDraw(f, context); // draw actual text
+        CFRange range = CTFrameGetVisibleStringRange(f);
+        if([self.drawingAttributedString length] > range.location + range.length && self.drawOverflowEllipses) {
+            // should have an ellipsis
+            float l = range.length - 3;
+            if(l < 0) l = 0;
+            
+            NSMutableAttributedString *string = [[NSMutableAttributedString alloc] initWithAttributedString:[attributedString attributedSubstringFromRange:NSMakeRange(range.location, l)]];
+            NSRange r;
+            NSDictionary *attrs = [attributedString attributesAtIndex:l effectiveRange:&r];
+            NSAttributedString *ellipsis = [[NSAttributedString alloc] initWithString:@"…" attributes:attrs];
+            [string appendAttributedString:ellipsis];
+            CTFramesetterRef framesetter = CTFramesetterCreateWithAttributedString((__bridge CFAttributedStringRef)string);
+            CGPathRef path = CGPathCreateMutable();
+            CGPathAddRect((CGMutablePathRef)path, NULL, frame);
+            CTFrameRef frameRef = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, 0), path, NULL);
+            CTFrameDraw(frameRef, context); // draw actual text
+            CFRelease(frameRef);
+            CFRelease(framesetter);
+            CFRelease(path);
+        } else CTFrameDraw(f, context); // draw actual text
 				
 		CGContextRestoreGState(context);
 	}
@@ -355,7 +385,7 @@
 
 - (CGSize)sizeConstrainedToWidth:(CGFloat)width numberOfLines:(NSUInteger)numberOfLines
 {
-	NSMutableAttributedString *fake = [self.attributedString mutableCopy];
+	NSMutableAttributedString *fake = [self.drawingAttributedString mutableCopy];
 	[fake replaceCharactersInRange:NSMakeRange(0, [fake length]) withString:@"M"];
 	CGFloat singleLineHeight = [fake ab_sizeConstrainedToWidth:width].height;
 	CGFloat maxHeight = singleLineHeight * numberOfLines;

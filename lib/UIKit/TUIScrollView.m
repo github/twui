@@ -73,6 +73,7 @@ enum {
 		_scrollViewFlags.alwaysBounceVertical = FALSE;
 		_scrollViewFlags.alwaysBounceHorizontal = FALSE;
 		
+        _scrollViewFlags.scrollIndicatorStyle = TUIScrollViewIndicatorVisibleDefault;
 		_scrollViewFlags.verticalScrollIndicatorVisibility = TUIScrollViewIndicatorVisibleDefault;
 		_scrollViewFlags.horizontalScrollIndicatorVisibility = TUIScrollViewIndicatorVisibleDefault;
 		
@@ -564,6 +565,19 @@ static CGPoint PointLerp(CGPoint a, CGPoint b, CGFloat t)
 	return -self.contentSize.height + visible.size.height;
 }
 
+- (BOOL)isBouncing {
+    return _bounce.bouncing;
+}
+
+- (void)stopThrowing {
+    // otherwise we may have started a scrollToTop:animated:, don't want to stop that)
+    if(_scrollViewFlags.animationMode == AnimationModeThrow) {
+        // ignore - let the bounce finish (_updateBounce will kill the timer when it's ready)
+        if(_bounce.bouncing) {}
+        else [self _stopTimer];
+    }
+}
+
 /**
  * @brief Whether the scroll view bounces past the edge of content and back again
  * 
@@ -829,16 +843,25 @@ static float clampBounce(float x) {
 	}
 }
 
-- (void)scrollRectToVisible:(CGRect)rect animated:(BOOL)animated
-{
+- (void)scrollRectToVisible:(CGRect)rect animated:(BOOL)animated {
 	CGRect visible = self.visibleRect;
 	if(rect.origin.y < visible.origin.y) {
 		// scroll down, have rect be flush with bottom of visible view
-		[self setContentOffset:CGPointMake(0, -rect.origin.y) animated:animated];
+		[self setContentOffset:CGPointMake(self.contentOffset.x, -rect.origin.y)
+                      animated:animated];
 	} else if(rect.origin.y + rect.size.height > visible.origin.y + visible.size.height) {
 		// scroll up, rect to be flush with top of view
-		[self setContentOffset:CGPointMake(0, -rect.origin.y + visible.size.height - rect.size.height) animated:animated];
-	}
+		[self setContentOffset:CGPointMake(self.contentOffset.x, -rect.origin.y + visible.size.height - rect.size.height)
+                      animated:animated];
+	} else if(rect.origin.x < visible.origin.x) {
+        // scroll right
+        [self setContentOffset:CGPointMake(-rect.origin.x, self.contentOffset.y)
+                      animated:animated];
+    } else if(rect.origin.x + rect.size.width > visible.origin.x + visible.size.width) {
+        // scroll left
+        [self setContentOffset:CGPointMake(-rect.origin.x + visible.size.width - rect.size.width, self.contentOffset.y)
+                      animated:animated];
+    }
 	[self.nsView invalidateHoverForView:self];
 }
 
@@ -1195,6 +1218,14 @@ static float clampBounce(float x) {
 			return YES;
 	}
 	return NO;
+}
+
+- (TUIScrollKnob *)verticalScrollKnob {
+    return _verticalScrollKnob;
+}
+
+- (TUIScrollKnob *)horizontalScrollKnob {
+    return _horizontalScrollKnob;
 }
 
 @end
