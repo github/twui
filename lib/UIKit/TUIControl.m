@@ -124,53 +124,115 @@
 	return self.acceptsFirstMouse;
 }
 
-- (void)mouseDown:(NSEvent *)event
-{
-	[super mouseDown:event];
+- (void)mouseDown:(NSEvent *)event {
+    if(!_controlFlags.disabled) {
+        [super mouseDown:event];
 
-	if (self.state & TUIControlStateDisabled) {
-		return;
-	}
-	
-	// handle state change
-	[self _stateWillChange];
-	_controlFlags.tracking = 1;
-	[self _stateDidChange];
-	
-	// handle touch down
-	if([event clickCount] < 2) {
-		[self sendActionsForControlEvents:TUIControlEventMouseDown];
-	} else {
-		[self sendActionsForControlEvents:TUIControlEventMouseDownRepeat];
-	}
-  
-	// needs display
-	[self setNeedsDisplay];
+        BOOL track = [self beginTrackingWithEvent:event];
+        if(track && !_controlFlags.tracking) {
+            [self _stateWillChange];
+            _controlFlags.tracking = 1;
+            [self _stateDidChange];
+        } else if(!track && _controlFlags.tracking) {
+            [self _stateWillChange];
+            _controlFlags.tracking = 0;
+            [self _stateDidChange];
+        }
+
+        if(_controlFlags.tracking) {            
+            TUIControlEvents currentEvents = (([event clickCount] < 2) ? 
+            				     TUIControlEventMouseDownRepeat : 
+            				     TUIControlMouseTouchDown);
+
+            [self sendActionsForControlEvents:currentEvents];
+            [self setNeedsDisplay];
+        }
+    }
 }
 
-- (void)mouseUp:(NSEvent *)event
-{
-	[super mouseUp:event];
+- (void)mouseDragged:(NSEvent *)event {
+    if(!_controlFlags.disabled) {
+        [super mouseDragged:event];
 
-	if (self.state & TUIControlStateDisabled) {
-		return;
-	}
-	
-	// handle state change
-	[self _stateWillChange];
-	_controlFlags.tracking = 0;
-	[self _stateDidChange];
-	
-	if([self eventInside:event]) {
-		if(![self didDrag]) {
-			[self sendActionsForControlEvents:TUIControlEventMouseUpInside];
-		}
-	} else {
-		[self sendActionsForControlEvents:TUIControlEventMouseUpOutside];
-	}
-	
-	// needs display
-	[self setNeedsDisplay];
+        if(_controlFlags.tracking) {
+            BOOL track = [self continueTrackingWithEvent:event];
+            if(track && !_controlFlags.tracking) {
+                [self _stateWillChange];
+                _controlFlags.tracking = 1;
+                [self _stateDidChange];
+            } else if(!track && _controlFlags.tracking) {
+                [self _stateWillChange];
+                _controlFlags.tracking = 0;
+                [self _stateDidChange];
+            }
+
+            if(_controlFlags.tracking) {
+                TUIControlEvents currentEvents = (([self eventInside:event])? 
+                                                 TUIControlEventMouseDragInside : 
+                                                 TUIControlEventMouseDragOutside);
+
+                [self sendActionsForControlEvents:currentEvents];
+                [self setNeedsDisplay];
+            }
+        }
+    }
+}
+
+- (void)mouseUp:(NSEvent *)event {
+    if(!_controlFlags.disabled) {
+        [super mouseUp:event];
+
+        if(_controlFlags.tracking) {
+            [self endTrackingWithEvent:event];
+
+            TUIControlEvents currentEvents = (([self eventInside:event])? 
+                               				 TUIControlEventMouseUpInside : 
+                                             TUIControlEventMouseUpOutside);
+
+            [self sendActionsForControlEvents:currentEvents];
+            [self setNeedsDisplay];
+
+            [self _stateWillChange];
+            _controlFlags.tracking = 0;
+            [self _stateDidChange];
+        }
+    }
+}
+
+// Support tracking cancelation.
+- (void)willMoveToSuperview:(TUIView *)newSuperview {
+    if(!_controlFlags.disabled && _controlFlags.tracking) {
+        [self _stateWillChange];
+        _controlFlags.tracking = 0;
+        [self _stateDidChange];
+
+        [self endTrackingWithEvent:nil];
+        [self setNeedsDisplay];
+    }
+}
+
+- (void)willMoveToWindow:(TUINSWindow *)newWindow {
+    if(!_controlFlags.disabled && _controlFlags.tracking) {
+        [self _stateWillChange];
+        _controlFlags.tracking = 0;
+        [self _stateDidChange];
+
+        [self endTrackingWithEvent:nil];
+        [self setNeedsDisplay];
+    }
+}
+
+// Override.
+- (BOOL)beginTrackingWithEvent:(NSEvent *)event {
+    return YES;
+}
+
+- (BOOL)continueTrackingWithEvent:(NSEvent *)event {
+    return YES;
+}
+
+- (void)endTrackingWithEvent:(NSEvent *)event {
+    return;
 }
 
 @end
