@@ -63,6 +63,25 @@ typedef NSUInteger TUIControlState;
 
 @property (nonatomic, assign) BOOL acceptsFirstMouse;
 
+// When control tracking begins, usually by mouse down or
+// swipe start, this method is called to validate the event.
+// If YES is returned, tracking will continue, otherwise
+// if NO is returned, tracking ends there itself.
+- (BOOL)beginTrackingWithEvent:(NSEvent *)event;
+
+// If the control opts to continue tracking, then this method
+// will be continuously called to validate each event in the
+// chain of tracking events, and should be used to update the
+// control view to reflect tracking changes. If YES is returned,
+// the control continues to receive tracking events. If NO
+// is returned, tracking ends there itself.
+- (BOOL)continueTrackingWithEvent:(NSEvent *)event;
+
+// When control tracking ends, this method is called to allow
+// the control to clean up. It is NOT called when the control
+// opts to cancel it - only when the user cancels the tracking.
+- (void)endTrackingWithEvent:(NSEvent *)event;
+
 @end
 
 @interface TUIControl (TargetAction)
