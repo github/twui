@@ -136,6 +136,8 @@
 		[self _updateDefaultAttributes];
 		
 		self.drawFrame = TUITextViewStandardFrame();
+
+		self.editable = YES;
 	}
 	return self;
 }
