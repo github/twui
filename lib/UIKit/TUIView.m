@@ -1079,6 +1079,7 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 - (void)setHidden:(BOOL)h
 {
 	self.layer.hidden = h;
+	[self.subviews makeObjectsPerformSelector:@selector(ancestorDidLayout)];
 }
 
 - (NSColor *)backgroundColor

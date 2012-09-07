@@ -151,7 +151,7 @@
 	[view stopRenderingContainedView];
 
 	if (!view.renderingContainedView) {
-		[view synchronizeNSViewGeometry];
+		[view synchronizeNSViewAppearance];
 		view.rootView.alphaValue = 1.0;
 	}
 

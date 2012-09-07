@@ -50,9 +50,9 @@
 @property (readonly) CGRect NSViewFrame;
 
 /**
- * This will synchronize the geometry of the receiver's NSView with that of
- * the receiver, ensuring that the NSView is laid out correctly on screen.
+ * This will synchronize the appearance of the receiver's NSView with that of
+ * the receiver, ensuring that the NSView is displayed correctly on screen.
  */
-- (void)synchronizeNSViewGeometry;
+- (void)synchronizeNSViewAppearance;
 
 @end
