@@ -106,6 +106,14 @@
 				[s ab_drawInRect:CGRectOffset(imageRect, imageRect.size.width, -15)];
 			};
 		}
+
+		NSTextField *textField = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 180, 91, 22)];
+		[textField.cell setUsesSingleLineMode:YES];
+		[textField.cell setScrollable:YES];
+
+		TUIViewNSViewContainer *textFieldContainer = [[TUIViewNSViewContainer alloc] initWithNSView:textField];
+		textFieldContainer.backgroundColor = [NSColor blueColor];
+		[self addSubview:textFieldContainer];
 	}
 	return self;
 }

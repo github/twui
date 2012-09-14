@@ -219,6 +219,12 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 {
 	v.autoresizingMask = TUIViewAutoresizingFlexibleSize;
 
+	TUINSView *originalNSView = v.ancestorTUINSView;
+	TUIView *originalRootView = _rootView;
+
+	[v willMoveToTUINSView:self];
+	[originalRootView willMoveToTUINSView:nil];
+
 	_rootView.nsView = nil;
 	_rootView.hostView = nil;
 	_rootView = v;
@@ -235,6 +241,9 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	[self.layer insertSublayer:_rootView.layer atIndex:0];
 	
 	[self _updateLayerScaleFactor];
+
+	[originalRootView didMoveFromTUINSView:self];
+	[v didMoveFromTUINSView:originalNSView];
 }
 
 - (void)setNextResponder:(NSResponder *)r
