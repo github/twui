@@ -309,6 +309,9 @@ normal:
 	if(_flags.delegateWillBecomeFirstResponder) [delegate textRendererWillBecomeFirstResponder:self];
 	if(_flags.delegateDidBecomeFirstResponder) [delegate textRendererDidBecomeFirstResponder:self];
 	
+    [[NSNotificationCenter defaultCenter] postNotificationName:TUITextRendererDidBecomeFirstResponder
+                                                        object:self];
+    
 	return YES;
 }
 
@@ -318,6 +321,10 @@ normal:
 	if(_flags.delegateWillResignFirstResponder) [delegate textRendererWillResignFirstResponder:self];
 	[self resetSelection];
 	if(_flags.delegateDidResignFirstResponder) [delegate textRendererDidResignFirstResponder:self];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:TUITextRendererDidResignFirstResponder
+                                                        object:self];
+    
 	return YES;
 }
 

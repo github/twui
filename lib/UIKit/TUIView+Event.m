@@ -87,33 +87,55 @@
 	NSPoint p = [self localPointForEvent:event];
 	
 	if(_viewFlags.dragDistanceLock) {
-		CGFloat dx = p.x - startDrag.x;
-		CGFloat dy = p.y - startDrag.y;
-		CGFloat dragDist = sqrt(dx*dx+dy*dy);
-		if(dragDist > 2.5) {
+		//CGFloat dx = p.x - startDrag.x;
+		//CGFloat dy = p.y - startDrag.y;
+		//CGFloat dragDist = sqrt(dx*dx+dy*dy);
+		//if(dragDist > 2.5) {
 			_viewFlags.dragDistanceLock = 0;
-		}
+		//}
 	}
 	if(_viewFlags.dragDistanceLock == 1)
 		return; // ignore
 	
 	if(_viewFlags.moveWindowByDragging) {
+        startDrag = [self localPointForEvent:event];
 		NSWindow *window = [self nsWindow];
 		NSPoint o = [window frame].origin;
-		o.x += p.x - startDrag.x;
-		o.y += p.y - startDrag.y;
+		//o.x += p.x - startDrag.x;
+		//o.y += p.y - startDrag.y;
 		
-		CGRect r = [window frame];
-		r.origin = o;
-		r = ABClampProposedRectToScreen(r);
-		o = r.origin;
+		//CGRect r = [window frame];
+		//r.origin = o;
+		//r = ABClampProposedRectToScreen(r);
+		//o = r.origin;
 		
 		if(!_viewFlags.didStartMovingByDragging) {
 			if([window respondsToSelector:@selector(windowWillStartLiveDrag)])
 				[window performSelector:@selector(windowWillStartLiveDrag)];
 			_viewFlags.didStartMovingByDragging = 1;
 		}
-		[window setFrameOrigin:o];
+		//[window setFrameOrigin:o];
+        
+        BOOL keepTracking = YES;
+        NSEvent *nextEvent = event;
+        while(keepTracking) {
+            switch([nextEvent type]) {
+                case NSLeftMouseDragged:
+                    p = [self localPointForEvent:nextEvent];
+                    o = [window frame].origin;
+                    o.x += p.x - startDrag.x;
+                    o.y += p.y - startDrag.y;
+                    [window setFrameOrigin:o];
+                    break;
+                case NSLeftMouseUp:
+                    return;
+                    break;
+                default:
+                    break;
+            }
+            
+            nextEvent = [window nextEventMatchingMask:NSLeftMouseDraggedMask | NSLeftMouseUpMask];
+        }
 	} else if(_viewFlags.resizeWindowByDragging) {
 		if(!_viewFlags.didStartResizeByDragging) {
 			_viewFlags.didStartResizeByDragging = 1;

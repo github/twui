@@ -22,6 +22,9 @@
 #import "TUIStringDrawing.h"
 #import "TUIView.h"
 
+NSString *TUITextRendererDidBecomeFirstResponder = @"TUITextRendererDidBecomeFirstResponder";
+NSString *TUITextRendererDidResignFirstResponder = @"TUITextRendererDidResignFirstResponder";
+
 @interface TUITextRenderer ()
 @property (nonatomic, retain) NSMutableDictionary *lineRects;
 @end
