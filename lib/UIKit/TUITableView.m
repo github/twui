@@ -658,10 +658,16 @@ static NSInteger SortCells(TUITableViewCell *a, TUITableViewCell *b, void *ctx)
 		CGFloat previousOffset = 0.0f;
 		NSIndexPath *savedIndexPath = nil;
 		CGFloat relativeOffset = 0.0;
+		
+		CGFloat resizingOffset = 0.0;
+		if ([self.nsView inLiveResize]) {
+			resizingOffset = (_lastSize.height - bounds.size.height);
+		}
+		
 		if(_tableFlags.maintainContentOffsetAfterReload) {
 			previousOffset = self.contentSize.height + self.contentOffset.y;
 		} else {
-			if(_tableFlags.forceSaveScrollPosition || [self.nsView inLiveResize]) {
+			if(_tableFlags.forceSaveScrollPosition || resizingOffset) {
 				_tableFlags.forceSaveScrollPosition = 0;
 				NSArray *a = [INDEX_PATHS_FOR_VISIBLE_ROWS sortedArrayUsingSelector:@selector(compare:)];
 				if([a count]) {
@@ -669,7 +675,7 @@ static NSInteger SortCells(TUITableViewCell *a, TUITableViewCell *b, void *ctx)
 					CGRect v = [self visibleRect];
 					CGRect r = [self rectForRowAtIndexPath:savedIndexPath];
 					relativeOffset = ((v.origin.y + v.size.height) - (r.origin.y + r.size.height));
-					relativeOffset += (_lastSize.height - bounds.size.height);
+					relativeOffset += resizingOffset;
 				}
 			} else if(_keepVisibleIndexPathForReload) {
 				savedIndexPath = _keepVisibleIndexPathForReload;
@@ -690,7 +696,7 @@ static NSInteger SortCells(TUITableViewCell *a, TUITableViewCell *b, void *ctx)
 		
 		// restore scroll position
 		if(_tableFlags.maintainContentOffsetAfterReload) {
-			CGFloat newOffset = previousOffset - self.contentSize.height;
+			CGFloat newOffset = previousOffset - self.contentSize.height - resizingOffset;
 			self.contentOffset = CGPointMake(self.contentOffset.x, newOffset);
 		} else {
 			if(savedIndexPath) {
