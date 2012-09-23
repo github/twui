@@ -34,6 +34,12 @@
 
 @property (nonatomic, copy) NSString *text;
 
+// To enable secure text entry on an editor class, or view,
+// simply set this boolean to YES. Once it is secured, the
+// drawingAttributedString will display only bullets, instead
+// of the actual string value. Just set this to NO to disable.
+@property (nonatomic, assign, getter = isSecure) BOOL secure;
+
 @property (nonatomic, strong) NSDictionary *defaultAttributes;
 @property (nonatomic, strong) NSDictionary *markedAttributes;
 

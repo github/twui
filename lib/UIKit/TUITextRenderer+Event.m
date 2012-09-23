@@ -19,13 +19,7 @@
 #import "TUICGAdditions.h"
 #import "TUINSView.h"
 #import "TUINSWindow.h"
-
-@interface TUITextRenderer()
-- (CTFramesetterRef)ctFramesetter;
-- (CTFrameRef)ctFrame;
-- (CGPathRef)ctPath;
-- (CFRange)_selectedRange;
-@end
+#import "TUITextRenderer+Private.h"
 
 @implementation TUITextRenderer (Event)
 

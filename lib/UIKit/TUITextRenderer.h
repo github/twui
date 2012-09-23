@@ -96,6 +96,14 @@ typedef enum {
 - (CGSize)sizeConstrainedToWidth:(CGFloat)width numberOfLines:(NSUInteger)numberOfLines;
 - (void)reset;
 
+// The -drawingAttributedString method allows for direct access
+// to the string being drawn to the screen. For example, if the
+// text rendering control is secure, this string would then 
+// contain a string with the same length as the original string,
+// but all characters replaced by large ellipses instead.
+// This method may be expanded or removed in the future.
+- (NSAttributedString *)drawingAttributedString;
+
 - (NSRange)selectedRange;
 - (void)setSelection:(NSRange)selection;
 - (NSString *)selectedString;
