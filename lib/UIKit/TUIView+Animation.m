@@ -108,10 +108,24 @@ static CGFloat TUIViewAnimationSlowMotionMultiplier (void) {
 	[self animateWithDuration:duration animations:animations completion:NULL];
 }
 
++ (void)animateWithDuration:(NSTimeInterval)duration
+					  delay:(NSTimeInterval)delay
+				 animations:(void (^)(void))animations
+				 completion:(void (^)(BOOL finished))completion {
+	[self beginAnimations:nil context:NULL];
+	self.animationDuration = duration;
+	[TUIView setAnimationDelay:delay];
+	
+	TUIViewCurrentAnimation.animationCompletionBlock = completion;
+	animations();
+	
+	[self commitAnimations];
+}
+
 + (void)animateWithDuration:(NSTimeInterval)duration animations:(void (^)(void))animations completion:(void (^)(BOOL finished))completion {
 	[self beginAnimations:nil context:NULL];
 	self.animationDuration = duration;
-
+	
 	TUIViewCurrentAnimation.animationCompletionBlock = completion;
 	animations();
 
@@ -161,7 +175,7 @@ static CGFloat TUIViewAnimationSlowMotionMultiplier (void) {
 }
 
 + (void)setAnimationDelay:(NSTimeInterval)delay {
-	TUIViewCurrentAnimation.basicAnimation.beginTime = CACurrentMediaTime() + delay * TUIViewAnimationSlowMotionMultiplier();
+	TUIViewCurrentAnimation.basicAnimation.beginTime = CACurrentMediaTime() + delay;
 	TUIViewCurrentAnimation.basicAnimation.fillMode = kCAFillModeBoth;
 }
 

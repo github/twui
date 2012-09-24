@@ -455,8 +455,15 @@ extern CGRect(^TUIViewCenteredLayout)(TUIView*);
 + (void)setAnimateContents:(BOOL)enabled;
 + (BOOL)willAnimateContents;
 
-+ (void)animateWithDuration:(NSTimeInterval)duration animations:(void (^)(void))animations;
-+ (void)animateWithDuration:(NSTimeInterval)duration animations:(void (^)(void))animations completion:(void (^)(BOOL finished))completion;
++ (void)animateWithDuration:(NSTimeInterval)duration
+				 animations:(void (^)(void))animations;
++ (void)animateWithDuration:(NSTimeInterval)duration
+					  delay:(NSTimeInterval)delay
+				 animations:(void (^)(void))animations
+				 completion:(void (^)(BOOL finished))completion;
++ (void)animateWithDuration:(NSTimeInterval)duration
+				 animations:(void (^)(void))animations
+				 completion:(void (^)(BOOL finished))completion;
 
 /**
  from receiver and all subviews
