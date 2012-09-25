@@ -127,7 +127,11 @@
 		cursor = [[TUIView alloc] initWithFrame:CGRectZero];
 		cursor.userInteractionEnabled = NO;
 		cursor.backgroundColor = [NSColor colorWithCalibratedRed:13 / 255.0 green:140 / 255.0 blue:231 / 255.0 alpha:1];
-		[self addSubview:cursor];
+        
+		if([self.nsWindow isKeyWindow])
+			[self addSubview:cursor];
+		
+		self.needsDisplayWhenWindowsKeyednessChanges = YES;
 		
 		self.autocorrectedResults = [NSMutableDictionary dictionary];
 		
@@ -140,6 +144,16 @@
 		self.editable = YES;
 	}
 	return self;
+}
+
+- (void)windowDidBecomeKey {
+	[self addSubview:cursor];
+	[super windowDidBecomeKey];
+}
+
+- (void)windowDidResignKey {
+	[cursor removeFromSuperview];
+	[super windowDidResignKey];
 }
 
 - (id)forwardingTargetForSelector:(SEL)sel

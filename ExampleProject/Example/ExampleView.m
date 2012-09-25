@@ -150,6 +150,10 @@
 	title.color = [NSColor blackColor];
 	title.font = exampleFont2;
 	view.labelRenderer.attributedString = title;
+	
+	// Dragging a title can drag the window too.
+	[view setMoveWindowByDragging:YES];
+	
 	return view;
 }
 

@@ -18,6 +18,7 @@
 #import "TUINSView.h"
 #import "TUINSWindow.h"
 #import "TUITextRenderer+Event.h"
+#import "TUIView+Private.h"
 
 @implementation TUIView (Event)
 
@@ -45,10 +46,25 @@
 	_viewFlags.didStartMovingByDragging = 0;
 	_viewFlags.didStartResizeByDragging = 0;
 	
-	if(self.superview != nil){
-	  [self.superview mouseDown:event onSubview:self];
-	}
+	__unsafe_unretained id _self = self;
+	CGPoint _startDrag = startDrag;
 	
+	self.dragHandler = ^(NSEvent *event) {
+		NSWindow *window = [_self nsWindow];
+		
+		if(event.type == NSLeftMouseDragged) {
+			NSPoint p = [_self localPointForEvent:event];
+			NSPoint o = window.frame.origin;
+			
+			o.x += p.x - _startDrag.x;
+			o.y += p.y - _startDrag.y;
+			window.frameOrigin = o;
+		}
+	};
+	
+	if(self.superview != nil) {
+		[self.superview mouseDown:event onSubview:self];
+	}
 }
 
 - (void)mouseUp:(NSEvent *)event
@@ -61,23 +77,25 @@
 		[self.nsView viewDidEndLiveResize];
 	}
 	
-	if(self.superview != nil){
-	  [self.superview mouseUp:event fromSubview:self];
+	self.dragHandler = nil;
+	
+	if(self.superview != nil) {
+		[self.superview mouseUp:event fromSubview:self];
 	}
 	
 }
 
 - (void)rightMouseDown:(NSEvent *)event
 {
-	if(self.superview != nil){
-	  [self.superview rightMouseDown:event onSubview:self];
+	if(self.superview != nil) {
+		[self.superview rightMouseDown:event onSubview:self];
 	}
 }
 
 - (void)rightMouseUp:(NSEvent *)event
 {
-	if(self.superview != nil){
-	  [self.superview rightMouseUp:event fromSubview:self];
+	if(self.superview != nil) {
+		[self.superview rightMouseUp:event fromSubview:self];
 	}
 }
 
@@ -87,33 +105,22 @@
 	NSPoint p = [self localPointForEvent:event];
 	
 	if(_viewFlags.dragDistanceLock) {
-		CGFloat dx = p.x - startDrag.x;
-		CGFloat dy = p.y - startDrag.y;
-		CGFloat dragDist = sqrt(dx*dx+dy*dy);
-		if(dragDist > 2.5) {
-			_viewFlags.dragDistanceLock = 0;
-		}
+		_viewFlags.dragDistanceLock = 0;
 	}
-	if(_viewFlags.dragDistanceLock == 1)
-		return; // ignore
 	
 	if(_viewFlags.moveWindowByDragging) {
+		startDrag = [self localPointForEvent:event];
 		NSWindow *window = [self nsWindow];
-		NSPoint o = [window frame].origin;
-		o.x += p.x - startDrag.x;
-		o.y += p.y - startDrag.y;
-		
-		CGRect r = [window frame];
-		r.origin = o;
-		r = ABClampProposedRectToScreen(r);
-		o = r.origin;
 		
 		if(!_viewFlags.didStartMovingByDragging) {
 			if([window respondsToSelector:@selector(windowWillStartLiveDrag)])
 				[window performSelector:@selector(windowWillStartLiveDrag)];
 			_viewFlags.didStartMovingByDragging = 1;
 		}
-		[window setFrameOrigin:o];
+		
+		if(self.dragHandler) {
+			self.dragHandler(event);
+		}
 	} else if(_viewFlags.resizeWindowByDragging) {
 		if(!_viewFlags.didStartResizeByDragging) {
 			_viewFlags.didStartResizeByDragging = 1;
@@ -152,9 +159,9 @@
 		if(!_currentTextRenderer && _viewFlags.pasteboardDraggingEnabled)
 			[self pasteboardDragMouseDragged:event];
 	}
-	
-	if(self.superview != nil){
-	  [self.superview mouseDragged:event onSubview:self];
+
+	if(self.superview != nil) {
+		[self.superview mouseDragged:event onSubview:self];
 	}
 	
 }
@@ -181,9 +188,9 @@
 
 - (void)mouseEntered:(NSEvent *)event
 {
-  if(self.superview != nil){
-    [self.superview mouseEntered:event onSubview:self];
-  }
+	if(self.superview != nil){
+		[self.superview mouseEntered:event onSubview:self];
+	}
 	if(_viewFlags.delegateMouseEntered){
 		[_viewDelegate view:self mouseEntered:event];
 	}
@@ -191,9 +198,9 @@
 
 - (void)mouseExited:(NSEvent *)event
 {
-  if(self.superview != nil){
-    [self.superview mouseExited:event fromSubview:self];
-  }
+	if(self.superview != nil){
+		[self.superview mouseExited:event fromSubview:self];
+	}
 	if(_viewFlags.delegateMouseExited){
 		[_viewDelegate view:self mouseExited:event];
 	}
@@ -211,12 +218,12 @@
 
 - (void)mouseDown:(NSEvent *)event onSubview:(TUIView *)subview
 {
-  [self.superview mouseDown:event onSubview:subview];
+	[self.superview mouseDown:event onSubview:subview];
 }
 
 - (void)mouseDragged:(NSEvent *)event onSubview:(TUIView *)subview
 {
-  [self.superview mouseDragged:event onSubview:subview];
+	[self.superview mouseDragged:event onSubview:subview];
 }
 
 - (void)mouseUp:(NSEvent *)event fromSubview:(TUIView *)subview
@@ -226,7 +233,7 @@
 
 - (void)rightMouseDown:(NSEvent *)event onSubview:(TUIView *)subview
 {
-  [self.superview rightMouseDown:event onSubview:subview];
+	[self.superview rightMouseDown:event onSubview:subview];
 }
 
 - (void)rightMouseUp:(NSEvent *)event fromSubview:(TUIView *)subview
@@ -236,12 +243,12 @@
 
 - (void)mouseEntered:(NSEvent *)event onSubview:(TUIView *)subview
 {
-  [self.superview mouseEntered:event onSubview:subview];
+	[self.superview mouseEntered:event onSubview:subview];
 }
 
 - (void)mouseExited:(NSEvent *)event fromSubview:(TUIView *)subview
 {
-  [self.superview mouseExited:event fromSubview:subview];
+	[self.superview mouseExited:event fromSubview:subview];
 }
 
 @end
