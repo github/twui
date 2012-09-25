@@ -79,9 +79,6 @@ typedef enum {
 	
 	__unsafe_unretained id _delegate;
 	
-  TUIScrollKnob * _verticalScrollKnob;
-  TUIScrollKnob * _horizontalScrollKnob;
-	
 	NSTimer *scrollTimer;
 	CGPoint destinationOffset;
 	CGPoint unfixedContentOffset;
@@ -163,6 +160,20 @@ typedef enum {
 @property (nonatomic) TUIScrollViewIndicatorStyle scrollIndicatorStyle;
 @property (nonatomic) float decelerationRate;
 
+@property (nonatomic, readonly) CGRect visibleRect;
+@property (nonatomic, readonly) TUIEdgeInsets scrollIndicatorInsets;
+
+@property (nonatomic, strong, readonly) TUIScrollKnob *verticalScrollKnob;
+@property (nonatomic, strong, readonly) TUIScrollKnob *horizontalScrollKnob;
+
+@property (nonatomic, readonly) CGPoint pullOffset;
+@property (nonatomic, readonly) CGPoint bounceOffset;
+
+@property (nonatomic, readonly, getter=isDragging) BOOL dragging;
+@property (nonatomic, readonly, getter=isBouncing) BOOL bouncing;
+@property (nonatomic, readonly, getter=isDecelerating) BOOL decelerating;
+@property (nonatomic, readonly, getter=isScrollingToTop) BOOL scrollingToTop;
+
 - (void)setContentOffset:(CGPoint)contentOffset animated:(BOOL)animated;
 - (void)scrollRectToVisible:(CGRect)rect animated:(BOOL)animated;
 - (void)scrollToTopAnimated:(BOOL)animated;
@@ -171,18 +182,8 @@ typedef enum {
 - (void)beginContinuousScrollForDragAtPoint:(CGPoint)dragLocation animated:(BOOL)animated;
 - (void)endContinuousScrollAnimated:(BOOL)animated;
 
-@property (nonatomic, readonly) CGRect visibleRect;
-@property (nonatomic, readonly) TUIEdgeInsets scrollIndicatorInsets;
-
 - (void)flashScrollIndicators;
-
-- (BOOL)isScrollingToTop;
-
-@property (nonatomic, readonly) CGPoint pullOffset;
-@property (nonatomic, readonly) CGPoint bounceOffset;
-
-@property (nonatomic, readonly, getter=isDragging) BOOL dragging;
-@property (nonatomic, readonly, getter=isDecelerating) BOOL decelerating;
+- (void)stopThrowing;
 
 @end
 
