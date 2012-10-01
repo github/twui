@@ -19,6 +19,7 @@
 @property (nonatomic, copy) NSString *layoutName;
 
 - (void)addLayoutConstraint:(TUILayoutConstraint *)constraint;
+- (void)removeLayoutConstraint:(TUILayoutConstraint *)constraint;
 - (NSArray *)layoutConstraints;
 - (void)removeAllLayoutConstraints;
 

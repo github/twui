@@ -45,6 +45,7 @@
  
  */
 - (void)addLayoutConstraint:(TUILayoutConstraint *)constraint toView:(TUIView *)view;
+- (void)removeLayoutConstraint:(TUILayoutConstraint *)constraint fromView:(TUIView *)view;
 - (void)removeLayoutConstraintsFromView:(TUIView *)view;
 
 - (NSArray *)layoutConstraintsOnView:(TUIView *)view;

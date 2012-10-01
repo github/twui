@@ -165,6 +165,16 @@
 	[self beginProcessingView:view];
 }
 
+- (void)removeLayoutConstraint:(TUILayoutConstraint *)constraint fromView:(TUIView *)view {
+	TUILayoutContainer *viewContainer = [self.constraints objectForKey:view];
+	if(viewContainer == nil) {
+		return;
+	}
+	
+	[[viewContainer layoutConstraints] removeObject:constraint];
+	[self beginProcessingView:view];
+}
+
 - (void)removeLayoutConstraintsFromView:(TUIView *)view {
 	TUILayoutContainer *viewContainer = [self.constraints objectForKey:view];
 	[[viewContainer layoutConstraints] removeAllObjects];

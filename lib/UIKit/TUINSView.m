@@ -158,11 +158,6 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	f.origin = NSZeroPoint;
 	[self addCursorRect:f cursor:[NSCursor arrowCursor]];
 }
-		 
-- (void)ab_setIsOpaque:(BOOL)o
-{
-	opaque = o;
-}
 
 - (void)tui_setOpaque:(BOOL)o
 {

@@ -60,8 +60,6 @@
 - (BOOL)isHoveringSubviewOfView:(TUIView *)v; // v or subview of v
 - (BOOL)isHoveringView:(TUIView *)v; // only v
 
-- (void)ab_setIsOpaque:(BOOL)o __attribute__((deprecated)); // don't use this
-
 - (void)tui_setOpaque:(BOOL)o;
 
 - (BOOL)isWindowKey;

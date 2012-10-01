@@ -384,8 +384,8 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 			CGContextSetRGBFillColor(context, 0, 1, 0, 0.3);
 		} else {
 			CGContextSetRGBFillColor(context, 1, 0, 0, 0.3);
-			CGContextFillRect(context, rectToDraw);
 		}
+		CGContextFillRect(context, rectToDraw);
 		#endif
 
 		layer.contents = TUIGraphicsGetImageFromCurrentImageContext();

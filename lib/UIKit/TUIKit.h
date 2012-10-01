@@ -44,7 +44,6 @@
 #import "TUIScrollView+TUIBridgedScrollView.h"
 #import "TUIStretchableImage.h"
 #import "TUIStringDrawing.h"
-#import "TUIStyledView.h"
 #import "TUITableView+Additions.h"
 #import "TUITableView.h"
 #import "TUITableViewCell.h"
@@ -58,5 +57,3 @@
 #import "TUIViewController.h"
 #import "TUIViewNSViewContainer.h"
 #import "NSFont+TUIExtensions.h"
-
-extern BOOL AtLeastLion; // set at launch

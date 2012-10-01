@@ -14,6 +14,7 @@
  limitations under the License.
  */
 
+#import <CoreServices/CoreServices.h>
 #import "TUIScrollView.h"
 #import "TUIKit.h"
 #import "TUIScrollKnob.h"
@@ -59,6 +60,22 @@ enum {
 @synthesize decelerationRate;
 @synthesize resizeKnobSize;
 
+// Default to non-Lion behavior to prevent breakage.
+static BOOL isAtleastLion = NO;
+
++ (void)initialize {
+	if(self.class != TUIScrollView.class)
+		return;
+	
+	SInt32 major = 0;
+	SInt32 minor = 0;
+	
+	Gestalt(gestaltSystemVersionMajor, &major);
+	Gestalt(gestaltSystemVersionMinor, &minor);
+	
+	isAtleastLion = ((major == 10 && minor >= 7) || major > 11);
+}
+
 + (Class)layerClass
 {
 	return [CAScrollLayer class];
@@ -72,7 +89,7 @@ enum {
 
 		decelerationRate = 0.88;
 		
-		_scrollViewFlags.bounceEnabled = (FORCE_ENABLE_BOUNCE || AtLeastLion || [[NSUserDefaults standardUserDefaults] boolForKey:@"ForceEnableScrollBouncing"]);
+		_scrollViewFlags.bounceEnabled = (FORCE_ENABLE_BOUNCE || isAtleastLion || [[NSUserDefaults standardUserDefaults] boolForKey:@"ForceEnableScrollBouncing"]);
 		_scrollViewFlags.alwaysBounceVertical = FALSE;
 		_scrollViewFlags.alwaysBounceHorizontal = FALSE;
 		
@@ -332,11 +349,8 @@ enum {
 
 - (void)setResizeKnobSize:(CGSize)s
 {
-	if(AtLeastLion) {
-		// ignore
-	} else {
+	if(!isAtleastLion)
 		resizeKnobSize = s;
-	}
 }
 
 - (BOOL)_verticalScrollKnobNeededForContentSize:(CGSize)size {
@@ -1002,7 +1016,8 @@ static float clampBounce(float x) {
 	if(_scrollViewFlags.bounceEnabled) {
 		_scrollViewFlags.gestureBegan = 0;
 		[self _startThrow];
-		if(AtLeastLion) {
+		
+		if(isAtleastLion) {
 			_scrollViewFlags.ignoreNextScrollPhaseNormal_10_7 = 1;
 		}
 	}
@@ -1019,7 +1034,7 @@ static float clampBounce(float x) {
 	{
 		int phase = ScrollPhaseNormal;
 		
-		if(AtLeastLion) {
+		if(isAtleastLion) {
 			SEL s = @selector(momentumPhase);
 			if([event respondsToSelector:s]) {
 				NSInteger (*imp)(id,SEL) = (NSInteger(*)(id,SEL))[event methodForSelector:s];
