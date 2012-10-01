@@ -1082,12 +1082,12 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 
 - (NSColor *)backgroundColor
 {
-	return [NSColor tui_colorWithCGColor:self.layer.backgroundColor];
+	return [NSColor colorWithCGColor:self.layer.backgroundColor];
 }
 
 - (void)setBackgroundColor:(NSColor *)color
 {
-	self.layer.backgroundColor = color.tui_CGColor;
+	self.layer.backgroundColor = color.CGColor;
 	if(color.alphaComponent < 1.0)
 		self.opaque = NO;
 

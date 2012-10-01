@@ -27,9 +27,15 @@ static void releasePatternInfo (void *info) {
     CFRelease(info);
 }
 
+// Disable warnings for method overrides because the
+// OS X 10.8 API added these methods in, and supplying
+// our own methods allows for cross-platform cohesiveness.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wobjc-protocol-method-implementation"
+
 @implementation NSColor (TUIExtensions)
 
-+ (NSColor *)tui_colorWithCGColor:(CGColorRef)color; {
++ (NSColor *)colorWithCGColor:(CGColorRef)color {
     if (!color)
         return nil;
 
@@ -42,7 +48,7 @@ static void releasePatternInfo (void *info) {
     return result;
 }
 
-- (CGColorRef)tui_CGColor; {
+- (CGColorRef)CGColor {
     if ([self.colorSpaceName isEqualToString:NSPatternColorSpace]) {
         CGImageRef patternImage = self.patternImage.tui_CGImage;
         if (!patternImage)
@@ -91,3 +97,5 @@ static void releasePatternInfo (void *info) {
 }
 
 @end
+
+#pragma clang diagnostic pop

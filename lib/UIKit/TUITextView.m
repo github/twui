@@ -96,7 +96,7 @@
 	NSMutableDictionary *attributes = [NSMutableDictionary dictionary];
 	
 	if (self.textColor != nil) {
-		[attributes setObject:(__bridge id)self.textColor.tui_CGColor forKey:(__bridge id)kCTForegroundColorAttributeName];
+		[attributes setObject:(__bridge id)self.textColor.CGColor forKey:(__bridge id)kCTForegroundColorAttributeName];
 	}
 	
 	NSParagraphStyle *style = ABNSParagraphStyleForTextAlignment(textAlignment);
