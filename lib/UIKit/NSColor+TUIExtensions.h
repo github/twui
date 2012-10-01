@@ -15,13 +15,13 @@
 /*
  * The CGColor corresponding to the receiver.
  */
-@property (nonatomic, readonly) CGColorRef tui_CGColor;
+@property (nonatomic, readonly) CGColorRef CGColor;
 
 /*
  * Returns an NSColor corresponding to the given CGColor.
  *
  * This method will not handle pattern colors.
  */
-+ (NSColor *)tui_colorWithCGColor:(CGColorRef)color;
++ (NSColor *)colorWithCGColor:(CGColorRef)color;
 
 @end
