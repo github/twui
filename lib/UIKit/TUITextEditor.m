@@ -87,6 +87,7 @@
 	return [super becomeFirstResponder];
 }
 
+
 - (BOOL)resignFirstResponder
 {
 	[view setNeedsDisplay];
@@ -218,8 +219,6 @@
 	self.selectedRange = selectedRange;
 	[self _textDidChange];
 }
-
-
 
 
 

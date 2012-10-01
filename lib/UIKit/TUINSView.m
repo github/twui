@@ -832,10 +832,10 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 }
 
 - (id<TUIHostView>)hostView {
-    if (_hostView)
-        return _hostView;
-    else
-        return self.superview.hostView;
+	if (_hostView)
+		return _hostView;
+	else
+		return self.superview.hostView;
 }
 
 - (void)viewHierarchyDidChange {

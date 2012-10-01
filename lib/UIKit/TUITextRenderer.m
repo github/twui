@@ -22,8 +22,11 @@
 #import "TUIStringDrawing.h"
 #import "TUIView.h"
 
+NSString *const TUITextRendererDidBecomeFirstResponder = @"TUITextRendererDidBecomeFirstResponder";
+NSString *const TUITextRendererDidResignFirstResponder = @"TUITextRendererDidResignFirstResponder";
+
 @interface TUITextRenderer ()
-@property (nonatomic, retain) NSMutableDictionary *lineRects;
+@property (nonatomic, strong) NSMutableDictionary *lineRects;
 @end
 
 @implementation TUITextRenderer
@@ -60,6 +63,14 @@
 	}
 	
 	[self _resetFrame];
+}
+
+- (id)init {
+	if((self = [super init])) {
+		self.selectionColor = [NSColor selectedTextBackgroundColor];
+	}
+	
+	return self;
 }
 
 - (void)dealloc
@@ -221,8 +232,6 @@
 	if(attributedString) {
 		CGContextSaveGState(context);
 		
-		CTFrameRef f = [self ctFrame];
-		
 		if(_flags.preDrawBlocksEnabled && !_flags.drawMaskDragSelection) {
 			[self.drawingAttributedString enumerateAttribute:TUIAttributedStringPreDrawBlockName inRange:NSMakeRange(0, [self.drawingAttributedString length]) options:0 usingBlock:^(id value, NSRange range, BOOL *stop) {
 				if(value == NULL) return;
@@ -275,6 +284,7 @@
 			CGContextRestoreGState(context);
 		}
 		
+		CTFrameRef f = [self ctFrame];
 		if(hitRange && !_flags.drawMaskDragSelection) {
 			// draw highlight
 			CGContextSaveGState(context);
@@ -301,7 +311,8 @@
 		
 		CFRange selectedRange = [self _selectedRange];
 		if(selectedRange.length > 0) {
-			[[NSColor selectedTextBackgroundColor] set];
+			[self.selectionColor set];
+			
 			// draw (or mask) selection
 			CFIndex rectCount = 100;
 			CGRect rects[rectCount];
@@ -313,12 +324,11 @@
 			}
 		}
 		
-		CGContextSetTextMatrix(context, CGAffineTransformIdentity);
-		
 		if(shadowColor)
 			CGContextSetShadowWithColor(context, shadowOffset, shadowBlur, shadowColor.tui_CGColor);
-
-		CTFrameDraw(f, context); // draw actual text
+		
+		CGContextSetTextMatrix(context, CGAffineTransformIdentity);
+		CTFrameDraw(f, context);
 		CGContextRestoreGState(context);
 	}
 }

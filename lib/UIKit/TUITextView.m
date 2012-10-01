@@ -127,6 +127,7 @@
 		cursor = [[TUIView alloc] initWithFrame:CGRectZero];
 		cursor.userInteractionEnabled = NO;
 		cursor.backgroundColor = [NSColor colorWithCalibratedRed:13 / 255.0 green:140 / 255.0 blue:231 / 255.0 alpha:1];
+		self.cursorWidth = 2.0f;
 		
 		self.needsDisplayWhenWindowsKeyednessChanges = YES;
 		
@@ -143,10 +144,13 @@
 	return self;
 }
 
+// The text view doesn't have a window when -init is called,
+// so the cursor can only be added or removed when the text
+// view is moved to a window or removed from a window.
 - (void)willMoveToWindow:(TUINSWindow *)newWindow {
 	[super willMoveToWindow:newWindow];
-
-	if ([newWindow isKeyWindow]) {
+	
+	if([newWindow isKeyWindow]) {
 		[self addSubview:cursor];
 	} else {
 		[cursor removeFromSuperview];
@@ -210,6 +214,23 @@
 	[self _updateDefaultAttributes];
 }
 
+- (void)setCursorColor:(NSColor *)c {
+	cursor.backgroundColor = c;
+	[cursor setNeedsDisplay];
+}
+
+- (NSColor *)cursorColor {
+	return cursor.backgroundColor;
+}
+
+- (void)setCursorWidth:(CGFloat)width {
+	if(width <= 0.0f)
+		return;
+	
+	_cursorWidth = width;
+	[self setNeedsDisplay];
+}
+
 - (void)setTextAlignment:(TUITextAlignment)t
 {
 	textAlignment = t;
@@ -267,7 +288,6 @@ static CAAnimation *ThrobAnimation()
 	NSResponder *firstResponder = [self.nsWindow firstResponder];
 	if(firstResponder == self) {
 		// responder should be on the renderer
-		NSLog(@"making renderer first responder");
 		[self.nsWindow tui_makeFirstResponder:renderer];
 		firstResponder = renderer;
 	}
@@ -276,20 +296,16 @@ static CAAnimation *ThrobAnimation()
 
 - (void)drawRect:(CGRect)rect
 {
-	static const CGFloat singleLineWidth = 20000.0f;
-	
 	CGContextRef ctx = TUIGraphicsGetCurrentContext();
+	static const CGFloat singleLineWidth = 20000.0f;
 	
 	if(drawFrame)
 		drawFrame(self, rect);
 	
-	BOOL singleLine = [self singleLine];
 	CGRect textRect = [self textRect];
 	CGRect rendererFrame = textRect;
-	if(singleLine) {
+	if([self singleLine])
 		rendererFrame.size.width = singleLineWidth;
-	}
-	
 	renderer.frame = rendererFrame;
 	
 	BOOL showCursor = [self _isKey] && [renderer selectedRange].length == 0;
@@ -304,7 +320,7 @@ static CAAnimation *ThrobAnimation()
 	// Single-line text views scroll horizontally with the cursor.
 	CGRect cursorFrame = [self _cursorRect];
 	CGFloat offset = 0.0f;
-	if(singleLine) {
+	if([self singleLine]) {
 		if(CGRectGetMaxX(cursorFrame) > CGRectGetWidth(textRect)) {
 			offset = CGRectGetMinX(cursorFrame) - CGRectGetWidth(textRect);
 			rendererFrame = CGRectMake(-offset, rendererFrame.origin.y, CGRectGetWidth(rendererFrame), CGRectGetHeight(rendererFrame));
@@ -320,7 +336,7 @@ static CAAnimation *ThrobAnimation()
 		}];
 	}
 	
-	BOOL doMask = singleLine;
+	BOOL doMask = [self singleLine];
 	if(doMask) {
 		CGContextSaveGState(ctx);
 		CGFloat radius = floor(rect.size.height / 2);
@@ -359,7 +375,7 @@ static CAAnimation *ThrobAnimation()
 	
 	// Ugh. So this seems to be a decent approximation for the height of the cursor. It doesn't always match the native cursor but what ev.
 	CGRect r = CGRectIntegral([renderer firstRectForCharacterRange:ABCFRangeFromNSRange(selection)]);
-	r.size.width = 2.0f;
+	r.size.width = self.cursorWidth;
 	CGRect fontBoundingBox = CTFontGetBoundingBox((__bridge CTFontRef)self.font);
 	r.size.height = round(fontBoundingBox.origin.y + fontBoundingBox.size.height);
 	r.origin.y += floor(self.font.leading);
@@ -496,7 +512,8 @@ static CAAnimation *ThrobAnimation()
 		}
 	}
 	
-	if(selectedTextCheckingResult == nil) return nil;
+	if(selectedTextCheckingResult == nil)
+		return [[self.textRenderers objectAtIndex:0] menuForEvent:event];
 	
 	NSMenu *menu = [[NSMenu alloc] initWithTitle:@""];
 	if(selectedTextCheckingResult.resultType == NSTextCheckingTypeCorrection && matchingAutocorrectPair != nil) {

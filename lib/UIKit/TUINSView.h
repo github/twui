@@ -28,7 +28,7 @@
 	TUIView *_hoverView;
 
 	__unsafe_unretained TUIView *_trackingView; // dragging view, weak
-	__unsafe_unretained TUIView *_hyperFocusView; // weak
+	__unsafe_unretained TUIView *_hyperFocusView; // hyperfocus view, weak
 
 	TUIView *_hyperFadeView;
 	void(^_hyperCompletion)(BOOL);

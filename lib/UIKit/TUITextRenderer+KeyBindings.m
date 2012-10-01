@@ -17,6 +17,8 @@
 #import "TUITextRenderer.h"
 #import "TUITextEditor.h"
 #import "TUIView.h"
+#import "CoreText+Additions.h"
+#import "TUITextRenderer+Private.h"
 
 @interface NSString (ABTokenizerAdditions)
 @end
@@ -61,7 +63,6 @@
 
 @end
 
-
 @implementation TUITextRenderer (KeyBindings)
 
 #define TEXT [attributedString string]
@@ -73,9 +74,78 @@
 	return nil;
 }
 
+- (CFIndex)_indexByMovingIndex:(CFIndex)index
+							by:(CFIndex)incr {
+	CFIndex lineIndex;
+	float xPosition;
+	AB_CTFrameGetLinePositionOfIndex(TEXT, [self ctFrame], index, &lineIndex, &xPosition);
+	
+	if(lineIndex >= 0) {
+		NSArray *lines = (__bridge NSArray *)CTFrameGetLines([self ctFrame]);
+		CFIndex linesCount = [lines count];
+		
+		// If the incremental value is less than 0 and the line index
+		// is 0, the index doesn't change.
+		if(incr <= 0 && lineIndex == 0) {
+			return 0;
+			
+		// If the line index after shifting is more than the line count,
+		// return the last character index.
+		} else if(lineIndex + incr >= linesCount) {
+			return [TEXT length];
+			
+		// If the line index is within text bounds after increment,
+		// return the real character index.
+		} else if(lineIndex + incr >= 0) {
+			CFIndex index;
+			AB_CTFrameGetIndexForPositionInLine(TEXT, [self ctFrame], lineIndex + incr, xPosition, &index);
+			return index;
+		}
+	}
+	
+	// Oops! Something went wrong. Return error (-1).
+	return -1;
+}
+
+- (void)moveUp:(id)sender
+{
+	NSInteger selectionLength = labs(_selectionStart - _selectionEnd);
+	if(selectionLength)
+		_selectionStart = _selectionEnd = (MIN(_selectionEnd,_selectionStart));
+	else
+		_selectionEnd = _selectionStart = [self _indexByMovingIndex:MIN(_selectionStart,_selectionEnd)
+																 by:-1];
+	[self.view setNeedsDisplay];
+}
+
+- (void)moveUpAndModifySelection:(id)sender
+{
+	_selectionEnd = [self _indexByMovingIndex:MIN(_selectionStart,_selectionEnd)
+										   by:-1];
+	[self.view setNeedsDisplay];
+}
+
+- (void)moveDown:(id)sender
+{
+	NSInteger selectionLength = labs(_selectionStart - _selectionEnd);
+	if(selectionLength)
+		_selectionStart = _selectionEnd = (MAX(_selectionEnd,_selectionStart));
+	else
+		_selectionEnd = _selectionStart = [self _indexByMovingIndex:MAX(_selectionStart,_selectionEnd)
+																 by:1];
+	[self.view setNeedsDisplay];
+}
+
+- (void)moveDownAndModifySelection:(id)sender
+{
+	_selectionEnd = [self _indexByMovingIndex:MAX(_selectionStart,_selectionEnd)
+										   by:1];
+	[self.view setNeedsDisplay];
+}
+
 - (void)moveRight:(id)sender
 {
-	NSInteger selectionLength = abs((int)(_selectionStart - _selectionEnd));
+	NSInteger selectionLength = labs(_selectionStart - _selectionEnd);
 	NSInteger max = [TEXT length];
 	_selectionStart = _selectionEnd = MIN(MAX(_selectionStart, _selectionEnd) + (selectionLength?0:1), max);
 	[self.view setNeedsDisplay];
@@ -83,7 +153,7 @@
 
 - (void)moveLeft:(id)sender
 {
-	NSInteger selectionLength = abs((int)(_selectionStart - _selectionEnd));
+	NSInteger selectionLength = labs(_selectionStart - _selectionEnd);
 	NSInteger min = 0;
 	_selectionStart = _selectionEnd = MAX(MIN(_selectionStart, _selectionEnd) - (selectionLength?0:1), min);
 	[self.view setNeedsDisplay];
@@ -151,14 +221,39 @@
 	[self.view setNeedsDisplay];
 }
 
+- (void)moveToBeginningOfParagraphAndModifySelection:(id)sender
+{
+	[self moveToBeginningOfLineAndModifySelection:sender];
+}
+
+- (void)moveToEndOfParagraphAndModifySelection:(id)sender
+{
+	[self moveToEndOfLineAndModifySelection:sender];
+}
+
+- (void)moveToBeginningOfDocumentAndModifySelection:(id)sender
+{
+	[self moveToBeginningOfLineAndModifySelection:sender];
+}
+
+- (void)moveToEndOfDocumentAndModifySelection:(id)sender
+{
+	[self moveToEndOfLineAndModifySelection:sender];
+}
+
 - (void)insertNewline:(id)sender
+{
+	[[self _textEditor] insertText:@"\n"];
+}
+
+- (void)insertNewlineIgnoringFieldEditor:(id)sender
 {
 	[[self _textEditor] insertText:@"\n"];
 }
 
 - (void)deleteBackward:(id)sender
 {
-    // Find the range to delete, handling an empty selection and the input point being at 0
+	// Find the range to delete, handling an empty selection and the input point being at 0
 	NSRange deleteRange = [self selectedRange];
 	if(deleteRange.length == 0) {
 		if(deleteRange.location == 0) {
@@ -168,13 +263,13 @@
 			deleteRange.length = 1;
 		}
 	}
-    
-    [[self _textEditor] deleteCharactersInRange:deleteRange];
+	
+	[[self _textEditor] deleteCharactersInRange:deleteRange];
 }
 
 - (void)deleteForward:(id)sender
 {
-    // Find the range to delete, handling an empty selection and the input point being at the end
+	// Find the range to delete, handling an empty selection and the input point being at the end
 	NSRange deleteRange = [self selectedRange];
 	if(deleteRange.length == 0) {
 		if(deleteRange.location == [TEXT length]) {
@@ -183,14 +278,14 @@
 			deleteRange.length = 1;
 		}
 	}
-    
-    [[self _textEditor] deleteCharactersInRange:deleteRange];
+	
+	[[self _textEditor] deleteCharactersInRange:deleteRange];
 }
 
 
 - (void)deleteToBeginningOfLine:(id)sender
 {
-	NSInteger selectionLength = abs((int)(_selectionStart - _selectionEnd));
+	NSInteger selectionLength = labs(_selectionStart - _selectionEnd);
 	if(selectionLength == 0) {
 		[[self _textEditor] deleteCharactersInRange:NSMakeRange(0, _selectionStart)];
 	} else {
@@ -200,7 +295,7 @@
 
 - (void)deleteWordBackward:(id)sender
 {
-	NSInteger selectionLength = abs((int)(_selectionStart - _selectionEnd));
+	NSInteger selectionLength = labs(_selectionStart - _selectionEnd);
 	if(selectionLength == 0) {
 		_selectionEnd = [TEXT ab_beginningOfWordGivenCursor:_selectionEnd];
 		[self deleteBackward:nil];
