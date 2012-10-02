@@ -40,6 +40,7 @@
 {
 	if((self = [super initWithFrame:frame])) {
 		renderer = [[TUITextRenderer alloc] init];
+		renderer.verticalAlignment = TUITextVerticalAlignmentMiddle;
 		[self setTextRenderers:[NSArray arrayWithObjects:renderer, nil]];
 		
 		_lineBreakMode = TUILineBreakModeClip;
