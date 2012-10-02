@@ -71,7 +71,13 @@ static NSTimeInterval const TUIScrollIndicatorStateRefreshSpeed = 0.01f;
 
 - (void)refreshKnobTimer {
 	if([NSScroller preferredScrollerStyle] == NSScrollerStyleOverlay) {
-		if(scrollView.scrollIndicatorStyle != TUIScrollViewIndicatorVisibleNever) {
+		TUIScrollViewIndicatorVisibility visibility;
+		if(self.vertical)
+			visibility = scrollView.verticalScrollIndicatorVisibility;
+		else
+			visibility = scrollView.horizontalScrollIndicatorVisibility;
+		
+		if(visibility != TUIScrollViewIndicatorVisibleNever) {
 			self.hideKnobTimer = nil;
 			self.hideKnobTimer = [NSTimer scheduledTimerWithTimeInterval:TUIScrollIndicatorDisplayPeriod
 																  target:self
