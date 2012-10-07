@@ -13,12 +13,14 @@
 #import <CoreGraphics/CoreGraphics.h>
 
 /*!
- TUINavigationController manages a stack of view controllers.
- It performs horizontal view transitions for pushed and popped views.
- This class aims to act as much like UINavigationController as much as possible,
- so it's source will borrow heavily from Chameleon's UINavigationController implementation.
- For more information about Chameleon, see https://github.com/BigZaphod/Chameleon/
+ TUINavigationController manages a stack of view controllers and a navigation bar.
+ It performs horizontal view transitions for pushed and popped views while keeping the navigation bar in sync.
  */
+
+//Custom animation block for TUINavigationController's -pushViewController:withAnimationBlock;
+//Animates all methods called within it for the default duration of a push animation, then cleans up after itself
+//Do not call view removal methods on any of the block's parameters, they will be performed for you at the end of animation
+typedef void (^TUINavigationAnimationBlock)(TUIViewController *pushingFrom, TUIViewController *pushingTo, CGRect suggestedFrame);
 
 @protocol TUINavigationControllerDelegate;
 
@@ -27,6 +29,8 @@
 - (id)initWithRootViewController:(TUIViewController *)rootViewController; // Convenience method pushes the root view controller without animation.
 
 - (void)pushViewController:(TUIViewController *)viewController animated:(BOOL)animated; // Uses a horizontal slide transition. Has no effect if the view controller is already in the stack.
+
+- (void)pushViewController:(TUIViewController *)viewController withAnimationBlock:(TUINavigationAnimationBlock)block; // Uses a pre-defined block transition. Has no effect if the view controller is already in the stack.
 
 - (TUIViewController *)popViewControllerAnimated:(BOOL)animated; // Returns the popped controller.
 - (NSArray *)popToViewController:(TUIViewController *)viewController animated:(BOOL)animated; // Pops view controllers until the one specified is on top. Returns the popped controllers.

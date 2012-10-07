@@ -7,7 +7,7 @@
 //
 
 #import "TUINavigationController.h"
-#import <TwUI/TUIKit.h>
+#import "TUIView.h"
 
 typedef enum {
 	_TUINavigationControllerVisibleControllerTransitionNone = 0,
@@ -96,19 +96,13 @@ static const NSTimeInterval kAnimationDuration = 0.5;
 
 - (void)pushViewController:(TUIViewController *)viewController animated:(BOOL)animated
 {
-	//no duplicate view controllers allowed.
     assert(![_viewControllers containsObject:viewController]);
-	
-	if (viewController == nil) {
-		NSLog(@"Application attempted to push nil view controller onto target %@", self);
-		return;
-	}
 	
     // override the animated property based on current state
     animated = animated && _visibleViewController;
     
 	[viewController.view setAutoresizingMask:TUIViewAutoresizingFlexibleSize];
-
+	
     // push on to controllers stack
     [_viewControllers addObject:viewController];
     
@@ -133,6 +127,35 @@ static const NSTimeInterval kAnimationDuration = 0.5;
 	}
     
 	[self _setVisibleViewControllerNeedsUpdate];
+}
+
+- (void)pushViewController:(TUIViewController *)viewController withAnimationBlock:(TUINavigationAnimationBlock)block {
+	assert(![_viewControllers containsObject:viewController]);
+    
+	[viewController.view setAutoresizingMask:TUIViewAutoresizingFlexibleSize];
+	
+    // push on to controllers stack
+    [_viewControllers addObject:viewController];
+    
+    // take ownership responsibility
+    [viewController setParentViewController:self];
+    
+	// if animated and on screen, begin part of the transition immediately, specifically, get the new view
+    // on screen asap and tell the new controller it's about to be made visible in an animated fashion
+	_visibleViewControllerTransition = _TUINavigationControllerVisibleControllerTransitionPushAnimated;
+	
+	viewController.view.frame = [self _controllerFrameForTransition:_visibleViewControllerTransition];
+	
+	[_visibleViewController viewWillDisappear:YES];
+	[viewController viewWillAppear:YES];
+	
+	if ([_delegate respondsToSelector:@selector(navigationController:willShowViewController:animated:)]) {
+		[_delegate navigationController:self willShowViewController:viewController animated:YES];
+	}
+	
+	[self.view insertSubview:viewController.view atIndex:0];
+    
+	[self _setVisibleViewControllerNeedsUpdateWithBlock:block];
 }
 
 - (TUIViewController *)popViewControllerAnimated:(BOOL)animated
@@ -185,6 +208,8 @@ static const NSTimeInterval kAnimationDuration = 0.5;
 	return formerTopViewController;
 }
 
+
+
 - (NSArray *)popToViewController:(TUIViewController *)viewController animated:(BOOL)animated
 {
     NSMutableArray *popped = [[NSMutableArray alloc] init];
@@ -228,11 +253,20 @@ static const NSTimeInterval kAnimationDuration = 0.5;
 	// schedules a deferred method to run
 	if (!_visibleViewControllerNeedsUpdate) {
 		_visibleViewControllerNeedsUpdate = YES;
-		[self performSelector:@selector(_updateVisibleViewController) withObject:nil afterDelay:0];
+		[self performSelector:@selector(_updateVisibleViewController:) withObject:nil afterDelay:0];
 	}
 }
 
-- (void)_updateVisibleViewController
+- (void)_setVisibleViewControllerNeedsUpdateWithBlock:(TUINavigationAnimationBlock)block
+{
+	// schedules a deferred method to run
+	if (!_visibleViewControllerNeedsUpdate) {
+		_visibleViewControllerNeedsUpdate = YES;
+		[self performSelector:@selector(_updateVisibleViewController:) withObject:block afterDelay:0];
+	}
+}
+
+- (void)_updateVisibleViewController:(TUINavigationAnimationBlock)block
 {
 	// do some bookkeeping
 	_visibleViewControllerNeedsUpdate = NO;
@@ -259,30 +293,46 @@ static const NSTimeInterval kAnimationDuration = 0.5;
             [_delegate navigationController:self didShowViewController:topViewController animated:NO];
         }
     } else {
-        const CGRect visibleControllerFrame = (_visibleViewControllerTransition == _TUINavigationControllerVisibleControllerTransitionPushAnimated)
-		? [self _controllerFrameForTransition:_TUINavigationControllerVisibleControllerTransitionPopAnimated]
-		: [self _controllerFrameForTransition:_TUINavigationControllerVisibleControllerTransitionPushAnimated];
-		
-        const CGRect topControllerFrame = [self _controllerFrameForTransition:_TUINavigationControllerVisibleControllerTransitionNone];
-        
-        TUIViewController *previouslyVisibleViewController = _visibleViewController;
-        
-        [TUIView animateWithDuration:kAnimationDuration
-                         animations:^(void) {
-                             previouslyVisibleViewController.view.frame = visibleControllerFrame;
-                             topViewController.view.frame = topControllerFrame;
-                         }
-                         completion:^(BOOL finished) {
-                             [previouslyVisibleViewController.view removeFromSuperview];
-                             [previouslyVisibleViewController viewDidDisappear:YES];
-                             [topViewController viewDidAppear:YES];
-                             
-                             if ([_delegate respondsToSelector:@selector(navigationController:didShowViewController:animated:)]) {
-                                 [_delegate navigationController:self didShowViewController:topViewController animated:YES];
-                             }
-                         }];
-	}
-    
+		if (block) {
+			TUIViewController *previouslyVisibleViewController = _visibleViewController;
+			const CGRect topControllerFrame = [self _controllerFrameForTransition:_TUINavigationControllerVisibleControllerTransitionNone];
+			[TUIView animateWithDuration:0.33 animations:^{
+				block(previouslyVisibleViewController, topViewController, topControllerFrame);
+			} completion:^(BOOL finished){
+				[previouslyVisibleViewController.view removeFromSuperview];
+				[previouslyVisibleViewController viewDidDisappear:YES];
+				[topViewController viewDidAppear:YES];
+				
+				if ([_delegate respondsToSelector:@selector(navigationController:didShowViewController:animated:)]) {
+					[_delegate navigationController:self didShowViewController:topViewController animated:YES];
+				}
+			}];
+		}
+		else {
+			const CGRect visibleControllerFrame = (_visibleViewControllerTransition == _TUINavigationControllerVisibleControllerTransitionPushAnimated)
+			? [self _controllerFrameForTransition:_TUINavigationControllerVisibleControllerTransitionPopAnimated]
+			: [self _controllerFrameForTransition:_TUINavigationControllerVisibleControllerTransitionPushAnimated];
+			
+			const CGRect topControllerFrame = [self _controllerFrameForTransition:_TUINavigationControllerVisibleControllerTransitionNone];
+			
+			TUIViewController *previouslyVisibleViewController = _visibleViewController;
+			
+			[TUIView animateWithDuration:kAnimationDuration
+							  animations:^(void) {
+								  previouslyVisibleViewController.view.frame = visibleControllerFrame;
+								  topViewController.view.frame = topControllerFrame;
+							  }
+							  completion:^(BOOL finished) {
+								  [previouslyVisibleViewController.view removeFromSuperview];
+								  [previouslyVisibleViewController viewDidDisappear:YES];
+								  [topViewController viewDidAppear:YES];
+								  
+								  if ([_delegate respondsToSelector:@selector(navigationController:didShowViewController:animated:)]) {
+									  [_delegate navigationController:self didShowViewController:topViewController animated:YES];
+								  }
+							  }];
+		}
+    }
 	_visibleViewController = topViewController;
     
 }
