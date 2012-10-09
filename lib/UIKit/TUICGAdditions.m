@@ -246,11 +246,12 @@ void TUIGraphicsEndImageContext(void)
 
 NSImage *TUIGraphicsDrawAsImage(CGSize size, void(^draw)(void))
 {
-	TUIGraphicsBeginImageContext(size);
+	TUIGraphicsBeginImageContextWithOptions(size, NO, 0);
 	draw();
 	NSImage *image = TUIGraphicsGetImageFromCurrentImageContext();
 	TUIGraphicsEndImageContext();
-    
+
+	image.size = size;
 	return image;
 }
 
