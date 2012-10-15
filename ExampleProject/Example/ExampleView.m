@@ -106,26 +106,38 @@
 				[s ab_drawInRect:CGRectOffset(imageRect, imageRect.size.width, -15)];
 			};
 		}
-
-		NSTextField *textField = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 180, 91, 22)];
-		[textField.cell setUsesSingleLineMode:YES];
-		[textField.cell setScrollable:YES];
-
-		TUIViewNSViewContainer *textFieldContainer = [[TUIViewNSViewContainer alloc] initWithNSView:textField];
-		textFieldContainer.backgroundColor = [NSColor blueColor];
-		[self addSubview:textFieldContainer];
+		
+		tabLabel = [[TUILabel alloc] initWithFrame:CGRectMake(0, 0, 256, 256)];
+		tabLabel.renderer.verticalAlignment = TUITextVerticalAlignmentMiddle;
+		tabLabel.alignment = TUITextAlignmentCenter;
+        tabLabel.backgroundColor = [NSColor clearColor];
+		tabLabel.textColor = [NSColor blackColor];
+		tabLabel.font = exampleFont2;
+		tabLabel.selectable = NO;
+		tabLabel.renderer.shadowColor = [NSColor whiteColor];
+		tabLabel.renderer.shadowOffset = CGSizeMake(0, 1);
+		tabLabel.renderer.shadowBlur = 1.0f;
+		
+        tabInformation = [[TUIPopover alloc] initWithContentViewController:[[TUIViewController alloc] init]];
+        tabInformation.behaviour = TUIPopoverViewControllerBehaviourTransient;
+        tabInformation.contentViewController.view = tabLabel;
 	}
 	return self;
 }
 
 
-- (void)tabBar:(ExampleTabBar *)tabBar didSelectTab:(NSInteger)index
-{
-	NSLog(@"selected tab %ld", index);
-	if(index == [[tabBar tabViews] count] - 1){
-	  NSLog(@"Reload table data...");
-	  [_tableView reloadData];
+- (void)tabBar:(ExampleTabBar *)tabBar didSelectTab:(NSInteger)index {
+	if(index == [[tabBar tabViews] count] - 1) {
+		tabLabel.text = [NSString stringWithFormat:@"Reloaded table data."];
+		[_tableView reloadData];
+	} else {
+		tabLabel.text = [NSString stringWithFormat:@"Selected tab %ld.", index];
 	}
+	
+	TUIView *tab = [tabBar.tabViews objectAtIndex:index];
+	tabInformation.contentSize = CGSizeApplyAffineTransform([tabLabel.text ab_sizeWithFont:tabLabel.font],
+															CGAffineTransformMakeScale(1.5, 1.5));
+	[tabInformation showRelativeToRect:tab.bounds ofView:tab preferredEdge:CGRectMinYEdge];
 }
 
 - (NSInteger)numberOfSectionsInTableView:(TUITableView *)tableView

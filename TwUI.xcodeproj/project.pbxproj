@@ -18,6 +18,12 @@
 		48A10E8415B7769A007F9EE3 /* TUILayoutManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E8015B7769A007F9EE3 /* TUILayoutManager.m */; };
 		48A10E8915B778E8007F9EE3 /* TUIView+Layout.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E8715B778E8007F9EE3 /* TUIView+Layout.m */; };
 		48A10E8B15B77A46007F9EE3 /* TUIView+Layout.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E8A15B77A46007F9EE3 /* TUIView+Layout.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		48A62339162BB24B00DFA443 /* NSBezierPath+TUIExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A62337162BB24B00DFA443 /* NSBezierPath+TUIExtensions.h */; };
+		48A6233A162BB24B00DFA443 /* NSBezierPath+TUIExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A62337162BB24B00DFA443 /* NSBezierPath+TUIExtensions.h */; };
+		48A6233B162BB24B00DFA443 /* NSBezierPath+TUIExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A62337162BB24B00DFA443 /* NSBezierPath+TUIExtensions.h */; };
+		48A6233C162BB24B00DFA443 /* NSBezierPath+TUIExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A62338162BB24B00DFA443 /* NSBezierPath+TUIExtensions.m */; };
+		48A6233D162BB24B00DFA443 /* NSBezierPath+TUIExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A62338162BB24B00DFA443 /* NSBezierPath+TUIExtensions.m */; };
+		48A6233E162BB24B00DFA443 /* NSBezierPath+TUIExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A62338162BB24B00DFA443 /* NSBezierPath+TUIExtensions.m */; };
 		5E6ECEB313BE791600109598 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EE9839C13BE7650005F430D /* ApplicationServices.framework */; };
 		5E6ECEB413BE791600109598 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CB5E31B613BE6F49004B7899 /* QuartzCore.framework */; };
 		5E6ECEB613BE791C00109598 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EE9839C13BE7650005F430D /* ApplicationServices.framework */; };
@@ -427,6 +433,8 @@
 		48A10E8015B7769A007F9EE3 /* TUILayoutManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TUILayoutManager.m; sourceTree = "<group>"; };
 		48A10E8715B778E8007F9EE3 /* TUIView+Layout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "TUIView+Layout.m"; sourceTree = "<group>"; };
 		48A10E8A15B77A46007F9EE3 /* TUIView+Layout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TUIView+Layout.h"; sourceTree = "<group>"; };
+		48A62337162BB24B00DFA443 /* NSBezierPath+TUIExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSBezierPath+TUIExtensions.h"; sourceTree = "<group>"; };
+		48A62338162BB24B00DFA443 /* NSBezierPath+TUIExtensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSBezierPath+TUIExtensions.m"; sourceTree = "<group>"; };
 		5EE9839C13BE7650005F430D /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
 		5EE983B713BE7809005F430D /* libtwui.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtwui.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8819794213E26E0200AA39EB /* TUIView+Accessibility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TUIView+Accessibility.h"; sourceTree = "<group>"; };
@@ -746,6 +754,8 @@
 				D0C7655A15B6297200E7AC2C /* NSClipView+TUIExtensions.m */,
 				D0EA12EF15C34FEA00FAA603 /* NSColor+TUIExtensions.h */,
 				D0EA12F015C34FEA00FAA603 /* NSColor+TUIExtensions.m */,
+				48A62337162BB24B00DFA443 /* NSBezierPath+TUIExtensions.h */,
+				48A62338162BB24B00DFA443 /* NSBezierPath+TUIExtensions.m */,
 				D05D239E15BF7239000ED14F /* NSImage+TUIExtensions.h */,
 				D05D239F15BF7239000ED14F /* NSImage+TUIExtensions.m */,
 				D0C7655B15B6297300E7AC2C /* NSScrollView+TUIExtensions.h */,
@@ -922,6 +932,7 @@
 				D05D23A215BF7239000ED14F /* NSImage+TUIExtensions.h in Headers */,
 				D0EA12F315C34FEA00FAA603 /* NSColor+TUIExtensions.h in Headers */,
 				48373DF7160EAE9400322CA7 /* TUITextRenderer+Private.h in Headers */,
+				48A6233B162BB24B00DFA443 /* NSBezierPath+TUIExtensions.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -993,6 +1004,7 @@
 				D05D23A015BF7239000ED14F /* NSImage+TUIExtensions.h in Headers */,
 				D0EA12F115C34FEA00FAA603 /* NSColor+TUIExtensions.h in Headers */,
 				48373DF5160EAE9400322CA7 /* TUITextRenderer+Private.h in Headers */,
+				48A62339162BB24B00DFA443 /* NSBezierPath+TUIExtensions.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1027,6 +1039,7 @@
 				D05D23A115BF7239000ED14F /* NSImage+TUIExtensions.h in Headers */,
 				D0EA12F215C34FEA00FAA603 /* NSColor+TUIExtensions.h in Headers */,
 				48373DF6160EAE9400322CA7 /* TUITextRenderer+Private.h in Headers */,
+				48A6233A162BB24B00DFA443 /* NSBezierPath+TUIExtensions.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1306,6 +1319,7 @@
 				D05DEE9115BF645D005D8769 /* TUIStretchableImage.m in Sources */,
 				D05D23A515BF7239000ED14F /* NSImage+TUIExtensions.m in Sources */,
 				D0EA12F615C34FEA00FAA603 /* NSColor+TUIExtensions.m in Sources */,
+				48A6233E162BB24B00DFA443 /* NSBezierPath+TUIExtensions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1379,6 +1393,7 @@
 				D05D23A315BF7239000ED14F /* NSImage+TUIExtensions.m in Sources */,
 				887C227C15C1C7BB006EC31D /* NSFont+TUIExtensions.m in Sources */,
 				D0EA12F415C34FEA00FAA603 /* NSColor+TUIExtensions.m in Sources */,
+				48A6233C162BB24B00DFA443 /* NSBezierPath+TUIExtensions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1458,6 +1473,7 @@
 				D05DEE9015BF645D005D8769 /* TUIStretchableImage.m in Sources */,
 				D05D23A415BF7239000ED14F /* NSImage+TUIExtensions.m in Sources */,
 				D0EA12F515C34FEA00FAA603 /* NSColor+TUIExtensions.m in Sources */,
+				48A6233D162BB24B00DFA443 /* NSBezierPath+TUIExtensions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -16,31 +16,36 @@
 
 #import "TUIView.h"
 
+#define CGRectNoEdge (CGRectEdge)-1
+
 @class TUIPopover;
 @class TUIViewController;
 
-enum _TUIPopoverViewControllerBehaviour
-{
+typedef enum {
     TUIPopoverViewControllerBehaviourApplicationDefined = 0,
     TUIPopoverViewControllerBehaviourTransient = 1,
-    TUIPopoverViewControllerBehaviourSemiTransient = 2 //Currently not supported, here for forwards compatibility purposes
-};
-
-typedef NSUInteger TUIPopoverViewControllerBehaviour;
+	
+	// Currently unsupported.
+    TUIPopoverViewControllerBehaviourSemiTransient = 2
+} TUIPopoverViewControllerBehaviour;
 
 typedef void (^TUIPopoverDelegateBlock)(TUIPopover *popover);
 
 @interface TUIPopover : NSResponder
 
 @property (nonatomic, strong) TUIViewController *contentViewController;
-@property (nonatomic, unsafe_unretained) Class backgroundViewClass; //Must be a subclass of TUIPopoverBackgroundView
-@property (nonatomic, unsafe_unretained) CGSize contentSize; //CGSizeZero uses the size of the view on contentViewController
+
+// Must be a subclass of TUIPopoverBackgroundView.
+@property (nonatomic, unsafe_unretained) Class backgroundViewClass;
+
+// CGSizeZero uses the size of the view on contentViewController.
+@property (nonatomic, unsafe_unretained) CGSize contentSize;
 @property (nonatomic, unsafe_unretained) BOOL animates;
 @property (nonatomic, unsafe_unretained) TUIPopoverViewControllerBehaviour behaviour;
 @property (nonatomic, readonly) BOOL shown;
 @property (nonatomic, readonly) CGRect positioningRect;
 
-//Block callbacks
+// Block callbacks.
 @property (nonatomic, copy) TUIPopoverDelegateBlock willCloseBlock;
 @property (nonatomic, copy) TUIPopoverDelegateBlock didCloseBlock;
 
@@ -63,11 +68,10 @@ typedef void (^TUIPopoverDelegateBlock)(TUIPopover *popover);
 + (CGRect)contentViewFrameForBackgroundFrame:(CGRect)frame popoverEdge:(CGRectEdge)popoverEdge;
 + (TUIPopoverBackgroundView *)backgroundViewForContentSize:(CGSize)contentSize popoverEdge:(CGRectEdge)popoverEdge originScreenRect:(CGRect)originScreenRect;
 
+// originScreenRect is in the screen coordinate space.
 - (id)initWithFrame:(CGRect)frame popoverEdge:(CGRectEdge)popoverEdge originScreenRect:(CGRect)originScreenRect;
-- (CGPathRef)newPopoverPathForEdge:(CGRectEdge)popoverEdge inFrame:(CGRect)frame; //override in subclasses to change the shape of the popover, but still use the default drawing.
 
-//Used in the default implementation
-@property (nonatomic, strong) NSColor *strokeColor;
-@property (nonatomic, strong) NSColor *fillColor;
+// override in subclasses to change the shape of the popover, but still use the default drawing.
+- (CGPathRef)newPopoverPathForEdge:(CGRectEdge)popoverEdge inFrame:(CGRect)frame;
     
 @end
