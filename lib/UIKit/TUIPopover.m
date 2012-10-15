@@ -115,28 +115,24 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 		CGRect returnRect = NSMakeRect(0.0, 0.0, popoverSize.width, popoverSize.height);
 		
 		if (popoverEdge == CGRectMinYEdge) {
-			CGFloat xOrigin = NSMidX(screenPositioningRect) - floor(popoverSize.width / 2.0);
-			CGFloat yOrigin = NSMinY(screenPositioningRect) - popoverSize.height;
-			returnRect.origin = NSMakePoint(xOrigin, yOrigin);
+			CGFloat xOrigin = CGRectGetMidX(screenPositioningRect) - floor(popoverSize.width / 2.0);
+			CGFloat yOrigin = CGRectGetMinY(screenPositioningRect) - popoverSize.height;
+			returnRect.origin = CGPointMake(xOrigin, yOrigin);
 		} else if (popoverEdge == CGRectMaxYEdge) {
-			CGFloat xOrigin = NSMidX(screenPositioningRect) - floor(popoverSize.width / 2.0);
-			returnRect.origin = NSMakePoint(xOrigin, NSMaxY(screenPositioningRect));
+			CGFloat xOrigin = CGRectGetMidX(screenPositioningRect) - floor(popoverSize.width / 2.0);
+			returnRect.origin = CGPointMake(xOrigin, CGRectGetMaxY(screenPositioningRect));
 		} else if (popoverEdge == CGRectMinXEdge) {
-			CGFloat xOrigin = NSMinX(screenPositioningRect) - popoverSize.width;
-			CGFloat yOrigin = NSMidY(screenPositioningRect) - floor(popoverSize.height / 2.0);
-			returnRect.origin = NSMakePoint(xOrigin, yOrigin);
+			CGFloat xOrigin = CGRectGetMinX(screenPositioningRect) - popoverSize.width;
+			CGFloat yOrigin = CGRectGetMidY(screenPositioningRect) - floor(popoverSize.height / 2.0);
+			returnRect.origin = CGPointMake(xOrigin, yOrigin);
 		} else if (popoverEdge == CGRectMaxXEdge) {
-			CGFloat yOrigin = NSMidY(screenPositioningRect) - floor(popoverSize.height / 2.0);
-			returnRect.origin = NSMakePoint(NSMaxX(screenPositioningRect), yOrigin);
+			CGFloat yOrigin = CGRectGetMidY(screenPositioningRect) - floor(popoverSize.height / 2.0);
+			returnRect.origin = CGPointMake(CGRectGetMaxX(screenPositioningRect), yOrigin);
 		} else {
 			returnRect = CGRectZero;
 		}
+		
 		return returnRect;
-    };
-
-    BOOL (^checkPopoverSizeForScreenWithPopoverEdge)(CGRectEdge) = ^(CGRectEdge popoverEdge) {
-        CGRect popoverRect = popoverRectForEdge(popoverEdge);
-        return NSContainsRect(positioningView.nsWindow.screen.visibleFrame, popoverRect);
     };
     
     __block CGRectEdge popoverEdge = preferredEdge;
@@ -165,6 +161,11 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 				proposedRect.origin.x = (CGRectGetMaxX(screenRect) - CGRectGetWidth(proposedRect));
 			return proposedRect;
 		};
+		
+		BOOL (^checkPopoverSizeForScreenWithPopoverEdge)(CGRectEdge) = ^(CGRectEdge popoverEdge) {
+			CGRect popoverRect = popoverRectForEdge(popoverEdge);
+			return NSContainsRect(positioningView.nsWindow.screen.visibleFrame, popoverRect);
+		};
         
         NSUInteger attemptCount = 0;
         while(!checkPopoverSizeForScreenWithPopoverEdge(popoverEdge)) {
@@ -186,8 +187,6 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
     CGRect contentViewFrame = [self.backgroundViewClass contentViewFrameForBackgroundFrame:backgroundView.bounds
 																			   popoverEdge:popoverEdge];
     _contentViewController.view.frame = contentViewFrame;
-	_contentViewController.view.layer.borderWidth = 1.0f;
-	_contentViewController.view.layer.borderColor = [NSColor redColor].CGColor;
 	
     _popoverWindow = [[TUIPopoverWindow alloc] initWithContentRect:popoverScreenRect];
     TUIPopoverWindowContentView *contentView = [[TUIPopoverWindowContentView alloc] initWithFrame:backgroundView.bounds];
@@ -302,45 +301,19 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 @implementation TUIPopoverBackgroundView
 
 + (CGSize)sizeForBackgroundViewWithContentSize:(CGSize)contentSize popoverEdge:(CGRectEdge)popoverEdge {
-    CGFloat inset = TUIPopoverBackgroundViewArrowHeight;
-	CGSize returnSize = contentSize;
-	
-	if(popoverEdge == CGRectMaxXEdge || popoverEdge == CGRectMinXEdge) {
-		returnSize.width += inset;
-	} else {
-		returnSize.height += inset;
-	}
-	
-	returnSize.width++;
-	returnSize.height++;
-	
-	return returnSize;
+	contentSize.width += TUIPopoverBackgroundViewArrowHeight;
+    contentSize.height += TUIPopoverBackgroundViewArrowHeight * 2;
+    
+    return contentSize;
 }
 
 + (CGRect)contentViewFrameForBackgroundFrame:(CGRect)backgroundFrame popoverEdge:(CGRectEdge)popoverEdge {
-    CGFloat inset = TUIPopoverBackgroundViewArrowHeight;
-    CGRect returnFrame = backgroundFrame;
-	
-	switch(popoverEdge) {
-		case CGRectMinXEdge:
-			returnFrame.size.width -= inset;
-			break;
-		case CGRectMinYEdge:
-			returnFrame.size.height -= inset;
-			break;
-		case CGRectMaxXEdge:
-			returnFrame.size.width -= inset;
-			returnFrame.origin.x += inset;
-			break;
-		case CGRectMaxYEdge:
-			returnFrame.size.height -= inset;
-			returnFrame.origin.y += inset;
-			break;
-		default:
-			break;
-	}
-	
-	return returnFrame;
+	backgroundFrame.size.width -= TUIPopoverBackgroundViewArrowHeight * 2;
+	backgroundFrame.origin.x += TUIPopoverBackgroundViewArrowHeight;
+	backgroundFrame.size.height -= TUIPopoverBackgroundViewArrowHeight * 2;
+	backgroundFrame.origin.y += TUIPopoverBackgroundViewArrowHeight;
+    
+    return CGRectInset(backgroundFrame, TUIPopoverBackgroundViewBorderRadius, TUIPopoverBackgroundViewBorderRadius);
 }
 
 + (TUIPopoverBackgroundView *)backgroundViewForContentSize:(CGSize)contentSize
@@ -419,35 +392,33 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 		_popoverEdge = popoverEdge;
 		_screenOriginRect = originScreenRect;
 		self.opaque = NO;
-		
-		__block __unsafe_unretained TUIPopoverBackgroundView *weakSelf = self;
-		self.drawRect = ^(TUIView *view, CGRect rect) {
-			TUIPopoverBackgroundView *strongSelf = weakSelf;
-			CGPathRef cgPath = [strongSelf newPopoverPathForEdge:popoverEdge inFrame:view.bounds];
-			NSBezierPath *path = [NSBezierPath bezierPathWithCGPath:cgPath];
-			CGPathRelease(cgPath);
-			
-			NSGradient *gradient = [[NSGradient alloc] initWithColors:@[[NSColor colorWithCalibratedWhite:1.00 alpha:0.90],
-									[NSColor colorWithCalibratedWhite:0.95 alpha:0.90]]];
-			[gradient drawInBezierPath:path angle:-90];
-			[[NSColor whiteColor] set];
-			[path strokeInside];
-			
-			[[NSColor colorWithCalibratedWhite:0.0 alpha:0.3] set];
-			[path stroke];
-		};
 	}
 	return self;
 }
 
+- (void)drawRect:(CGRect)rect {
+	CGPathRef cgPath = [self newPopoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, 0.5, 0.5)];
+	NSBezierPath *path = [NSBezierPath bezierPathWithCGPath:cgPath];
+	CGPathRelease(cgPath);
+	
+	NSGradient *gradient = [[NSGradient alloc] initWithColors:@[[NSColor colorWithCalibratedWhite:1.00 alpha:0.90],
+							[NSColor colorWithCalibratedWhite:0.95 alpha:0.90]]];
+	[gradient drawInBezierPath:path angle:-90];
+	[[NSColor whiteColor] set];
+	[path strokeInside];
+	
+	[[NSColor colorWithCalibratedWhite:0.0 alpha:0.3] set];
+	[path stroke];
+}
+
 - (void)updateMaskLayer {
 	CAShapeLayer *maskLayer = [CAShapeLayer layer];
-    CGPathRef path = [self newPopoverPathForEdge:self.popoverEdge inFrame:self.bounds];
+    CGPathRef path = [self newPopoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, -1.0, -1.0)];
     maskLayer.path = path;
     maskLayer.fillColor = CGColorGetConstantColor(kCGColorBlack);
     CGPathRelease(path);
 	
-    //self.layer.mask = maskLayer;
+    self.layer.mask = maskLayer;
 }
 
 @end

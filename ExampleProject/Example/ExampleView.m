@@ -107,17 +107,8 @@
 			};
 		}
 		
-		tabLabel = [[TUILabel alloc] initWithFrame:CGRectMake(0, 0, 256, 256)];
-		tabLabel.renderer.verticalAlignment = TUITextVerticalAlignmentMiddle;
-		tabLabel.alignment = TUITextAlignmentCenter;
-        tabLabel.backgroundColor = [NSColor whiteColor];
-		tabLabel.textColor = [NSColor darkGrayColor];
-		tabLabel.font = exampleFont1;
-		tabLabel.selectable = NO;
-		
         tabInformation = [[TUIPopover alloc] initWithContentViewController:[[TUIViewController alloc] init]];
         tabInformation.behaviour = TUIPopoverViewControllerBehaviourTransient;
-        tabInformation.contentViewController.view = tabLabel;
 	}
 	return self;
 }
@@ -125,15 +116,30 @@
 
 - (void)tabBar:(ExampleTabBar *)tabBar didSelectTab:(NSInteger)index {
 	if(index == [[tabBar tabViews] count] - 1) {
-		tabLabel.text = [NSString stringWithFormat:@"Reloaded table data."];
 		[_tableView reloadData];
-	} else {
-		tabLabel.text = [NSString stringWithFormat:@"Selected tab %ld.", index];
 	}
 	
-	tabInformation.contentSize = CGSizeApplyAffineTransform([tabLabel.text ab_sizeWithFont:tabLabel.font],
-															CGAffineTransformMakeScale(1.5, 1.5));
-	[tabInformation showRelativeToRect:tabBar.bounds ofView:tabBar preferredEdge:CGRectMinYEdge];
+	TUIView *tab = [tabBar.tabViews objectAtIndex:index];
+	TUIImageView *image = [[TUIImageView alloc] initWithImage:[NSImage tui_imageWithSize:tab.bounds.size
+																				 drawing:^(CGContextRef ctx)
+	{
+		[tab.layer renderInContext:ctx];
+	}]];
+	
+	CGRectEdge popoverEdge = CGRectMinYEdge;
+	if(index == 0)
+		popoverEdge = CGRectMinXEdge;
+	else if(index == 1)
+		popoverEdge = CGRectMaxXEdge;
+	else if(index == 2)
+		popoverEdge = CGRectMinYEdge;
+	else if(index == 3)
+		popoverEdge = CGRectMaxYEdge;
+	
+	image.backgroundColor = [NSColor clearColor];
+	tabInformation.contentViewController.view = image;
+	tabInformation.contentSize = tab.bounds.size;
+	[tabInformation showRelativeToRect:tab.bounds ofView:tab preferredEdge:popoverEdge];
 }
 
 - (NSInteger)numberOfSectionsInTableView:(TUITableView *)tableView

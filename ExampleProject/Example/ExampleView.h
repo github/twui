@@ -26,7 +26,6 @@
 	NSFont *exampleFont2;
 	
 	TUIPopover *tabInformation;
-	TUILabel *tabLabel;
 }
 
 @end
