@@ -74,7 +74,8 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
         self.animates = YES;
         self.behaviour = TUIPopoverViewControllerBehaviourApplicationDefined;
         self.contentViewController = nil;
-        
+        self.backgroundViewClass = TUIPopoverBackgroundView.class;
+		
         _shown = NO;
     }
 	return self;
@@ -87,7 +88,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 	return self;
 }
 
-- (void)showRelativeToRect:(CGRect)positioningRect ofView:(TUIView *)positioningView preferredEdge:(CGRectEdge)preferredEdge {
+- (void)showRelativeToRect:(CGRect)newPositioningRect ofView:(TUIView *)positioningView preferredEdge:(CGRectEdge)preferredEdge {
     if(_shown)
 		return;
     
@@ -103,10 +104,10 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 	
 	CGSize contentViewSize = (CGSizeEqualToSize(self.contentSize, CGSizeZero) ?
                               self.contentViewController.view.frame.size : self.contentSize);
-    positioningRect = CGRectEqualToRect(positioningRect, CGRectZero) ? positioningView.bounds : positioningRect;
+    _positioningRect = CGRectEqualToRect(newPositioningRect, CGRectZero) ? positioningView.bounds : newPositioningRect;
     self.originalViewSize = self.contentViewController.view.frame.size;
 	
-    CGRect basePositioningRect = [positioningView convertRect:positioningRect toView:nil];
+    CGRect basePositioningRect = [positioningView convertRect:_positioningRect toView:nil];
     NSRect windowRelativeRect = [positioningView.nsView convertRect:basePositioningRect toView:nil];
     CGRect screenPositioningRect = windowRelativeRect;
 	screenPositioningRect.origin = [positioningView.nsWindow convertBaseToScreen:windowRelativeRect.origin];
@@ -186,22 +187,19 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
     TUIPopoverBackgroundView *backgroundView = [self.backgroundViewClass backgroundViewForContentSize:contentViewSize
 																						  popoverEdge:popoverEdge
 																					 originScreenRect:screenPositioningRect];
-    
     CGRect contentViewFrame = [self.backgroundViewClass contentViewFrameForBackgroundFrame:backgroundView.bounds
 																			   popoverEdge:popoverEdge];
-    self.contentViewController.view.frame = contentViewFrame;
+    _contentViewController.view.frame = contentViewFrame;
 	
-    self.popoverWindow = [[TUIPopoverWindow alloc] initWithContentRect:popoverScreenRect];
+    _popoverWindow = [[TUIPopoverWindow alloc] initWithContentRect:popoverScreenRect];
     TUIPopoverWindowContentView *contentView = [[TUIPopoverWindowContentView alloc] initWithFrame:backgroundView.bounds];
 	contentView.arrowEdge = popoverEdge;
     contentView.nsView.rootView = backgroundView;
     self.popoverWindow.contentView = contentView;
-	
     [backgroundView addSubview:self.contentViewController.view];
-    [positioningView.nsWindow addChildWindow:self.popoverWindow ordered:NSWindowAbove]; 
-	[self.popoverWindow makeKeyAndOrderFront:self];
+    [positioningView.nsWindow addChildWindow:_popoverWindow ordered:NSWindowAbove];
 	[backgroundView updateMaskLayer];
-    
+	
     CAMediaTimingFunction *easeInOut = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
 	CABasicAnimation *fade = [CABasicAnimation animationWithKeyPath:@"opacity"];
 	fade.duration = TUIPopoverDefaultAnimationDuration;
@@ -220,7 +218,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 	group.tui_completionBlock = ^{
 		self.animating = NO;
 		_shown = YES;
-		
+		NSLog(@"showing");
 		[self.contentViewController viewDidAppear:YES];
 		if(self.didShowBlock)
 			self.didShowBlock(self);
@@ -313,8 +311,8 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
         returnSize.height += TUIPopoverBackgroundViewArrowHeight;
     }
     
-    returnSize.width ++;
-    returnSize.height ++;
+    returnSize.width++;
+    returnSize.height++;
     
     return returnSize;
 }
@@ -351,6 +349,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
     TUIPopoverBackgroundView *returnView = [[self.class alloc] initWithFrame:NSMakeRect(0.0, 0.0, size.width, size.height)
 																 popoverEdge:popoverEdge
 															originScreenRect:originScreenRect];
+	
     return returnView;
 }
 
@@ -458,8 +457,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
     if((self = [super initWithFrame:frame])) {
         self.arrowEdge = CGRectNoEdge;
 		
-        CGFloat inset = TUIPopoverBackgroundViewBorderRadius + TUIPopoverBackgroundViewArrowHeight + 0.5;
-        _nsView = [[TUINSView alloc] initWithFrame:NSInsetRect(self.bounds, inset, inset)];
+        _nsView = [[TUINSView alloc] initWithFrame:self.bounds];
         [_nsView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
         [_nsView tui_setOpaque:NO];
         [self addSubview:_nsView];
@@ -479,6 +477,9 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 	self.layer.shadowOpacity = 0.4f;
 	self.layer.shadowOffset = CGSizeMake(0.0f, -4.0f);
 	self.layer.shadowRadius = 5.0f;
+	
+	self.layer.borderColor = [NSColor blueColor].CGColor;
+	self.layer.borderWidth = 1.0f;
 }
 
 - (void)setArrowEdge:(CGRectEdge)arrowEdge {
@@ -527,15 +528,6 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
     } return self;
 }
 
-- (CGRect)contentRectForFrameRect:(CGRect)windowFrame {
-    windowFrame.origin = NSZeroPoint;
-    return NSInsetRect(windowFrame, TUIPopoverBackgroundViewArrowHeight, TUIPopoverBackgroundViewArrowHeight);
-}
-
-- (CGRect)frameRectForContentRect:(CGRect)contentRect {
-    return NSInsetRect(contentRect, -TUIPopoverBackgroundViewArrowHeight, -TUIPopoverBackgroundViewArrowHeight);
-}
-
 - (BOOL)canBecomeKeyWindow {
     return YES;
 }
@@ -554,48 +546,6 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 
 - (TUIPopoverWindowContentView *)frameView {
     return (TUIPopoverWindowContentView *)[super contentView];
-}
-
-- (void)setRootView:(TUIView *)aView {
-    if([_popoverRootView isEqualTo:aView])
-        return;
-    
-	CGRect bounds = self.frame;
-	bounds.origin = NSZeroPoint;
-    
-	TUIPopoverWindowContentView *frameView = [super contentView];
-	if(!frameView) {
-		frameView = [[TUIPopoverWindowContentView alloc] initWithFrame:bounds];
-		[super setContentView:frameView];
-	}
-    
-	if(_popoverRootView)
-        [_popoverRootView removeFromSuperview];
-	_popoverRootView = aView;
-    
-	[frameView.nsView setRootView:_popoverRootView];
-}
-
-- (void)setContentView:(NSView *)aView {
-	if([_popoverContentView isEqualTo:aView])
-        return;
-    
-	CGRect bounds = [self frame];
-	bounds.origin = NSZeroPoint;
-    
-	TUIPopoverWindowContentView *frameView = [super contentView];
-	if(!frameView) {
-		frameView = [[TUIPopoverWindowContentView alloc] initWithFrame:bounds];
-		[super setContentView:frameView];
-	}
-    
-	if(_popoverContentView)
-        [_popoverContentView removeFromSuperview];
-	_popoverContentView = aView;
-    
-	[_popoverContentView setFrame:[self contentRectForFrameRect:bounds]];
-	[_popoverContentView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
-	[frameView addSubview:_popoverContentView];
 }
 
 @end

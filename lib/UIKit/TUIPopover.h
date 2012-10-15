@@ -40,9 +40,10 @@ typedef void (^TUIPopoverDelegateBlock)(TUIPopover *popover);
 
 // CGSizeZero uses the size of the view on contentViewController.
 @property (nonatomic, unsafe_unretained) CGSize contentSize;
-@property (nonatomic, unsafe_unretained) BOOL animates;
 @property (nonatomic, unsafe_unretained) TUIPopoverViewControllerBehaviour behaviour;
-@property (nonatomic, readonly) BOOL shown;
+
+@property (nonatomic, unsafe_unretained) BOOL animates;
+@property (nonatomic, readonly, getter = isShown) BOOL shown;
 @property (nonatomic, readonly) CGRect positioningRect;
 
 // Block callbacks.
