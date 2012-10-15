@@ -65,9 +65,13 @@ typedef void (^TUIPopoverDelegateBlock)(TUIPopover *popover);
 
 @interface TUIPopoverBackgroundView : TUIView
 
-+ (CGSize)sizeForBackgroundViewWithContentSize:(CGSize)contentSize popoverEdge:(CGRectEdge)popoverEdge;
-+ (CGRect)contentViewFrameForBackgroundFrame:(CGRect)frame popoverEdge:(CGRectEdge)popoverEdge;
-+ (TUIPopoverBackgroundView *)backgroundViewForContentSize:(CGSize)contentSize popoverEdge:(CGRectEdge)popoverEdge originScreenRect:(CGRect)originScreenRect;
++ (CGSize)sizeForBackgroundViewWithContentSize:(CGSize)contentSize
+								   popoverEdge:(CGRectEdge)popoverEdge;
++ (CGRect)contentViewFrameForBackgroundFrame:(CGRect)frame
+								 popoverEdge:(CGRectEdge)popoverEdge;
++ (TUIPopoverBackgroundView *)backgroundViewForContentSize:(CGSize)contentSize
+											   popoverEdge:(CGRectEdge)popoverEdge
+										  originScreenRect:(CGRect)originScreenRect;
 
 // originScreenRect is in the screen coordinate space.
 - (id)initWithFrame:(CGRect)frame popoverEdge:(CGRectEdge)popoverEdge originScreenRect:(CGRect)originScreenRect;

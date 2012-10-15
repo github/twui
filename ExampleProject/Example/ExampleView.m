@@ -110,13 +110,10 @@
 		tabLabel = [[TUILabel alloc] initWithFrame:CGRectMake(0, 0, 256, 256)];
 		tabLabel.renderer.verticalAlignment = TUITextVerticalAlignmentMiddle;
 		tabLabel.alignment = TUITextAlignmentCenter;
-        tabLabel.backgroundColor = [NSColor clearColor];
-		tabLabel.textColor = [NSColor blackColor];
-		tabLabel.font = exampleFont2;
+        tabLabel.backgroundColor = [NSColor whiteColor];
+		tabLabel.textColor = [NSColor darkGrayColor];
+		tabLabel.font = exampleFont1;
 		tabLabel.selectable = NO;
-		tabLabel.renderer.shadowColor = [NSColor whiteColor];
-		tabLabel.renderer.shadowOffset = CGSizeMake(0, 1);
-		tabLabel.renderer.shadowBlur = 1.0f;
 		
         tabInformation = [[TUIPopover alloc] initWithContentViewController:[[TUIViewController alloc] init]];
         tabInformation.behaviour = TUIPopoverViewControllerBehaviourTransient;
@@ -134,10 +131,9 @@
 		tabLabel.text = [NSString stringWithFormat:@"Selected tab %ld.", index];
 	}
 	
-	TUIView *tab = [tabBar.tabViews objectAtIndex:index];
 	tabInformation.contentSize = CGSizeApplyAffineTransform([tabLabel.text ab_sizeWithFont:tabLabel.font],
 															CGAffineTransformMakeScale(1.5, 1.5));
-	[tabInformation showRelativeToRect:tab.bounds ofView:tab preferredEdge:CGRectMinYEdge];
+	[tabInformation showRelativeToRect:tabBar.bounds ofView:tabBar preferredEdge:CGRectMinYEdge];
 }
 
 - (NSInteger)numberOfSectionsInTableView:(TUITableView *)tableView
