@@ -22,7 +22,7 @@
 
 typedef void (^TUIPopoverDelegateBlock)(TUIPopover *popover);
 
-extern NSString *const NSPopoverDidCloseNotification;
+extern NSString *const TUIPopoverDidCloseNotification;
 
 // The userInfo key containing the reason for the TUIPopoverWillCloseNotification.
 // It can currently be either TUIPopoverCloseReasonStandard or
@@ -37,20 +37,20 @@ extern NSString *const TUIPopoverCloseReasonStandard;
 extern NSString *const TUIPopoverCloseReasonDetachToWindow;
 
 // Sent before the popover is shown.
-extern NSString *const NSPopoverWillShowNotification;
+extern NSString *const TUIPopoverWillShowNotification;
 
 // Sent after the popover has finished animating onscreen.
-extern NSString *const NSPopoverDidShowNotification;
+extern NSString *const TUIPopoverDidShowNotification;
 
-// Sent before the popover is closed. The userInfo key NSPopoverCloseReasonKey
+// Sent before the popover is closed. The userInfo key TUIPopoverCloseReasonKey
 // specifies the reason for closing.  It can currently be either
-// NSPopoverCloseReasonStandard or NSPopoverCloseReasonDetachToWindow, although
+// TUIPopoverCloseReasonStandard or TUIPopoverCloseReasonDetachToWindow, although
 // more reasons for closing may be added in the future.
-extern NSString *const NSPopoverWillCloseNotification;
+extern NSString *const TUIPopoverWillCloseNotification;
 
 // Sent after the popover has finished animating offscreen.  This notification
-// has the same user info keys as NSPopoverWillCloseNotification.
-extern NSString *const NSPopoverDidCloseNotification;
+// has the same user info keys as TUIPopoverWillCloseNotification.
+extern NSString *const TUIPopoverDidCloseNotification;
 
 typedef enum {
 	
@@ -109,7 +109,7 @@ typedef enum {
 @property (nonatomic, assign) CGSize contentSize;
 
 // Specifies the behavior of the popover.
-// The default value is NSPopoverBehaviorApplicationDefined.
+// The default value is TUIPopoverBehaviorApplicationDefined.
 @property (nonatomic, unsafe_unretained) TUIPopoverBehavior behavior;
 
 // Specifies if the popover is to be animated. A popover may be animated
@@ -139,14 +139,14 @@ typedef enum {
 @property (nonatomic, strong) NSArray *hideAnimations;
 
 // You can optionally use block callbacks instead of a delegate, in which
-// case, the delegate method is not called.
+// case, both the delegate method and the block will be called.
 @property (nonatomic, copy) TUIPopoverDelegateBlock willShowBlock;
 @property (nonatomic, copy) TUIPopoverDelegateBlock didShowBlock;
 @property (nonatomic, copy) TUIPopoverDelegateBlock willCloseBlock;
 @property (nonatomic, copy) TUIPopoverDelegateBlock didCloseBlock;
 
 // The delegate of the popover.
-@property (assign) id <TUIPopoverDelegate> delegate;
+@property (nonatomic, unsafe_unretained) id <TUIPopoverDelegate> delegate;
 
 // Initialize the popover with a view controller, whose view will be used
 // as the content view inside the popover.
@@ -175,7 +175,7 @@ typedef enum {
 
 // Attempts to close the popover. The popover will not be closed if it has a
 // delegate and the delegate implements the returns popoverShouldClose: method
-// returning NO, or if a subclass of the NSPopover class implements
+// returning NO, or if a subclass of the TUIPopover class implements
 // popoverShouldClose: and returns NO). The operation will fail if the popover
 // is displaying a nested popover or if it has a child window. A window will
 // attempt to close its popovers when it receives a performClose: message.
@@ -224,7 +224,7 @@ typedef enum {
 // delegate a chance to veto the close.  If the delegate returns YES,
 // -popoverShouldClose: will also be invoked on the popover to allow the
 // popover to veto the close.
-- (BOOL)popoverShouldClose:(NSPopover *)popover;
+- (BOOL)popoverShouldClose:(TUIPopover *)popover;
 
 // Return a window to which the popover should be detached.  You should not
 // remove the popover's content view as part of your implementation of this
@@ -235,24 +235,24 @@ typedef enum {
 // to instantiate separate copies of the content for the popover and the
 // detachable window.  The popover will animate to appear as though it morphs
 // into the detachable window (unless the animates property is set to NO. The
-// exact animation used is not guaranteed).  Subclasses of NSPopover may also
+// exact animation used is not guaranteed).  Subclasses of TUIPopover may also
 // implement this method, in which case the subclass method will be invoked
 // only if the delegate does not implement the method.
-- (NSWindow *)detachableWindowForPopover:(NSPopover *)popover;
+- (NSWindow *)detachableWindowForPopover:(TUIPopover *)popover;
 
-// Invoked on the delegate when the NSPopoverWillShowNotification
+// Invoked on the delegate when the TUIPopoverWillShowNotification
 // notification is sent.  This method will also be invoked on the popover.
 - (void)popoverWillShow:(NSNotification *)notification;
 
-// Invoked on the delegate when the NSPopoverDidShowNotification
+// Invoked on the delegate when the TUIPopoverDidShowNotification
 // notification is sent.  This method will also be invoked on the popover.
 - (void)popoverDidShow:(NSNotification *)notification;
 
-// Invoked on the delegate when the NSPopoverWillCloseNotification
+// Invoked on the delegate when the TUIPopoverWillCloseNotification
 // notification is sent.  This method will also be invoked on the popover.
 - (void)popoverWillClose:(NSNotification *)notification;
 
-// Invoked on the delegate when the NSPopoverDidCloseNotification
+// Invoked on the delegate when the TUIPopoverDidCloseNotification
 // notification is sent.  This method will also be invoked on the popover.
 - (void)popoverDidClose:(NSNotification *)notification;
 

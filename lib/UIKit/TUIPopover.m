@@ -26,6 +26,10 @@
 NSString *const TUIPopoverCloseReasonKey = @"_kTUIPopoverCloseReasonKey";
 NSString *const TUIPopoverCloseReasonStandard = @"_kTUIPopoverCloseReasonStandard";
 NSString *const TUIPopoverCloseReasonDetachToWindow = @"_kTUIPopoverCloseReasonDetachToWindow";
+NSString *const TUIPopoverWillShowNotification = @"_kTUIPopoverWillShowNotification";
+NSString *const TUIPopoverDidShowNotification = @"_kTUIPopoverDidShowNotification";
+NSString *const TUIPopoverWillCloseNotification = @"_kTUIPopoverWillCloseNotification";
+NSString *const TUIPopoverDidCloseNotification = @"_kTUIPopoverDidCloseNotification";
 
 CGFloat const TUIPopoverBackgroundViewBorderRadius = 4.5;
 CGFloat const TUIPopoverBackgroundViewArrowInset = 2.0;
@@ -105,13 +109,48 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 	return self;
 }
 
+- (void)setDelegate:(id<TUIPopoverDelegate>)delegate {
+	_delegate = delegate;
+	
+	if([delegate respondsToSelector:@selector(popoverWillShow:)]) {
+		[[NSNotificationCenter defaultCenter] addObserver:self.delegate
+												 selector:@selector(popoverWillShow:)
+													 name:TUIPopoverWillShowNotification
+												   object:self];
+	}
+	
+	if([delegate respondsToSelector:@selector(popoverDidShow:)]) {
+		[[NSNotificationCenter defaultCenter] addObserver:self.delegate
+												 selector:@selector(popoverDidShow:)
+													 name:TUIPopoverDidShowNotification
+												   object:self];
+	}
+	
+	if([delegate respondsToSelector:@selector(popoverWillClose:)]) {
+		[[NSNotificationCenter defaultCenter] addObserver:self.delegate
+												 selector:@selector(popoverWillClose:)
+													 name:TUIPopoverWillCloseNotification
+												   object:self];
+	}
+	
+	if([delegate respondsToSelector:@selector(popoverDidClose:)]) {
+		[[NSNotificationCenter defaultCenter] addObserver:self.delegate
+												 selector:@selector(popoverDidClose:)
+													 name:TUIPopoverDidCloseNotification
+												   object:self];
+	}
+}
+
 - (void)showRelativeToRect:(CGRect)newPositioningRect ofView:(TUIView *)positioningView preferredEdge:(CGRectEdge)preferredEdge {
-    if(_shown)
+    if(self.shown)
 		return;
     
     [self.contentViewController viewWillAppear:YES];
     if(self.willShowBlock != nil)
         self.willShowBlock(self);
+	[[NSNotificationCenter defaultCenter] postNotificationName:TUIPopoverWillShowNotification
+														object:self
+													  userInfo:nil];
     
     if(self.behavior != TUIPopoverBehaviorApplicationDefined) {
 		if(self.transientEventMonitor)
@@ -124,39 +163,39 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
     _positioningRect = CGRectEqualToRect(newPositioningRect, CGRectZero) ? positioningView.bounds : newPositioningRect;
     self.originalViewSize = self.contentViewController.view.frame.size;
 	
-    CGRect basePositioningRect = [positioningView convertRect:_positioningRect toView:nil];
-    NSRect windowRelativeRect = [positioningView.nsView convertRect:basePositioningRect toView:nil];
-    CGRect screenPositioningRect = windowRelativeRect;
+	CGRect basePositioningRect = [positioningView convertRect:_positioningRect toView:nil];
+	NSRect windowRelativeRect = [positioningView.nsView convertRect:basePositioningRect toView:nil];
+	CGRect screenPositioningRect = windowRelativeRect;
 	screenPositioningRect.origin = [positioningView.nsWindow convertBaseToScreen:windowRelativeRect.origin];
-    
-    CGRect (^popoverRectForEdge)(CGRectEdge) = ^(CGRectEdge popoverEdge) {
-		CGSize popoverSize = [self.backgroundViewClass sizeForBackgroundViewWithContentSize:contentViewSize
-																				popoverEdge:popoverEdge];
-		CGRect returnRect = NSMakeRect(0.0, 0.0, popoverSize.width, popoverSize.height);
-		
-		if (popoverEdge == CGRectMinYEdge) {
-			CGFloat xOrigin = CGRectGetMidX(screenPositioningRect) - floor(popoverSize.width / 2.0);
-			CGFloat yOrigin = CGRectGetMinY(screenPositioningRect) - popoverSize.height;
-			returnRect.origin = CGPointMake(xOrigin, yOrigin);
-		} else if (popoverEdge == CGRectMaxYEdge) {
-			CGFloat xOrigin = CGRectGetMidX(screenPositioningRect) - floor(popoverSize.width / 2.0);
-			returnRect.origin = CGPointMake(xOrigin, CGRectGetMaxY(screenPositioningRect));
-		} else if (popoverEdge == CGRectMinXEdge) {
-			CGFloat xOrigin = CGRectGetMinX(screenPositioningRect) - popoverSize.width;
-			CGFloat yOrigin = CGRectGetMidY(screenPositioningRect) - floor(popoverSize.height / 2.0);
-			returnRect.origin = CGPointMake(xOrigin, yOrigin);
-		} else if (popoverEdge == CGRectMaxXEdge) {
-			CGFloat yOrigin = CGRectGetMidY(screenPositioningRect) - floor(popoverSize.height / 2.0);
-			returnRect.origin = CGPointMake(CGRectGetMaxX(screenPositioningRect), yOrigin);
-		} else {
-			returnRect = CGRectZero;
-		}
-		
-		return returnRect;
-    };
-    
     __block CGRectEdge popoverEdge = preferredEdge;
+	
     CGRect (^popoverRect)() = ^{
+		CGRect (^popoverRectForEdge)(CGRectEdge) = ^(CGRectEdge popoverEdge) {
+			CGSize popoverSize = [self.backgroundViewClass sizeForBackgroundViewWithContentSize:contentViewSize
+																					popoverEdge:popoverEdge];
+			CGRect returnRect = NSMakeRect(0.0, 0.0, popoverSize.width, popoverSize.height);
+			
+			if (popoverEdge == CGRectMinYEdge) {
+				CGFloat xOrigin = CGRectGetMidX(screenPositioningRect) - floor(popoverSize.width / 2.0);
+				CGFloat yOrigin = CGRectGetMinY(screenPositioningRect) - popoverSize.height;
+				returnRect.origin = CGPointMake(xOrigin, yOrigin);
+			} else if (popoverEdge == CGRectMaxYEdge) {
+				CGFloat xOrigin = CGRectGetMidX(screenPositioningRect) - floor(popoverSize.width / 2.0);
+				returnRect.origin = CGPointMake(xOrigin, CGRectGetMaxY(screenPositioningRect));
+			} else if (popoverEdge == CGRectMinXEdge) {
+				CGFloat xOrigin = CGRectGetMinX(screenPositioningRect) - popoverSize.width;
+				CGFloat yOrigin = CGRectGetMidY(screenPositioningRect) - floor(popoverSize.height / 2.0);
+				returnRect.origin = CGPointMake(xOrigin, yOrigin);
+			} else if (popoverEdge == CGRectMaxXEdge) {
+				CGFloat yOrigin = CGRectGetMidY(screenPositioningRect) - floor(popoverSize.height / 2.0);
+				returnRect.origin = CGPointMake(CGRectGetMaxX(screenPositioningRect), yOrigin);
+			} else {
+				returnRect = CGRectZero;
+			}
+			
+			return returnRect;
+		};
+		
         CGRectEdge (^nextEdgeForEdge)(CGRectEdge) = ^(CGRectEdge currentEdge) {
             if(currentEdge == CGRectMaxXEdge) {
                 return (CGRectEdge)(preferredEdge == CGRectMinXEdge ? CGRectMaxYEdge : CGRectMinXEdge);
@@ -229,6 +268,9 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 		_shown = YES;
 		
 		[self.contentViewController viewDidAppear:YES];
+		[[NSNotificationCenter defaultCenter] postNotificationName:TUIPopoverDidShowNotification
+															object:self
+														  userInfo:nil];
 		if(self.didShowBlock)
 			self.didShowBlock(self);
 	};
@@ -244,13 +286,18 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 }
 
 - (void)closeWithFadeoutDuration:(NSTimeInterval)duration {
-    if(self.animating || !_shown)
+    if(self.animating || !self.shown)
 		return;
     
     if(self.transientEventMonitor)
 		[self removeEventMonitor];
+	
+	[self.contentViewController viewWillDisappear:YES];
     if(self.willCloseBlock != nil)
         self.willCloseBlock(self);
+	[[NSNotificationCenter defaultCenter] postNotificationName:TUIPopoverWillCloseNotification
+														object:self
+													  userInfo:@{TUIPopoverCloseReasonKey : TUIPopoverCloseReasonStandard}];
 	
 	for(CAAnimation *animation in self.hideAnimations) {
 		animation.fillMode = kCAFillModeForwards;
@@ -270,8 +317,12 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
         self.animating = NO;
         _shown = NO;
         
+		[self.contentViewController viewDidDisappear:YES];
         if(self.didCloseBlock != nil)
             self.didCloseBlock(self);
+		[[NSNotificationCenter defaultCenter] postNotificationName:TUIPopoverDidCloseNotification
+															object:self
+														  userInfo:@{TUIPopoverCloseReasonKey : TUIPopoverCloseReasonStandard}];
         
         self.contentViewController.view.frame = CGRectMake(self.contentViewController.view.frame.origin.x,
                                                            self.contentViewController.view.frame.origin.y,
