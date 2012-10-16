@@ -21,8 +21,8 @@
 @protocol TUIPopoverDelegate;
 
 typedef void (^TUIPopoverDelegateBlock)(TUIPopover *popover);
-
-extern NSString *const TUIPopoverDidCloseNotification;
+typedef BOOL (^TUIPopoverConfirmationBlock)(TUIPopover *popover);
+typedef NSWindow * (^TUIPopoverWindowBlock)(TUIPopover *popover);
 
 // The userInfo key containing the reason for the TUIPopoverWillCloseNotification.
 // It can currently be either TUIPopoverCloseReasonStandard or
@@ -43,43 +43,42 @@ extern NSString *const TUIPopoverWillShowNotification;
 extern NSString *const TUIPopoverDidShowNotification;
 
 // Sent before the popover is closed. The userInfo key TUIPopoverCloseReasonKey
-// specifies the reason for closing.  It can currently be either
+// specifies the reason for closing. It can currently be either
 // TUIPopoverCloseReasonStandard or TUIPopoverCloseReasonDetachToWindow, although
 // more reasons for closing may be added in the future.
 extern NSString *const TUIPopoverWillCloseNotification;
 
-// Sent after the popover has finished animating offscreen.  This notification
+// Sent after the popover has finished animating offscreen. This notification
 // has the same user info keys as TUIPopoverWillCloseNotification.
 extern NSString *const TUIPopoverDidCloseNotification;
 
 typedef enum {
 	
-	// Your application assumes responsibility for closing the popover.
-	// The system will still close the popover in a limited number of
-	// circumstances. For instance, the system will attempt to close the
-	// popover when the window of its positioningView is closed. You may
-	// consider implementing -cancel: to close the popover when the escape
-	// key is pressed. This is the default value.
-    TUIPopoverBehaviorApplicationDefined = 0,
+	// The application assumes responsibility for closing the popover.
+	// The popover will still close itself in a limited number of
+	// circumstances. For instance, the popover will attempt to close
+	// itself when the window of its positioningView is closed. You may
+	// consider implementing the delegate to close the popover when the
+	// escape key is pressed. This is the default value.
+    TUIPopoverBehaviorApplicationDefined,
 	
-	// The system will close the popover when the user interacts with a
+	// The popover will close itself the when the user interacts with a
 	// user interface element outside the popover. Note that interacting
 	// with menus or panels that become key only when needed will not
 	// cause a transient popover to close.
-    TUIPopoverBehaviorTransient = 1,
+    TUIPopoverBehaviorTransient,
 	
 	// The system will close the popover when the user interacts with user
 	// interface elements in the window containing the popover's positioning
 	// view. Semi-transient popovers cannot be shown relative to views in
 	// other popovers, nor can they be shown relative to views in child windows.
-	// Currently unsupported.
-    TUIPopoverBehaviorSemiTransient = 2
+    TUIPopoverBehaviorSemitransient = TUIPopoverBehaviorTransient
 } TUIPopoverBehavior;
 
 // The TUIPopover provides a means to display additional content related
 // to existing content on the screen. The popover is automatically positioned
 // relative to its positioning view and is moved whenever its positioning
-// view moves. A positioning rectangle within the positioning view can be
+// view's window moves. A positioning rectangle within the view can be
 // specified for additional granularity. An anchor is used to express the
 // relation between these two units of content. A popover has an appearance
 // that specifies its visual characteristics, as well as a behavior that
@@ -87,9 +86,14 @@ typedef enum {
 // transient popover is closed in response to most user interactions,
 // whereas a semi-transient popovers is closed when the user interacts
 // with the window containing the popover's positioning view. Popovers with
-// application-defined behavior are not usually closed on the developer's behalf.
-// Popovers can be detached to become a separate window when they are dragged
-// by implementing the appropriate delegate method or block.
+// application-defined behavior are not usually closed on the developer's
+// behalf. All popovers will be automatically closed if the positioning view
+// is removed from a window. Popovers can be detached to become a separate
+// window when they are dragged by implementing a delegate method or block.
+//
+// UNSUPPORTED FEATURES:
+// - Semitransient behavior is currently unsupported.
+// - Popover to window detaching is currently unsupported.
 @interface TUIPopover : NSResponder
 
 // The view controller that manages the content of the popover. You must set
@@ -128,9 +132,7 @@ typedef enum {
 
 // The content size of the popover. Popovers are positioned relative to a
 // positioning view and are automatically moved when the location or size
-// of the positioning view changes. Sometimes it is desirable to position
-// popovers relative to a rectangle within the positioning view. In this
-// case, you must update the positioningRect whenever this rectangle changes.
+// of the positioning view changes.
 @property (nonatomic, readonly) CGRect positioningRect;
 
 // Set the custom popover animations to use when animating in or out. These
@@ -138,8 +140,18 @@ typedef enum {
 @property (nonatomic, strong) NSArray *showAnimations;
 @property (nonatomic, strong) NSArray *hideAnimations;
 
+// Set the popover animation duration. If the popover animates, this duration
+// will be used for its animations. If it is set to a negative value,
+// the default duration will be used.
+@property (nonatomic, assign) NSTimeInterval animationDuration;
+
 // You can optionally use block callbacks instead of a delegate, in which
-// case, both the delegate method and the block will be called.
+// case, both the delegate method and the block will be called. For
+// information on the usage of these delegate blocks, refer to the delegate
+// methods below. The shouldClose and detachableWindow blocks take priority
+// over delegate method calls.
+@property (nonatomic, copy) TUIPopoverConfirmationBlock shouldClose;
+@property (nonatomic, copy) TUIPopoverWindowBlock detachableWindow;
 @property (nonatomic, copy) TUIPopoverDelegateBlock willShowBlock;
 @property (nonatomic, copy) TUIPopoverDelegateBlock didShowBlock;
 @property (nonatomic, copy) TUIPopoverDelegateBlock willCloseBlock;
@@ -158,28 +170,27 @@ typedef enum {
 // May be an empty rectangle, which will default to the bounds of positioningView.
 // The positioningView is the view relative to which the popover should be
 // positioned. Causes the method to raise NSInvalidArgumentException if nil.
-// The preferredEdge is theedge of positioningView the popover should prefer
+// The preferredEdge is the edge of positioningView the popover should prefer
 // to be anchored to. This method raises NSInternalInconsistencyException if
-// contentViewController or the view controller’s view is nil. If the popover
-// is already being shown, this method updates the anchored view, rectangle,
-// and preferred edge. If the positioning view is hidden, this method does nothing.
-- (void)showRelativeToRect:(CGRect)positioningRect ofView:(TUIView *)positioningView preferredEdge:(CGRectEdge)preferredEdge;
+// contentViewController or the view controller’s view is nil.
+// If the popover is already being shown, this method does nothing.
+- (void)showRelativeToRect:(CGRect)positioningRect
+					ofView:(TUIView *)positioningView
+			 preferredEdge:(CGRectEdge)preferredEdge;
 
 // Forces the popover to close without consulting its delegate. Any popovers
 // nested within the popovers will also receive a close message. When a window
 // is closed in response to the close message being sent, all of its popovers
 // are closed. The popover animates out when closed unless the animates
-// property is set to NO. It can optionally be closed with a fade duration.
+// property is set to NO.
 - (void)close;
-- (void)closeWithFadeoutDuration:(NSTimeInterval)duration;
 
 // Attempts to close the popover. The popover will not be closed if it has a
 // delegate and the delegate implements the returns popoverShouldClose: method
-// returning NO, or if a subclass of the TUIPopover class implements
-// popoverShouldClose: and returns NO). The operation will fail if the popover
-// is displaying a nested popover or if it has a child window. A window will
-// attempt to close its popovers when it receives a performClose: message.
-// The popover animates out when closed unless the animates property is NO.
+// returning NO. The operation will fail if the popover is displaying a nested
+// popover or if it has a child window. A window will attempt to close its
+// popovers when it receives a performClose: message. The popover animates out
+// when closed unless the animates property is NO.
 - (IBAction)performClose:(id)sender;
 
 @end

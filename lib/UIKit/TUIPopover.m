@@ -36,7 +36,9 @@ CGFloat const TUIPopoverBackgroundViewArrowInset = 2.0;
 CGFloat const TUIPopoverBackgroundViewArrowHeight = 12.0;
 CGFloat const TUIPopoverBackgroundViewArrowWidth = 24.0;
 
-NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
+NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
+#define TUIPopoverCurrentAnimationDuration \
+((self.animationDuration > 0.0) ? self.animationDuration : TUIPopoverDefaultAnimationDuration)
 
 @interface TUIPopoverBackgroundView ()
 
@@ -98,6 +100,15 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 		self.showAnimations = @[fadeIn, bounce];
 		self.hideAnimations = @[fadeOut];
         _shown = NO;
+		
+		[[NSNotificationCenter defaultCenter] addObserver:self
+												 selector:@selector(parentWindowClosed:)
+													 name:NSWindowWillCloseNotification
+												   object:self];
+		[[NSNotificationCenter defaultCenter] addObserver:self
+												 selector:@selector(parentWindowClosed:)
+													 name:TUIViewWillMoveToWindowNotification
+												   object:self];
     }
 	return self;
 }
@@ -141,9 +152,86 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 	}
 }
 
+- (void)setContentViewController:(TUIViewController *)controller {
+	if(self.shown) {
+		TUIPopoverBackgroundView *backgroundView = (TUIPopoverBackgroundView *)[self.popoverWindow.contentView nsView].rootView;
+		CGSize contentViewSize = (CGSizeEqualToSize(self.contentSize, CGSizeZero) ?
+								  controller.view.frame.size : self.contentSize);
+		
+		CGSize backgroundSize = [self.backgroundViewClass sizeForBackgroundViewWithContentSize:contentViewSize
+																				   popoverEdge:backgroundView.popoverEdge];
+		CGRect backgroundRect = backgroundView.frame;
+		backgroundRect.size = backgroundSize;
+		
+		void (^updateBlock)(void) = ^{
+			backgroundView.frame = backgroundRect;
+			CGRect contentViewFrame = [self.backgroundViewClass contentViewFrameForBackgroundFrame:backgroundRect
+																					   popoverEdge:backgroundView.popoverEdge];
+			controller.view.frame = contentViewFrame;
+			if(self.animates)
+				[[self.popoverWindow.contentView animator] setFrame:backgroundView.bounds];
+			else
+				[self.popoverWindow.contentView setFrame:backgroundView.bounds];
+			
+			[_contentViewController.view removeFromSuperview];
+			[backgroundView addSubview:controller.view];
+		};
+		
+		if(self.animates) {
+			[TUIView animateWithDuration:TUIPopoverCurrentAnimationDuration animations:^{
+				updateBlock();
+			}];
+		} else updateBlock();
+	}
+	
+	_contentViewController = controller;
+}
+
+- (void)setContentSize:(CGSize)size {
+	if(self.shown) {
+		TUIPopoverBackgroundView *backgroundView = (TUIPopoverBackgroundView *)[self.popoverWindow.contentView nsView].rootView;
+		CGSize contentViewSize = (CGSizeEqualToSize(size, CGSizeZero) ? self.contentViewController.view.frame.size : size);
+		
+		CGSize backgroundSize = [self.backgroundViewClass sizeForBackgroundViewWithContentSize:contentViewSize
+																				   popoverEdge:backgroundView.popoverEdge];
+		CGRect backgroundRect = backgroundView.frame;
+		backgroundRect.size = backgroundSize;
+		
+		
+		void (^updateBlock)(void) = ^{
+			backgroundView.frame = backgroundRect;
+			CGRect contentViewFrame = [self.backgroundViewClass contentViewFrameForBackgroundFrame:backgroundRect
+																					   popoverEdge:backgroundView.popoverEdge];
+			self.contentViewController.view.frame = contentViewFrame;
+			if(self.animates)
+				[[self.popoverWindow.contentView animator] setFrame:backgroundView.bounds];
+			else
+				[self.popoverWindow.contentView setFrame:backgroundView.bounds];
+		};
+		
+		if(self.animates) {
+			[TUIView animateWithDuration:TUIPopoverCurrentAnimationDuration animations:^{
+				updateBlock();
+			}];
+		} else updateBlock();
+	}
+	
+	_contentSize = size;
+}
+
 - (void)showRelativeToRect:(CGRect)newPositioningRect ofView:(TUIView *)positioningView preferredEdge:(CGRectEdge)preferredEdge {
     if(self.shown)
 		return;
+	
+	if(!positioningView) {
+		[NSException raise:NSInvalidArgumentException format:@"TUIPopover positioningView cannot be nil!"];
+		return;
+	}
+	
+	if(!self.contentViewController || !self.contentViewController.view) {
+		[NSException raise:NSInternalInconsistencyException format:@"TUIPopover contentViewController view cannot be nil!"];
+		return;
+	}
     
     [self.contentViewController viewWillAppear:YES];
     if(self.willShowBlock != nil)
@@ -250,20 +338,13 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 	
     _popoverWindow = [[TUIPopoverWindow alloc] initWithContentRect:popoverScreenRect];
     TUIPopoverWindowContentView *contentView = [[TUIPopoverWindowContentView alloc] initWithFrame:backgroundView.bounds];
-    contentView.nsView.rootView = backgroundView;
     self.popoverWindow.contentView = contentView;
+    contentView.nsView.rootView = backgroundView;
 	
-	for(CAAnimation *animation in self.showAnimations) {
-		animation.fillMode = kCAFillModeForwards;
-		animation.duration = TUIPopoverDefaultAnimationDuration;
-	}
+	contentView.arrowEdge = popoverEdge;
+	[backgroundView updateMaskLayer];
 	
-	CAAnimationGroup *group = [[CAAnimationGroup alloc] init];
-	group.animations = self.showAnimations;
-	group.fillMode = kCAFillModeForwards;
-	group.removedOnCompletion = YES;
-	group.duration = TUIPopoverDefaultAnimationDuration;
-	group.tui_completionBlock = ^{
+	void (^completionBlock)(void) = ^{
 		self.animating = NO;
 		_shown = YES;
 		
@@ -275,17 +356,33 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 			self.didShowBlock(self);
 	};
 	
-	contentView.arrowEdge = popoverEdge;
-	[backgroundView updateMaskLayer];
-	
-	self.animating = YES;
-	CALayer *viewLayer = ((NSView *)_popoverWindow.contentView).layer;
-	[viewLayer addAnimation:group forKey:nil];
-    [positioningView.nsWindow addChildWindow:_popoverWindow ordered:NSWindowAbove];
-    [_popoverWindow makeKeyAndOrderFront:nil];
+	if(self.animates) {
+		for(CAAnimation *animation in self.showAnimations) {
+			animation.fillMode = kCAFillModeForwards;
+			animation.duration = TUIPopoverCurrentAnimationDuration;
+		}
+		
+		CAAnimationGroup *group = [[CAAnimationGroup alloc] init];
+		group.animations = self.showAnimations;
+		group.fillMode = kCAFillModeForwards;
+		group.removedOnCompletion = YES;
+		group.duration = TUIPopoverCurrentAnimationDuration;
+		group.tui_completionBlock = completionBlock;
+		
+		self.animating = YES;
+		CALayer *viewLayer = ((NSView *)_popoverWindow.contentView).layer;
+		[viewLayer addAnimation:group forKey:nil];
+		[positioningView.nsWindow addChildWindow:_popoverWindow ordered:NSWindowAbove];
+		[_popoverWindow makeKeyAndOrderFront:nil];
+	} else {
+		[positioningView.nsWindow addChildWindow:_popoverWindow ordered:NSWindowAbove];
+		[_popoverWindow makeKeyAndOrderFront:nil];
+		
+		completionBlock();
+	}
 }
 
-- (void)closeWithFadeoutDuration:(NSTimeInterval)duration {
+- (void)close {
     if(self.animating || !self.shown)
 		return;
     
@@ -299,17 +396,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 														object:self
 													  userInfo:@{TUIPopoverCloseReasonKey : TUIPopoverCloseReasonStandard}];
 	
-	for(CAAnimation *animation in self.hideAnimations) {
-		animation.fillMode = kCAFillModeForwards;
-		animation.duration = duration;
-	}
-	
-	CAAnimationGroup *group = [[CAAnimationGroup alloc] init];
-	group.animations = self.hideAnimations;
-	group.fillMode = kCAFillModeForwards;
-	group.removedOnCompletion = YES;
-	group.duration = duration;
-    group.tui_completionBlock = ^{
+	void (^completionBlock)(void) = ^{
         [self.popoverWindow close];
         [self.popoverWindow.parentWindow removeChildWindow:self.popoverWindow];
         
@@ -329,18 +416,41 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
                                                            self.originalViewSize.width,
                                                            self.originalViewSize.height);
     };
-    
-    self.animating = YES;
-	CALayer *viewLayer = ((NSView *)self.popoverWindow.contentView).layer;
-	[viewLayer addAnimation:group forKey:nil];
-}
-
-- (void)close {
-    [self closeWithFadeoutDuration:TUIPopoverDefaultAnimationDuration];
+	
+	if(self.animates) {
+		for(CAAnimation *animation in self.hideAnimations) {
+			animation.fillMode = kCAFillModeForwards;
+			animation.duration = TUIPopoverCurrentAnimationDuration;
+		}
+		
+		CAAnimationGroup *group = [[CAAnimationGroup alloc] init];
+		group.animations = self.hideAnimations;
+		group.fillMode = kCAFillModeForwards;
+		group.removedOnCompletion = YES;
+		group.duration = TUIPopoverCurrentAnimationDuration;
+		group.tui_completionBlock = completionBlock;
+		
+		self.animating = YES;
+		CALayer *viewLayer = ((NSView *)self.popoverWindow.contentView).layer;
+		[viewLayer addAnimation:group forKey:nil];
+	} else {
+		completionBlock();
+	}
 }
 
 - (IBAction)performClose:(id)sender {
-    [self close];
+	if(self.shouldClose != nil) {
+		if(self.shouldClose(self))
+			[self close];
+	} else if([self.delegate respondsToSelector:@selector(popoverShouldClose:)]) {
+		if([self.delegate popoverShouldClose:self])
+			[self close];
+	}
+}
+
+- (void)parentWindowClosed:(NSNotification *)notification {
+	if([notification.object isEqual:self.contentViewController.view.nsWindow])
+		[self close];
 }
 
 - (void)addEventMonitor {
