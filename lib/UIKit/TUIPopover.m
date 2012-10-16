@@ -23,10 +23,14 @@
 #import "TUINSWindow.h"
 #import "TUIViewController.h"
 
-CGFloat const TUIPopoverBackgroundViewBorderRadius = 5.0;
+NSString *const TUIPopoverCloseReasonKey = @"_kTUIPopoverCloseReasonKey";
+NSString *const TUIPopoverCloseReasonStandard = @"_kTUIPopoverCloseReasonStandard";
+NSString *const TUIPopoverCloseReasonDetachToWindow = @"_kTUIPopoverCloseReasonDetachToWindow";
+
+CGFloat const TUIPopoverBackgroundViewBorderRadius = 4.5;
 CGFloat const TUIPopoverBackgroundViewArrowInset = 2.0;
-CGFloat const TUIPopoverBackgroundViewArrowHeight = 17.0;
-CGFloat const TUIPopoverBackgroundViewArrowWidth = 35.0;
+CGFloat const TUIPopoverBackgroundViewArrowHeight = 12.0;
+CGFloat const TUIPopoverBackgroundViewArrowWidth = 24.0;
 
 NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 
@@ -69,10 +73,21 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 - (id)init {
     if((self = [super init])) {
         self.animates = YES;
-        self.behaviour = TUIPopoverViewControllerBehaviourApplicationDefined;
+        self.behavior = TUIPopoverBehaviorApplicationDefined;
         self.contentViewController = nil;
         self.backgroundViewClass = TUIPopoverBackgroundView.class;
 		
+		CAMediaTimingFunction *easeInOut = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+		CABasicAnimation *fade = [CABasicAnimation animationWithKeyPath:@"opacity"];
+		fade.fromValue = @0.0f;
+		fade.toValue = @1.0f;
+		
+		CAKeyframeAnimation *bounce = [CAKeyframeAnimation animationWithKeyPath:@"transform.scale"];
+		bounce.values = @[@0.05, @1.11245, @1.0];
+		bounce.keyTimes = @[@0, @(4.0/9.0+5.0/18.0), @1.0];
+		bounce.timingFunctions = @[easeInOut, easeInOut, easeInOut];
+		
+		self.showAnimations = @[fade, bounce];
         _shown = NO;
     }
 	return self;
@@ -93,7 +108,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
     if(self.willShowBlock != nil)
         self.willShowBlock(self);
     
-    if(self.behaviour != TUIPopoverViewControllerBehaviourApplicationDefined) {
+    if(self.behavior != TUIPopoverBehaviorApplicationDefined) {
 		if(self.transientEventMonitor)
             [self removeEventMonitor];
         [self addEventMonitor];
@@ -187,30 +202,19 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
     CGRect contentViewFrame = [self.backgroundViewClass contentViewFrameForBackgroundFrame:backgroundView.bounds
 																			   popoverEdge:popoverEdge];
     _contentViewController.view.frame = contentViewFrame;
+    [backgroundView addSubview:self.contentViewController.view];
 	
     _popoverWindow = [[TUIPopoverWindow alloc] initWithContentRect:popoverScreenRect];
     TUIPopoverWindowContentView *contentView = [[TUIPopoverWindowContentView alloc] initWithFrame:backgroundView.bounds];
-	contentView.arrowEdge = popoverEdge;
     contentView.nsView.rootView = backgroundView;
     self.popoverWindow.contentView = contentView;
-    [backgroundView addSubview:self.contentViewController.view];
-    [positioningView.nsWindow addChildWindow:_popoverWindow ordered:NSWindowAbove];
-	[backgroundView updateMaskLayer];
 	
-    CAMediaTimingFunction *easeInOut = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-	CABasicAnimation *fade = [CABasicAnimation animationWithKeyPath:@"opacity"];
-	fade.duration = TUIPopoverDefaultAnimationDuration;
-	fade.fromValue = @0.0f;
-	fade.toValue = @1.0f;
-	
-	CAKeyframeAnimation *bounce = [CAKeyframeAnimation animationWithKeyPath:@"transform.scale"];
-	bounce.duration = TUIPopoverDefaultAnimationDuration;
-	bounce.values = @[@0.05, @1.11245, @0.951807, @1.0];
-	bounce.keyTimes = @[@0, @(4.0/9.0), @(4.0/9.0+5.0/18.0), @1.0];
-	bounce.timingFunctions = @[easeInOut, easeInOut, easeInOut, easeInOut];
+	CALayer *viewLayer = ((NSView *)_popoverWindow.contentView).layer;
 	
 	CAAnimationGroup *group = [[CAAnimationGroup alloc] init];
-	group.animations = @[fade, bounce];
+	group.animations = self.showAnimations;
+	group.fillMode = kCAFillModeForwards;
+	group.removedOnCompletion = YES;
 	group.duration = TUIPopoverDefaultAnimationDuration;
 	group.tui_completionBlock = ^{
 		self.animating = NO;
@@ -221,8 +225,12 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 			self.didShowBlock(self);
 	};
 	
+	contentView.arrowEdge = popoverEdge;
+	[backgroundView updateMaskLayer];
+	
 	self.animating = YES;
-	[((NSView *)_popoverWindow.contentView).layer addAnimation:group forKey:nil];
+	[viewLayer addAnimation:group forKey:nil];
+    [positioningView.nsWindow addChildWindow:_popoverWindow ordered:NSWindowAbove];
     [_popoverWindow makeKeyAndOrderFront:nil];
 }
 
@@ -274,7 +282,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 			return event;
 		
 		static NSUInteger escapeKey = 53;
-		BOOL shouldClose = (event.type == NSLeftMouseDown || event.type == NSRightMouseDown ? (!NSPointInRect([NSEvent mouseLocation], self.popoverWindow.frame) && self.behaviour == TUIPopoverViewControllerBehaviourTransient) : event.keyCode == escapeKey);
+		BOOL shouldClose = (event.type == NSLeftMouseDown || event.type == NSRightMouseDown ? (!NSPointInRect([NSEvent mouseLocation], self.popoverWindow.frame) && self.behavior == TUIPopoverBehaviorTransient) : event.keyCode == escapeKey);
 		
 		if(shouldClose) [self close];
 		return event;
@@ -286,10 +294,10 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 	self.transientEventMonitor = nil;
 }
 
-- (void)setBehavior:(TUIPopoverViewControllerBehaviour)behaviour {
-    _behaviour = behaviour;
+- (void)setBehavior:(TUIPopoverBehavior)behavior {
+    _behavior = behavior;
     if(_shown) {
-        if(_behaviour == TUIPopoverViewControllerBehaviourApplicationDefined && self.transientEventMonitor)
+        if(_behavior == TUIPopoverBehaviorApplicationDefined && self.transientEventMonitor)
             [self removeEventMonitor];
         else if(!self.transientEventMonitor)
             [self addEventMonitor];
@@ -308,12 +316,9 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 }
 
 + (CGRect)contentViewFrameForBackgroundFrame:(CGRect)backgroundFrame popoverEdge:(CGRectEdge)popoverEdge {
-	backgroundFrame.size.width -= TUIPopoverBackgroundViewArrowHeight * 2;
-	backgroundFrame.origin.x += TUIPopoverBackgroundViewArrowHeight;
-	backgroundFrame.size.height -= TUIPopoverBackgroundViewArrowHeight * 2;
-	backgroundFrame.origin.y += TUIPopoverBackgroundViewArrowHeight;
-    
-    return CGRectInset(backgroundFrame, TUIPopoverBackgroundViewBorderRadius, TUIPopoverBackgroundViewBorderRadius);
+	CGFloat inset = TUIPopoverBackgroundViewArrowHeight + TUIPopoverBackgroundViewBorderRadius;
+	
+    return ABRectRoundOrigin(CGRectInset(backgroundFrame, inset, inset));
 }
 
 + (TUIPopoverBackgroundView *)backgroundViewForContentSize:(CGSize)contentSize
@@ -401,8 +406,8 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 	NSBezierPath *path = [NSBezierPath bezierPathWithCGPath:cgPath];
 	CGPathRelease(cgPath);
 	
-	NSGradient *gradient = [[NSGradient alloc] initWithColors:@[[NSColor colorWithCalibratedWhite:1.00 alpha:0.90],
-							[NSColor colorWithCalibratedWhite:0.95 alpha:0.90]]];
+	NSGradient *gradient = [[NSGradient alloc] initWithColors:@[[NSColor colorWithCalibratedWhite:0.95 alpha:0.95],
+																[NSColor colorWithCalibratedWhite:0.90 alpha:0.95]]];
 	[gradient drawInBezierPath:path angle:-90];
 	[[NSColor whiteColor] set];
 	[path strokeInside];
@@ -427,7 +432,6 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 
 - (id)initWithFrame:(CGRect)frame {
     if((self = [super initWithFrame:frame])) {
-        self.arrowEdge = CGRectNoEdge;
 		[self setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
 		
         _nsView = [[TUINSView alloc] initWithFrame:self.bounds];
