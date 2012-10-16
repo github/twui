@@ -96,7 +96,6 @@ typedef enum {
 // the content view controller of the popover before the popover is shown.
 // Changes to the popover's content view controller while the popover is
 // shown will cause the popover to animate if the animates property is YES.
-// NOTE: FIX, DOES NOT DO ANYTHING.
 @property (nonatomic, strong) TUIViewController *contentViewController;
 
 // Must be a subclass of TUIPopoverBackgroundView.
@@ -107,8 +106,7 @@ typedef enum {
 // set. Changes to the content size of the popover will cause the popover
 // to animate while it is shown if the animates property is YES. CGSizeZero
 // uses the size of the content view in the contentViewController.
-// NOTE: FIX, DOES NOT DO ANYTHING.
-@property (nonatomic, unsafe_unretained) CGSize contentSize;
+@property (nonatomic, assign) CGSize contentSize;
 
 // Specifies the behavior of the popover.
 // The default value is NSPopoverBehaviorApplicationDefined.
@@ -120,8 +118,7 @@ typedef enum {
 // the content view or content size changes. The system does not guarantee
 // which behaviors will be animated or that this property will be respected;
 // it is regarded as a hint.
-// NOTE: FIX, DOES NOT DO ANYTHING.
-@property (nonatomic, unsafe_unretained) BOOL animates;
+@property (nonatomic, assign) BOOL animates;
 
 // The display state of the popover. The value is YES if the popover is
 // being shown, NO otherwise. The popover is considered to be shown from

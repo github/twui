@@ -77,17 +77,22 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
         self.contentViewController = nil;
         self.backgroundViewClass = TUIPopoverBackgroundView.class;
 		
-		CAMediaTimingFunction *easeInOut = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-		CABasicAnimation *fade = [CABasicAnimation animationWithKeyPath:@"opacity"];
-		fade.fromValue = @0.0f;
-		fade.toValue = @1.0f;
+		CABasicAnimation *fadeIn = [CABasicAnimation animationWithKeyPath:@"opacity"];
+		fadeIn.fromValue = @0.0f;
+		fadeIn.toValue = @1.0f;
 		
+		CABasicAnimation *fadeOut = [CABasicAnimation animationWithKeyPath:@"opacity"];
+		fadeOut.fromValue = @1.0f;
+		fadeOut.toValue = @0.0f;
+		
+		CAMediaTimingFunction *easeInOut = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
 		CAKeyframeAnimation *bounce = [CAKeyframeAnimation animationWithKeyPath:@"transform.scale"];
 		bounce.values = @[@0.05, @1.11245, @1.0];
 		bounce.keyTimes = @[@0, @(4.0/9.0+5.0/18.0), @1.0];
 		bounce.timingFunctions = @[easeInOut, easeInOut, easeInOut];
 		
-		self.showAnimations = @[fade, bounce];
+		self.showAnimations = @[fadeIn, bounce];
+		self.hideAnimations = @[fadeOut];
         _shown = NO;
     }
 	return self;
@@ -209,7 +214,10 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
     contentView.nsView.rootView = backgroundView;
     self.popoverWindow.contentView = contentView;
 	
-	CALayer *viewLayer = ((NSView *)_popoverWindow.contentView).layer;
+	for(CAAnimation *animation in self.showAnimations) {
+		animation.fillMode = kCAFillModeForwards;
+		animation.duration = TUIPopoverDefaultAnimationDuration;
+	}
 	
 	CAAnimationGroup *group = [[CAAnimationGroup alloc] init];
 	group.animations = self.showAnimations;
@@ -229,6 +237,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 	[backgroundView updateMaskLayer];
 	
 	self.animating = YES;
+	CALayer *viewLayer = ((NSView *)_popoverWindow.contentView).layer;
 	[viewLayer addAnimation:group forKey:nil];
     [positioningView.nsWindow addChildWindow:_popoverWindow ordered:NSWindowAbove];
     [_popoverWindow makeKeyAndOrderFront:nil];
@@ -242,12 +251,20 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
 		[self removeEventMonitor];
     if(self.willCloseBlock != nil)
         self.willCloseBlock(self);
-    
-    CABasicAnimation *fadeOutAnimation = [CABasicAnimation animationWithKeyPath:@"alphaValue"];
-    fadeOutAnimation.duration = duration;
-    fadeOutAnimation.tui_completionBlock = ^{
-        [self.popoverWindow.parentWindow removeChildWindow:self.popoverWindow];
+	
+	for(CAAnimation *animation in self.hideAnimations) {
+		animation.fillMode = kCAFillModeForwards;
+		animation.duration = duration;
+	}
+	
+	CAAnimationGroup *group = [[CAAnimationGroup alloc] init];
+	group.animations = self.hideAnimations;
+	group.fillMode = kCAFillModeForwards;
+	group.removedOnCompletion = YES;
+	group.duration = duration;
+    group.tui_completionBlock = ^{
         [self.popoverWindow close];
+        [self.popoverWindow.parentWindow removeChildWindow:self.popoverWindow];
         
         self.popoverWindow.contentView = nil;
         self.animating = NO;
@@ -262,9 +279,9 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.3;
                                                            self.originalViewSize.height);
     };
     
-    self.popoverWindow.animations = [NSDictionary dictionaryWithObject:fadeOutAnimation forKey:@"alphaValue"];
     self.animating = YES;
-    [self.popoverWindow.animator setAlphaValue:0.0];
+	CALayer *viewLayer = ((NSView *)self.popoverWindow.contentView).layer;
+	[viewLayer addAnimation:group forKey:nil];
 }
 
 - (void)close {
