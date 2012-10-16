@@ -108,7 +108,7 @@
 		}
 		
         tabInformation = [[TUIPopover alloc] initWithContentViewController:[[TUIViewController alloc] init]];
-        tabInformation.behavior = TUIPopoverBehaviorTransient;
+		tabInformation.behavior = TUIPopoverBehaviorTransient;
 	}
 	return self;
 }

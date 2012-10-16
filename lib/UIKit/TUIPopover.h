@@ -21,8 +21,8 @@
 @protocol TUIPopoverDelegate;
 
 typedef void (^TUIPopoverDelegateBlock)(TUIPopover *popover);
-typedef BOOL (^TUIPopoverConfirmationBlock)(TUIPopover *popover);
 typedef NSWindow * (^TUIPopoverWindowBlock)(TUIPopover *popover);
+typedef BOOL (^TUIPopoverConfirmationBlock)();
 
 // The userInfo key containing the reason for the TUIPopoverWillCloseNotification.
 // It can currently be either TUIPopoverCloseReasonStandard or
@@ -57,22 +57,22 @@ typedef enum {
 	// The application assumes responsibility for closing the popover.
 	// The popover will still close itself in a limited number of
 	// circumstances. For instance, the popover will attempt to close
-	// itself when the window of its positioningView is closed. You may
-	// consider implementing the delegate to close the popover when the
-	// escape key is pressed. This is the default value.
+	// itself when the window of its positioningView is closed.
+	// If escape is pressed, the delegate method or block shouldClose is
+	// asked to confirm whether the popover should close or not.
     TUIPopoverBehaviorApplicationDefined,
 	
-	// The popover will close itself the when the user interacts with a
-	// user interface element outside the popover. Note that interacting
-	// with menus or panels that become key only when needed will not
-	// cause a transient popover to close.
+	// The popover will close itself the when the user interacts with
+	// interface elements outside the popover or escape is pressed.
+	// If escape is pressed, the delegate method or block shouldClose is
+	// asked to confirm whether the popover should close or not.
     TUIPopoverBehaviorTransient,
 	
-	// The system will close the popover when the user interacts with user
-	// interface elements in the window containing the popover's positioning
-	// view. Semi-transient popovers cannot be shown relative to views in
-	// other popovers, nor can they be shown relative to views in child windows.
-    TUIPopoverBehaviorSemitransient = TUIPopoverBehaviorTransient
+	// The popover will close itself when the user interacts with interface
+	// elements in the positioning view's window or escape is pressed.
+	// If escape is pressed, the delegate method or block shouldClose is
+	// asked to confirm whether the popover should close or not.
+    TUIPopoverBehaviorSemitransient
 } TUIPopoverBehavior;
 
 // The TUIPopover provides a means to display additional content related
@@ -92,7 +92,6 @@ typedef enum {
 // window when they are dragged by implementing a delegate method or block.
 //
 // UNSUPPORTED FEATURES:
-// - Semitransient behavior is currently unsupported.
 // - Popover to window detaching is currently unsupported.
 @interface TUIPopover : NSResponder
 

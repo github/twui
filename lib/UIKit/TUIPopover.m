@@ -65,6 +65,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 @interface TUIPopover ()
 
 @property (nonatomic, strong) TUIPopoverWindow *popoverWindow;
+@property (nonatomic, unsafe_unretained) TUIView *currentPositioningView;
 @property (nonatomic, unsafe_unretained) id transientEventMonitor;
 @property (nonatomic, assign) BOOL animating;
 @property (nonatomic, assign) CGSize originalViewSize;
@@ -79,7 +80,12 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 - (id)init {
     if((self = [super init])) {
         self.animates = YES;
+        _shown = NO;
+		
         self.behavior = TUIPopoverBehaviorApplicationDefined;
+		self.animates = YES;
+		self.animationDuration = -1.0f;
+		
         self.contentViewController = nil;
         self.backgroundViewClass = TUIPopoverBackgroundView.class;
 		
@@ -99,7 +105,6 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 		
 		self.showAnimations = @[fadeIn, bounce];
 		self.hideAnimations = @[fadeOut];
-        _shown = NO;
 		
 		[[NSNotificationCenter defaultCenter] addObserver:self
 												 selector:@selector(parentWindowClosed:)
@@ -345,6 +350,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 	[backgroundView updateMaskLayer];
 	
 	void (^completionBlock)(void) = ^{
+		self.currentPositioningView = positioningView;
 		self.animating = NO;
 		_shown = YES;
 		
@@ -359,6 +365,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 	if(self.animates) {
 		for(CAAnimation *animation in self.showAnimations) {
 			animation.fillMode = kCAFillModeForwards;
+			animation.removedOnCompletion = YES;
 			animation.duration = TUIPopoverCurrentAnimationDuration;
 		}
 		
@@ -372,14 +379,13 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 		self.animating = YES;
 		CALayer *viewLayer = ((NSView *)_popoverWindow.contentView).layer;
 		[viewLayer addAnimation:group forKey:nil];
-		[positioningView.nsWindow addChildWindow:_popoverWindow ordered:NSWindowAbove];
-		[_popoverWindow makeKeyAndOrderFront:nil];
-	} else {
-		[positioningView.nsWindow addChildWindow:_popoverWindow ordered:NSWindowAbove];
-		[_popoverWindow makeKeyAndOrderFront:nil];
-		
-		completionBlock();
 	}
+	
+	[positioningView.nsWindow addChildWindow:_popoverWindow ordered:NSWindowAbove];
+	[_popoverWindow makeKeyAndOrderFront:nil];
+	
+	if(!self.animates)
+		completionBlock();
 }
 
 - (void)close {
@@ -398,9 +404,10 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 	
 	void (^completionBlock)(void) = ^{
         [self.popoverWindow close];
+		self.currentPositioningView = nil;
+        self.popoverWindow.contentView = nil;
         [self.popoverWindow.parentWindow removeChildWindow:self.popoverWindow];
         
-        self.popoverWindow.contentView = nil;
         self.animating = NO;
         _shown = NO;
         
@@ -420,13 +427,14 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 	if(self.animates) {
 		for(CAAnimation *animation in self.hideAnimations) {
 			animation.fillMode = kCAFillModeForwards;
+			animation.removedOnCompletion = NO;
 			animation.duration = TUIPopoverCurrentAnimationDuration;
 		}
 		
 		CAAnimationGroup *group = [[CAAnimationGroup alloc] init];
 		group.animations = self.hideAnimations;
 		group.fillMode = kCAFillModeForwards;
-		group.removedOnCompletion = YES;
+		group.removedOnCompletion = NO;
 		group.duration = TUIPopoverCurrentAnimationDuration;
 		group.tui_completionBlock = completionBlock;
 		
@@ -445,6 +453,8 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 	} else if([self.delegate respondsToSelector:@selector(popoverShouldClose:)]) {
 		if([self.delegate popoverShouldClose:self])
 			[self close];
+	} else {
+		[self close];
 	}
 }
 
@@ -454,15 +464,31 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 }
 
 - (void)addEventMonitor {
-    self.transientEventMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:(NSLeftMouseDownMask | NSRightMouseDownMask | NSKeyUpMask) handler: ^(NSEvent *event)
-	{
+	NSEventMask mask = (NSLeftMouseDownMask | NSRightMouseDownMask | NSKeyUpMask);
+    self.transientEventMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:mask handler:^(NSEvent *event) {
 		if(self.popoverWindow == nil)
 			return event;
 		
-		static NSUInteger escapeKey = 53;
-		BOOL shouldClose = (event.type == NSLeftMouseDown || event.type == NSRightMouseDown ? (!NSPointInRect([NSEvent mouseLocation], self.popoverWindow.frame) && self.behavior == TUIPopoverBehaviorTransient) : event.keyCode == escapeKey);
+		static NSUInteger const escapeKey = 53;
+		BOOL mouseInPopover = NSPointInRect([NSEvent mouseLocation], self.popoverWindow.frame);
+		BOOL mouseInWindow = NSPointInRect([NSEvent mouseLocation], self.popoverWindow.parentWindow.frame);
 		
-		if(shouldClose) [self close];
+		if((event.type == NSLeftMouseDown) || (event.type == NSRightMouseDown)) {
+			if((self.behavior == TUIPopoverBehaviorTransient) && !mouseInPopover) {
+				[self close];
+			} else if((self.behavior == TUIPopoverBehaviorSemitransient) && mouseInWindow) {
+				[self close];
+			}
+		} else if(event.keyCode == escapeKey) {
+			if(self.shouldClose != nil) {
+				if(self.shouldClose())
+					[self close];
+			} else if([self.delegate respondsToSelector:@selector(popoverShouldClose:)]) {
+				if([self.delegate popoverShouldClose:self])
+					[self close];
+			}
+		}
+		
 		return event;
 	}];
 }
