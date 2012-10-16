@@ -341,6 +341,9 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
     _contentViewController.view.frame = contentViewFrame;
     [backgroundView addSubview:self.contentViewController.view];
 	
+	_contentViewController.view.layer.borderWidth = 1.0f;
+	_contentViewController.view.layer.borderColor = [NSColor redColor].CGColor;
+	
     _popoverWindow = [[TUIPopoverWindow alloc] initWithContentRect:popoverScreenRect];
     TUIPopoverWindowContentView *contentView = [[TUIPopoverWindowContentView alloc] initWithFrame:backgroundView.bounds];
     self.popoverWindow.contentView = contentView;
@@ -513,7 +516,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 @implementation TUIPopoverBackgroundView
 
 + (CGSize)sizeForBackgroundViewWithContentSize:(CGSize)contentSize popoverEdge:(CGRectEdge)popoverEdge {
-	contentSize.width += TUIPopoverBackgroundViewArrowHeight;
+	contentSize.width += TUIPopoverBackgroundViewArrowHeight * 2;
     contentSize.height += TUIPopoverBackgroundViewArrowHeight * 2;
     
     return contentSize;
@@ -522,7 +525,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 + (CGRect)contentViewFrameForBackgroundFrame:(CGRect)backgroundFrame popoverEdge:(CGRectEdge)popoverEdge {
 	CGFloat inset = TUIPopoverBackgroundViewArrowHeight + TUIPopoverBackgroundViewBorderRadius;
 	
-    return ABRectRoundOrigin(CGRectInset(backgroundFrame, inset, inset));
+    return CGRectIntegral(CGRectInset(backgroundFrame, inset, inset));
 }
 
 + (TUIPopoverBackgroundView *)backgroundViewForContentSize:(CGSize)contentSize
