@@ -14,10 +14,10 @@
  limitations under the License.
  */
 
-#import "TUIView.h"
 #import <pthread.h>
 #import "NSColor+TUIExtensions.h"
 #import "TUICGAdditions.h"
+#import "TUIView.h"
 #import "TUILayoutManager.h"
 #import "TUINSView.h"
 #import "TUINSWindow.h"

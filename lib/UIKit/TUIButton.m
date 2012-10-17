@@ -236,6 +236,7 @@ static CGRect ButtonRectCenteredInRect(CGRect a, CGRect b)
 		CGContextSetAlpha(ctx, 0.5);
 	CGRect titleFrame = self.bounds;
 	titleFrame.size.width -= (_titleEdgeInsets.left + _titleEdgeInsets.right);
+	titleFrame.size.height -= (_titleEdgeInsets.top + _titleEdgeInsets.bottom);
 	self.titleLabel.frame = titleFrame;
 	[self.titleLabel drawRect:self.titleLabel.bounds];
 	CGContextRestoreGState(ctx);

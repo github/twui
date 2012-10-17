@@ -979,6 +979,8 @@ static float clampBounce(float x) {
 		_throw.t = t;
 		
 		[self _startTimer:AnimationModeThrow];
+			
+		BOOL pulling = self._pulling; // prefetch the pulling state before resetting it
 		
 		if(_pull.xPulling) {
 			_pull.xPulling = NO;
@@ -994,7 +996,7 @@ static float clampBounce(float x) {
 			_bounce.y = _pull.y;
 		}
 		
-    if(self._pulling && _scrollViewFlags.didChangeContentInset){
+    if(pulling && _scrollViewFlags.didChangeContentInset){
       _scrollViewFlags.didChangeContentInset = 0;
       _bounce.x += _contentInset.left;
       _bounce.y += _contentInset.top;
