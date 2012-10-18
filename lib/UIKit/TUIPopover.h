@@ -206,6 +206,11 @@ typedef enum {
 + (CGRect)contentViewFrameForBackgroundFrame:(CGRect)frame
 								 popoverEdge:(CGRectEdge)popoverEdge;
 
+// Returns a popover window offset for the given background frame and
+// popover edge, which will shift the popover frame by the returned point.
++ (CGPoint)popoverOffsetForBackgroundFrame:(CGRect)frame
+							   popoverEdge:(CGRectEdge)popoverEdge;
+
 // Returns a background view for a given content size, popover edge,
 // and an origin screen rectangle, in the screen coordinate space. It
 // is advised to override the method in the subclass.

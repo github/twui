@@ -342,9 +342,17 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
     _contentViewController.view.frame = contentViewFrame;
     [backgroundView addSubview:self.contentViewController.view];
 	
-    _popoverWindow = [[TUIPopoverWindow alloc] initWithContentRect:popoverScreenRect];
+	// Adjust the window rect again with an offset for the shadow.
+	CGRect windowRect = popoverScreenRect;
+	CGPoint windowOffset = [self.backgroundViewClass popoverOffsetForBackgroundFrame:backgroundView.bounds
+																		popoverEdge:popoverEdge];
+	windowRect.origin.x += windowOffset.x;
+	windowRect.origin.y += windowOffset.y;
+	
+    _popoverWindow = [[TUIPopoverWindow alloc] initWithContentRect:windowRect];
     TUIPopoverWindowContentView *contentView = [[TUIPopoverWindowContentView alloc] initWithFrame:backgroundView.bounds];
     self.popoverWindow.frameView = contentView;
+	contentView.frame = backgroundView.bounds;
     contentView.rootView = backgroundView;
 	
 	contentView.popoverEdge = popoverEdge;
@@ -514,8 +522,28 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 @implementation TUIPopoverBackgroundView
 
 + (CGSize)sizeForBackgroundViewWithContentSize:(CGSize)contentSize popoverEdge:(CGRectEdge)popoverEdge {
+	
+	// Add padding on all widths so the shadow shows.
 	contentSize.width += TUIPopoverBackgroundViewArrowHeight * 2;
     contentSize.height += TUIPopoverBackgroundViewArrowHeight * 2;
+	
+	// Adjust the drawing board so the shadow isn't clipped.
+	switch(popoverEdge) {
+		case CGRectMinXEdge:
+			contentSize.width += TUIPopoverBackgroundViewArrowHeight;
+			break;
+		case CGRectMaxXEdge:
+			contentSize.width += TUIPopoverBackgroundViewArrowHeight;
+			break;
+		case CGRectMinYEdge:
+			contentSize.height += TUIPopoverBackgroundViewArrowHeight;
+			break;
+		case CGRectMaxYEdge:
+			contentSize.height += TUIPopoverBackgroundViewArrowHeight;
+			break;
+		default:
+			break;
+	}
 	
     return contentSize;
 }
@@ -523,7 +551,52 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 + (CGRect)contentViewFrameForBackgroundFrame:(CGRect)backgroundFrame popoverEdge:(CGRectEdge)popoverEdge {
 	CGFloat inset = TUIPopoverBackgroundViewArrowHeight + TUIPopoverBackgroundViewBorderRadius;
 	
+	// Adjust the drawing board so the shadow isn't clipped.
+	switch(popoverEdge) {
+		case CGRectMinXEdge:
+			backgroundFrame.size.width -= TUIPopoverBackgroundViewArrowHeight;
+			break;
+		case CGRectMaxXEdge:
+			backgroundFrame.origin.x += TUIPopoverBackgroundViewArrowHeight;
+			backgroundFrame.size.width -= TUIPopoverBackgroundViewArrowHeight;
+			break;
+		case CGRectMinYEdge:
+			backgroundFrame.size.height -= TUIPopoverBackgroundViewArrowHeight;
+			break;
+		case CGRectMaxYEdge:
+			backgroundFrame.origin.y += TUIPopoverBackgroundViewArrowHeight;
+			backgroundFrame.size.height -= TUIPopoverBackgroundViewArrowHeight;
+			break;
+		default:
+			break;
+	}
+	
+	// Inset the content so it doesn't get masked out.
     return CGRectIntegral(CGRectInset(backgroundFrame, inset, inset));
+}
+
++ (CGPoint)popoverOffsetForBackgroundFrame:(CGRect)frame popoverEdge:(CGRectEdge)popoverEdge {
+	CGPoint returnOffset = CGPointZero;
+	
+	// Adjust the drawing board so the shadow isn't clipped.
+	switch(popoverEdge) {
+		case CGRectMinXEdge:
+			returnOffset.x += TUIPopoverBackgroundViewArrowHeight;
+			break;
+		case CGRectMaxXEdge:
+			returnOffset.x -= TUIPopoverBackgroundViewArrowHeight;
+			break;
+		case CGRectMinYEdge:
+			returnOffset.y += TUIPopoverBackgroundViewArrowHeight;
+			break;
+		case CGRectMaxYEdge:
+			returnOffset.y -= TUIPopoverBackgroundViewArrowHeight;
+			break;
+		default:
+			break;
+	}
+	
+	return returnOffset;
 }
 
 + (TUIPopoverBackgroundView *)backgroundViewForContentSize:(CGSize)contentSize
