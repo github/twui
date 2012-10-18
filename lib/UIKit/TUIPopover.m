@@ -36,7 +36,7 @@ CGFloat const TUIPopoverBackgroundViewArrowInset = 2.0;
 CGFloat const TUIPopoverBackgroundViewArrowHeight = 12.0;
 CGFloat const TUIPopoverBackgroundViewArrowWidth = 24.0;
 
-NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
+NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 #define TUIPopoverCurrentAnimationDuration \
 ((self.animationDuration > 0.0) ? self.animationDuration : TUIPopoverDefaultAnimationDuration)
 
@@ -49,14 +49,15 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 
 @end
 
-@interface TUIPopoverWindowContentView : NSView
+@interface TUIPopoverWindowContentView : TUINSView
 
-@property (nonatomic, readonly) TUINSView *nsView;
-@property (nonatomic, assign) CGRectEdge arrowEdge;
+@property (nonatomic, assign) CGRectEdge popoverEdge;
 
 @end
 
 @interface TUIPopoverWindow : NSWindow
+
+@property (nonatomic, strong) TUIPopoverWindowContentView *frameView;
 
 - (id)initWithContentRect:(CGRect)contentRect;
 
@@ -159,7 +160,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 
 - (void)setContentViewController:(TUIViewController *)controller {
 	if(self.shown) {
-		TUIPopoverBackgroundView *backgroundView = (TUIPopoverBackgroundView *)[self.popoverWindow.contentView nsView].rootView;
+		TUIPopoverBackgroundView *backgroundView = (TUIPopoverBackgroundView *)self.popoverWindow.frameView.rootView;
 		CGSize contentViewSize = (CGSizeEqualToSize(self.contentSize, CGSizeZero) ?
 								  controller.view.frame.size : self.contentSize);
 		
@@ -194,7 +195,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 
 - (void)setContentSize:(CGSize)size {
 	if(self.shown) {
-		TUIPopoverBackgroundView *backgroundView = (TUIPopoverBackgroundView *)[self.popoverWindow.contentView nsView].rootView;
+		TUIPopoverBackgroundView *backgroundView = (TUIPopoverBackgroundView *)self.popoverWindow.frameView.rootView;
 		CGSize contentViewSize = (CGSizeEqualToSize(size, CGSizeZero) ? self.contentViewController.view.frame.size : size);
 		
 		CGSize backgroundSize = [self.backgroundViewClass sizeForBackgroundViewWithContentSize:contentViewSize
@@ -341,15 +342,12 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
     _contentViewController.view.frame = contentViewFrame;
     [backgroundView addSubview:self.contentViewController.view];
 	
-	_contentViewController.view.layer.borderWidth = 1.0f;
-	_contentViewController.view.layer.borderColor = [NSColor redColor].CGColor;
-	
     _popoverWindow = [[TUIPopoverWindow alloc] initWithContentRect:popoverScreenRect];
     TUIPopoverWindowContentView *contentView = [[TUIPopoverWindowContentView alloc] initWithFrame:backgroundView.bounds];
-    self.popoverWindow.contentView = contentView;
-    contentView.nsView.rootView = backgroundView;
+    self.popoverWindow.frameView = contentView;
+    contentView.rootView = backgroundView;
 	
-	contentView.arrowEdge = popoverEdge;
+	contentView.popoverEdge = popoverEdge;
 	[backgroundView updateMaskLayer];
 	
 	void (^completionBlock)(void) = ^{
@@ -380,7 +378,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 		group.tui_completionBlock = completionBlock;
 		
 		self.animating = YES;
-		CALayer *viewLayer = ((NSView *)_popoverWindow.contentView).layer;
+		CALayer *viewLayer = _popoverWindow.frameView.layer;
 		[viewLayer addAnimation:group forKey:nil];
 	}
 	
@@ -442,7 +440,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 		group.tui_completionBlock = completionBlock;
 		
 		self.animating = YES;
-		CALayer *viewLayer = ((NSView *)self.popoverWindow.contentView).layer;
+		CALayer *viewLayer = self.popoverWindow.frameView.layer;
 		[viewLayer addAnimation:group forKey:nil];
 	} else {
 		completionBlock();
@@ -518,7 +516,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 + (CGSize)sizeForBackgroundViewWithContentSize:(CGSize)contentSize popoverEdge:(CGRectEdge)popoverEdge {
 	contentSize.width += TUIPopoverBackgroundViewArrowHeight * 2;
     contentSize.height += TUIPopoverBackgroundViewArrowHeight * 2;
-    
+	
     return contentSize;
 }
 
@@ -637,37 +635,24 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 
 @implementation TUIPopoverWindowContentView
 
-- (id)initWithFrame:(CGRect)frame {
-    if((self = [super initWithFrame:frame])) {
-		[self setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
-		
-        _nsView = [[TUINSView alloc] initWithFrame:self.bounds];
-        [_nsView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
-        [_nsView tui_setOpaque:NO];
-        [self addSubview:_nsView];
-    }
-	return self;
-}
-
-- (BOOL)isOpaque {
-	return NO;
-}
-
 - (void)viewDidMoveToWindow {
-    [self setWantsLayer:YES];
+	[self tui_setOpaque:NO];
 	
 	// Set a layer shadow because we lose the window shadow.
 	self.layer.shadowColor = [NSColor shadowColor].CGColor;
-	self.layer.shadowOpacity = 0.4f;
+	self.layer.shadowOpacity = 0.3f;
 	self.layer.shadowOffset = CGSizeMake(0.0f, -4.0f);
-	self.layer.shadowRadius = 5.0f;
+	self.layer.shadowRadius = 6.0f;
+	
+	self.layer.borderColor = [NSColor redColor].CGColor;
+	self.layer.borderWidth = 1.0f;
 }
 
-- (void)setArrowEdge:(CGRectEdge)arrowEdge {
-    _arrowEdge = arrowEdge;
+- (void)setPopoverEdge:(CGRectEdge)popoverEdge {
+    _popoverEdge = popoverEdge;
 	
 	// Set the layer anchor point, so animations act accordingly.
-	switch(arrowEdge) {
+	switch(popoverEdge) {
 		case CGRectMinXEdge:
 			self.layer.anchorPoint = CGPointMake(1.0, 0.5);
 			break;
@@ -688,7 +673,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 	CALayer *layer = self.layer;
 	CGPoint correctPosition = CGPointMake(layer.position.x + layer.bounds.size.width * (layer.anchorPoint.x - 0.5),
 										  layer.position.y + layer.bounds.size.height * (layer.anchorPoint.y - 0.5));
-	[layer setPosition:correctPosition];
+	[self.layer setPosition:correctPosition];
 }
 
 @end
@@ -702,7 +687,10 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
                                     defer:YES])) {
         [self setOpaque:NO];
         [self setBackgroundColor:[NSColor clearColor]];
+		
 		[self setReleasedWhenClosed:NO];
+        [self setMovableByWindowBackground:NO];
+        [self setExcludedFromWindowsMenu:YES];
     } return self;
 }
 
@@ -712,6 +700,18 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 
 - (BOOL)canBecomeMainWindow {
     return NO;
+}
+
+- (BOOL)isExcludedFromWindowsMenu {
+	return YES;
+}
+
+- (TUIPopoverWindowContentView *)frameView {
+	return (TUIPopoverWindowContentView *)self.contentView;
+}
+
+- (void)setFrameView:(TUIPopoverWindowContentView *)frameView {
+	[self setContentView:frameView];
 }
 
 @end
