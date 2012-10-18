@@ -187,9 +187,19 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 		
 		if(self.animates) {
 			[TUIView animateWithDuration:TUIPopoverCurrentAnimationDuration animations:^{
+				[_contentViewController viewWillDisappear:YES];
+				[controller viewWillAppear:YES];
 				updateBlock();
+				[_contentViewController viewDidDisappear:YES];
+				[controller viewDidAppear:YES];
 			}];
-		} else updateBlock();
+		} else {
+			[_contentViewController viewWillDisappear:YES];
+			[controller viewWillAppear:YES];
+			updateBlock();
+			[_contentViewController viewDidDisappear:YES];
+			[controller viewDidAppear:YES];
+		}
 	}
 	
 	_contentViewController = controller;
@@ -228,9 +238,6 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 }
 
 - (void)showRelativeToRect:(CGRect)newPositioningRect ofView:(TUIView *)positioningView preferredEdge:(CGRectEdge)preferredEdge {
-    if(self.shown)
-		return;
-	
 	if(!positioningView) {
 		[NSException raise:NSInvalidArgumentException format:@"TUIPopover positioningView cannot be nil!"];
 		return;
@@ -240,6 +247,9 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 		[NSException raise:NSInternalInconsistencyException format:@"TUIPopover contentViewController view cannot be nil!"];
 		return;
 	}
+	
+	if(self.shown)
+		return;
     
     [self.contentViewController viewWillAppear:YES];
     if(self.willShowBlock != nil)
