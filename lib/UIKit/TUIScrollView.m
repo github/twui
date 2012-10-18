@@ -773,9 +773,9 @@ static float clampBounce(float x) {
 		
 		if(fabsf(_bounce.vy) < 1.0 && fabsf(_bounce.y) < 1.0 && fabsf(_bounce.vx) < 1.0 && fabsf(_bounce.x) < 1.0) {
 			[self _stopTimer];
-            if (_scrollViewFlags.delegateScrollViewDidEndDecelerating) {
-                [_delegate scrollViewDidEndDecelerating:self];
-            }
+		        if (_scrollViewFlags.delegateScrollViewDidEndDecelerating) {
+                		[_delegate scrollViewDidEndDecelerating:self];
+            		}
 		}
 		
 		[self _updateScrollKnobs];
@@ -1174,9 +1174,9 @@ static float clampBounce(float x) {
 						// ignore - let the bounce finish (_updateBounce will kill the timer when it's ready)
 					} else {
 						[self _stopTimer];
-                        if (_scrollViewFlags.delegateScrollViewDidEndDecelerating) {
-                            [_delegate scrollViewDidEndDecelerating:self];
-                        }
+                        			if (_scrollViewFlags.delegateScrollViewDidEndDecelerating) {
+                            				[_delegate scrollViewDidEndDecelerating:self];
+                        			}
 					}
 				}
 				break;
