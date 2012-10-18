@@ -765,10 +765,10 @@ static NSInteger SortCells(TUITableViewCell *a, TUITableViewCell *b, void *ctx)
 					}
 				}
 				
-                section.headerView.frame = headerFrame;
-                if (![self __isDraggingCell]) {
-                    [section.headerView setNeedsLayout];
-                }
+				section.headerView.frame = headerFrame;
+				if (![self __isDraggingCell]) {
+					[section.headerView setNeedsLayout];
+				}
 				
 				if(section.headerView.superview == nil){
 					[self addSubview:section.headerView];
