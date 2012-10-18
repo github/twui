@@ -211,13 +211,6 @@ typedef enum {
 + (CGPoint)popoverOffsetForBackgroundFrame:(CGRect)frame
 							   popoverEdge:(CGRectEdge)popoverEdge;
 
-// Returns a background view for a given content size, popover edge,
-// and an origin screen rectangle, in the screen coordinate space. It
-// is advised to override the method in the subclass.
-+ (TUIPopoverBackgroundView *)backgroundViewForContentSize:(CGSize)contentSize
-											   popoverEdge:(CGRectEdge)popoverEdge
-										  originScreenRect:(CGRect)originScreenRect;
-
 // Intitializes a popover background view with a given frame and origin
 // screen rectangle in the screen coordinate space, and the popover edge.
 - (id)initWithFrame:(CGRect)frame popoverEdge:(CGRectEdge)popoverEdge originScreenRect:(CGRect)originScreenRect;
@@ -227,7 +220,7 @@ typedef enum {
 // the popover, but still use the default drawing. To change the drawing
 // of the popover, override the standard drawRect: and add an invocation
 // to this method to retrieve the popover path and draw with it.
-- (CGPathRef)newPopoverPathForEdge:(CGRectEdge)popoverEdge inFrame:(CGRect)frame;
+- (CGPathRef)popoverPathForEdge:(CGRectEdge)popoverEdge inFrame:(CGRect)frame;
 
 @end
 

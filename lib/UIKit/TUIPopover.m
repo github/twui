@@ -45,6 +45,9 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 @property (nonatomic, assign) CGRect screenOriginRect;
 @property (nonatomic, assign) CGRectEdge popoverEdge;
 
++ (TUIPopoverBackgroundView *)backgroundViewForContentSize:(CGSize)contentSize
+											   popoverEdge:(CGRectEdge)popoverEdge
+										  originScreenRect:(CGRect)originScreenRect;
 - (void)updateMaskLayer;
 
 @end
@@ -333,28 +336,61 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
         } return (CGRect)popoverRectForEdge(popoverEdge);
     };
 	
+	// Get the popover screen rectangle and create a background view
+	// for the popover with the adjusted content size and popover offset.
     CGRect popoverScreenRect = popoverRect();
     TUIPopoverBackgroundView *backgroundView = [self.backgroundViewClass backgroundViewForContentSize:contentViewSize
 																						  popoverEdge:popoverEdge
 																					 originScreenRect:screenPositioningRect];
-    CGRect contentViewFrame = [self.backgroundViewClass contentViewFrameForBackgroundFrame:backgroundView.bounds
+	CGPoint popoverOffset = [self.backgroundViewClass popoverOffsetForBackgroundFrame:backgroundView.bounds
+																		 popoverEdge:popoverEdge];
+	
+	// Adjust the window rect again with the offset for the shadow.
+	CGRect windowRect = popoverScreenRect;
+	windowRect.origin.x += popoverOffset.x;
+	windowRect.origin.y += popoverOffset.y;
+	
+	// Create the popover window and add the content view and root view.
+    _popoverWindow = [[TUIPopoverWindow alloc] initWithContentRect:windowRect];
+    TUIPopoverWindowContentView *contentView = [[TUIPopoverWindowContentView alloc] initWithFrame:backgroundView.bounds];
+    self.popoverWindow.frameView = contentView;
+    contentView.rootView = backgroundView;
+	
+	// Adjust the background view frame so the popover path auto-adjusts.
+	// Cache the previous bounds and offset it so the content sits inside.
+	CGRect contentFrame = backgroundView.bounds;
+	CGRect backgroundFrame = backgroundView.frame;
+	switch(popoverEdge) {
+		case CGRectMinXEdge:
+			backgroundFrame.size.width -= popoverOffset.x;
+			break;
+		case CGRectMaxXEdge:
+			backgroundFrame.origin.x -= popoverOffset.x;
+			backgroundFrame.size.width += popoverOffset.x;
+			
+			contentFrame.origin.x += popoverOffset.x;
+			break;
+		case CGRectMinYEdge:
+			backgroundFrame.size.height -= popoverOffset.y;
+			break;
+		case CGRectMaxYEdge:
+			backgroundFrame.origin.y -= popoverOffset.y;
+			backgroundFrame.size.height += popoverOffset.y;
+			
+			contentFrame.origin.y += popoverOffset.y;
+			break;
+		default:
+			break;
+	}
+	backgroundView.frame = backgroundFrame;
+	
+	// Set the content view frame and add it to the popover background view.
+    CGRect contentViewFrame = [self.backgroundViewClass contentViewFrameForBackgroundFrame:contentFrame
 																			   popoverEdge:popoverEdge];
     _contentViewController.view.frame = contentViewFrame;
     [backgroundView addSubview:self.contentViewController.view];
 	
-	// Adjust the window rect again with an offset for the shadow.
-	CGRect windowRect = popoverScreenRect;
-	CGPoint windowOffset = [self.backgroundViewClass popoverOffsetForBackgroundFrame:backgroundView.bounds
-																		popoverEdge:popoverEdge];
-	windowRect.origin.x += windowOffset.x;
-	windowRect.origin.y += windowOffset.y;
-	
-    _popoverWindow = [[TUIPopoverWindow alloc] initWithContentRect:windowRect];
-    TUIPopoverWindowContentView *contentView = [[TUIPopoverWindowContentView alloc] initWithFrame:backgroundView.bounds];
-    self.popoverWindow.frameView = contentView;
-	contentView.frame = backgroundView.bounds;
-    contentView.rootView = backgroundView;
-	
+	// Apply the popover edge and update the drawing mask.
 	contentView.popoverEdge = popoverEdge;
 	[backgroundView updateMaskLayer];
 	
@@ -530,14 +566,10 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 	// Adjust the drawing board so the shadow isn't clipped.
 	switch(popoverEdge) {
 		case CGRectMinXEdge:
-			contentSize.width += TUIPopoverBackgroundViewArrowHeight;
-			break;
 		case CGRectMaxXEdge:
 			contentSize.width += TUIPopoverBackgroundViewArrowHeight;
 			break;
 		case CGRectMinYEdge:
-			contentSize.height += TUIPopoverBackgroundViewArrowHeight;
-			break;
 		case CGRectMaxYEdge:
 			contentSize.height += TUIPopoverBackgroundViewArrowHeight;
 			break;
@@ -609,7 +641,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 							originScreenRect:originScreenRect];
 }
 
-- (CGPathRef)newPopoverPathForEdge:(CGRectEdge)popoverEdge inFrame:(CGRect)rect {
+- (CGPathRef)popoverPathForEdge:(CGRectEdge)popoverEdge inFrame:(CGRect)rect {
 	NSBezierPath *path = [NSBezierPath bezierPath];
     
     CGFloat radius = TUIPopoverBackgroundViewBorderRadius;
@@ -621,7 +653,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
     CGFloat maxX = CGRectGetMaxX(drawingRect);
     CGFloat minY = CGRectGetMinY(drawingRect);
     CGFloat maxY = CGRectGetMaxY(drawingRect);
-    
+	
     // Bottom left corner.
     [path appendBezierPathWithArcWithCenter:NSMakePoint(minX, minY) radius:radius startAngle:180.0 endAngle:270.0];
     if(self.popoverEdge == CGRectMaxYEdge) {
@@ -680,7 +712,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 }
 
 - (void)drawRect:(CGRect)rect {
-	CGPathRef cgPath = [self newPopoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, 0.5, 0.5)];
+	CGPathRef cgPath = [self popoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, 0.5, 0.5)];
 	NSBezierPath *path = [NSBezierPath bezierPathWithCGPath:cgPath];
 	CGPathRelease(cgPath);
 	
@@ -696,7 +728,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 
 - (void)updateMaskLayer {
 	CAShapeLayer *maskLayer = [CAShapeLayer layer];
-    CGPathRef path = [self newPopoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, -1.0, -1.0)];
+    CGPathRef path = [self popoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, -1.0, -1.0)];
     maskLayer.path = path;
     maskLayer.fillColor = CGColorGetConstantColor(kCGColorBlack);
     CGPathRelease(path);
@@ -716,9 +748,6 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 	self.layer.shadowOpacity = 0.3f;
 	self.layer.shadowOffset = CGSizeMake(0.0f, -4.0f);
 	self.layer.shadowRadius = 6.0f;
-	
-	self.layer.borderColor = [NSColor redColor].CGColor;
-	self.layer.borderWidth = 1.0f;
 }
 
 - (void)setPopoverEdge:(CGRectEdge)popoverEdge {
