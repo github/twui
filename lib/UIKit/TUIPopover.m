@@ -32,7 +32,6 @@ NSString *const TUIPopoverWillCloseNotification = @"_kTUIPopoverWillCloseNotific
 NSString *const TUIPopoverDidCloseNotification = @"_kTUIPopoverDidCloseNotification";
 
 CGFloat const TUIPopoverBackgroundViewBorderRadius = 4.5;
-CGFloat const TUIPopoverBackgroundViewArrowInset = 2.0;
 CGFloat const TUIPopoverBackgroundViewArrowHeight = 12.0;
 CGFloat const TUIPopoverBackgroundViewArrowWidth = 24.0;
 
@@ -577,6 +576,9 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 			break;
 	}
 	
+	// Make up for the border radius.
+	contentSize.width += TUIPopoverBackgroundViewBorderRadius;
+	contentSize.height += TUIPopoverBackgroundViewBorderRadius;
     return contentSize;
 }
 
@@ -646,7 +648,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
     
     CGFloat radius = TUIPopoverBackgroundViewBorderRadius;
     CGFloat inset = radius + TUIPopoverBackgroundViewArrowHeight;
-	CGFloat insetArrowHeight = TUIPopoverBackgroundViewArrowHeight - TUIPopoverBackgroundViewArrowInset;
+	CGFloat insetArrowHeight = TUIPopoverBackgroundViewArrowHeight;
     CGRect drawingRect = NSInsetRect(rect, inset, inset);
     
     CGFloat minX = CGRectGetMinX(drawingRect);
