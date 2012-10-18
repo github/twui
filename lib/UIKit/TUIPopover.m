@@ -567,10 +567,12 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 @implementation TUIPopoverBackgroundView
 
 + (CGSize)sizeForBackgroundViewWithContentSize:(CGSize)contentSize popoverEdge:(CGRectEdge)popoverEdge {
+	CGFloat inset = TUIPopoverBackgroundViewArrowHeight + TUIPopoverBackgroundViewBorderRadius;
 	
-	// Add padding on all widths so the shadow shows.
-	contentSize.width += TUIPopoverBackgroundViewArrowHeight * 2;
-    contentSize.height += TUIPopoverBackgroundViewArrowHeight * 2;
+	// Add padding on all widths so the shadow shows and
+	// make up for the border radius.
+	contentSize.width += inset * 2;
+    contentSize.height += inset * 2;
 	
 	// Adjust the drawing board so the shadow isn't clipped.
 	switch(popoverEdge) {
@@ -586,9 +588,6 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 			break;
 	}
 	
-	// Make up for the border radius.
-	contentSize.width += TUIPopoverBackgroundViewBorderRadius;
-	contentSize.height += TUIPopoverBackgroundViewBorderRadius;
     return contentSize;
 }
 
