@@ -134,6 +134,7 @@ static BOOL isAtleastLion = NO;
 	_scrollViewFlags.delegateScrollViewDidShowScrollIndicator = [_delegate respondsToSelector:@selector(scrollView:didShowScrollIndicator:)];
 	_scrollViewFlags.delegateScrollViewWillHideScrollIndicator = [_delegate respondsToSelector:@selector(scrollView:willHideScrollIndicator:)];
 	_scrollViewFlags.delegateScrollViewDidHideScrollIndicator = [_delegate respondsToSelector:@selector(scrollView:didHideScrollIndicator:)];
+	_scrollViewFlags.delegateScrollViewDidEndDecelerating = [_delegate respondsToSelector:@selector(scrollViewDidEndDecelerating:)];
 }
 
 - (TUIScrollViewIndicatorStyle)scrollIndicatorStyle
@@ -772,6 +773,9 @@ static float clampBounce(float x) {
 		
 		if(fabsf(_bounce.vy) < 1.0 && fabsf(_bounce.y) < 1.0 && fabsf(_bounce.vx) < 1.0 && fabsf(_bounce.x) < 1.0) {
 			[self _stopTimer];
+            if (_scrollViewFlags.delegateScrollViewDidEndDecelerating) {
+                [_delegate scrollViewDidEndDecelerating:self];
+            }
 		}
 		
 		[self _updateScrollKnobs];
@@ -1170,6 +1174,9 @@ static float clampBounce(float x) {
 						// ignore - let the bounce finish (_updateBounce will kill the timer when it's ready)
 					} else {
 						[self _stopTimer];
+                        if (_scrollViewFlags.delegateScrollViewDidEndDecelerating) {
+                            [_delegate scrollViewDidEndDecelerating:self];
+                        }
 					}
 				}
 				break;
