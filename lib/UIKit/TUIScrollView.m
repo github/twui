@@ -130,6 +130,7 @@ static BOOL isAtleastLion = NO;
 	_scrollViewFlags.delegateScrollViewDidScroll = [_delegate respondsToSelector:@selector(scrollViewDidScroll:)];
 	_scrollViewFlags.delegateScrollViewWillBeginDragging = [_delegate respondsToSelector:@selector(scrollViewWillBeginDragging:)];
 	_scrollViewFlags.delegateScrollViewDidEndDragging = [_delegate respondsToSelector:@selector(scrollViewDidEndDragging:)];
+	_scrollViewFlags.delegateScrollViewDidEndDecelerating = [_delegate respondsToSelector:@selector(scrollViewDidEndDecelerating:)];
 	_scrollViewFlags.delegateScrollViewWillShowScrollIndicator = [_delegate respondsToSelector:@selector(scrollView:willShowScrollIndicator:)];
 	_scrollViewFlags.delegateScrollViewDidShowScrollIndicator = [_delegate respondsToSelector:@selector(scrollView:didShowScrollIndicator:)];
 	_scrollViewFlags.delegateScrollViewWillHideScrollIndicator = [_delegate respondsToSelector:@selector(scrollView:willHideScrollIndicator:)];
@@ -772,6 +773,9 @@ static float clampBounce(float x) {
 		
 		if(fabsf(_bounce.vy) < 1.0 && fabsf(_bounce.y) < 1.0 && fabsf(_bounce.vx) < 1.0 && fabsf(_bounce.x) < 1.0) {
 			[self _stopTimer];
+			if (_scrollViewFlags.delegateScrollViewDidEndDecelerating) {
+				[_delegate scrollViewDidEndDecelerating:self];
+			}
 		}
 		
 		[self _updateScrollKnobs];
@@ -1170,6 +1174,9 @@ static float clampBounce(float x) {
 						// ignore - let the bounce finish (_updateBounce will kill the timer when it's ready)
 					} else {
 						[self _stopTimer];
+						if (_scrollViewFlags.delegateScrollViewDidEndDecelerating) {
+							[_delegate scrollViewDidEndDecelerating:self];
+						}
 					}
 				}
 				break;
