@@ -20,6 +20,7 @@
 #import "CoreText+Additions.h"
 #import "NSClipView+TUIExtensions.h"
 #import "NSColor+TUIExtensions.h"
+#import "NSBezierPath+TUIExtensions.h"
 #import "NSImage+TUIExtensions.h"
 #import "NSScrollView+TUIExtensions.h"
 #import "NSView+TUIExtensions.h"
