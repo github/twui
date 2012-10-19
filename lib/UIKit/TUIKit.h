@@ -48,6 +48,7 @@
 #import "TUITableView+Additions.h"
 #import "TUITableView.h"
 #import "TUITableViewCell.h"
+#import "TUITableViewController.h"
 #import "TUITableViewSectionHeader.h"
 #import "TUITextEditor.h"
 #import "TUITextField.h"
