@@ -79,7 +79,7 @@ typedef enum {
 	
 	__unsafe_unretained id _delegate;
 	
-	NSTimer *scrollTimer;
+	CVDisplayLinkRef displayLink;
 	CGPoint destinationOffset;
 	CGPoint unfixedContentOffset;
 	
