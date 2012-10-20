@@ -718,9 +718,9 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 	
 	// Set a layer shadow because we lose the window shadow.
 	self.layer.shadowColor = [NSColor shadowColor].CGColor;
-	self.layer.shadowOpacity = 0.3f;
-	self.layer.shadowOffset = CGSizeMake(0.0f, -4.0f);
-	self.layer.shadowRadius = 6.0f;
+	self.layer.shadowOpacity = 0.5f;
+	self.layer.shadowOffset = CGSizeMake(0.0f, -3.0f);
+	self.layer.shadowRadius = 5.0f;
 }
 
 - (void)setPopoverEdge:(CGRectEdge)popoverEdge {
