@@ -18,8 +18,23 @@
 
 @interface TUIImageView : TUIView
 
+@property (nonatomic, strong) NSImage *image;
+@property (nonatomic, strong) NSImage *highlightedImage;
+
+@property (nonatomic, assign, getter = isHighlighted) BOOL highlighted;
+@property (nonatomic, assign, getter = isEditable) BOOL editable;
+@property (nonatomic, assign) BOOL adjustsToImageSize;
+
+@property (nonatomic, copy) NSArray *animationImages;
+@property (nonatomic, copy) NSArray *highlightedAnimationImages;
+
+@property (nonatomic, assign) NSTimeInterval animationDuration;
+@property (nonatomic, assign) NSInteger animationRepeatCount;
+
 - (id)initWithImage:(NSImage *)image;
 
-@property(nonatomic, strong) NSImage *image;
+- (void)startAnimating;
+- (void)stopAnimating;
+- (BOOL)isAnimating;
 
 @end

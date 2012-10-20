@@ -15,41 +15,190 @@
  */
 
 #import "TUIImageView.h"
+#import "TUINSView.h"
+#import "NSImage+TUIExtensions.h"
+#import "TUIStretchableImage.h"
 
 @implementation TUIImageView
-@synthesize image = _image;
 
-- (void)setImage:(NSImage *)i
-{
-	_image = i;
-	[self setNeedsDisplay];
+- (id)initWithFrame:(CGRect)frame {
+    if((self = [super initWithFrame:frame])) {
+        self.userInteractionEnabled = NO;
+        self.opaque = NO;
+		self.editable = NO;
+		self.adjustsToImageSize = YES;
+    }
+    return self;
 }
 
-- (id)initWithImage:(NSImage *)image
-{
-	CGRect frame = CGRectZero;
-	if (image) frame = CGRectMake(0, 0, image.size.width, image.size.height);
-
-	self = [super initWithFrame:frame];
-	if (self == nil) return nil;
-
-	self.userInteractionEnabled = NO;
-	_image = image;
-
+- (id)initWithImage:(NSImage *)image {
+	if((self = [self initWithFrame:image ? CGRectMake(0, 0, image.size.width, image.size.height) : CGRectZero])) {
+		self.image = image;
+	}
 	return self;
 }
 
-- (void)drawRect:(CGRect)rect
-{
+- (void)drawRect:(CGRect)rect {
 	[super drawRect:rect];
-	if (_image == nil)
+	if(!self.image)
 		return;
     
-    [_image drawInRect:rect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+    [self.image drawInRect:rect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+}
+
+- (void)startAnimating {
+    NSArray *images = _highlighted ? _highlightedAnimationImages : _animationImages;
+	
+	NSMutableArray *CGImages = [NSMutableArray array];
+	for(NSImage *image in images) {
+		[CGImages addObject:(__bridge id)image.tui_CGImage];
+	}
+	
+    CAKeyframeAnimation *animation = [CAKeyframeAnimation animationWithKeyPath:@"contents"];
+    animation.calculationMode = kCAAnimationDiscrete;
+    animation.fillMode = kCAFillModeBoth;
+    animation.removedOnCompletion = NO;
+    animation.duration = self.animationDuration ?: ([images count] * (1/30.0));
+    animation.repeatCount = self.animationRepeatCount ?: HUGE_VALF;
+    animation.values = CGImages;
+	
+    [self.layer addAnimation:animation forKey:@"contents"];
+}
+
+- (void)stopAnimating {
+    [self.layer removeAnimationForKey:@"contents"];
+}
+
+- (BOOL)isAnimating {
+    return [self.layer animationForKey:@"contents"] != nil;
+}
+
+- (void)setImage:(NSImage *)image {
+	if([_image isEqual:image])
+		return;
+	
+	_image = image;
+	if(!(self.highlighted && self.highlightedImage))
+		[self setNeedsDisplay];
+}
+
+- (void)setHighlightedImage:(NSImage *)newImage {
+    if([_highlightedImage isEqual:newImage])
+		return;
+	
+	_highlightedImage = newImage;
+	if(self.highlighted)
+		[self setNeedsDisplay];
+}
+
+- (void)setHighlighted:(BOOL)h {
+	if(_highlighted == h)
+		return;
+	
+    _highlighted = h;
+	if([TUIView isInAnimationContext])
+		[self redraw];
+	else [self setNeedsDisplay];
+	
+	if([self isAnimating])
+		[self startAnimating];
+}
+
+- (void)setEditable:(BOOL)editable {
+	_editable = editable;
+	if(editable)
+		[self registerForDraggedTypes:@[NSPasteboardTypePDF,
+		 NSPasteboardTypeTIFF,
+		 NSPasteboardTypePNG,
+		 NSFilenamesPboardType,
+		 NSPostScriptPboardType,
+		 NSTIFFPboardType,
+		 NSFileContentsPboardType,
+		 NSPDFPboardType]];
+	else [self unregisterDraggedTypes];
+}
+
+- (void)displayIfSizeChangedFrom:(CGSize)oldSize to:(CGSize)newSize {
+    if(!CGSizeEqualToSize(newSize, oldSize) && [self.image.class isKindOfClass:TUIStretchableImage.class]) {
+        [self setNeedsDisplay];
+    }
+}
+
+- (void)setFrame:(CGRect)newFrame {
+	BOOL needsDisplay = !CGSizeEqualToSize(self.frame.size, newFrame.size);
+	[super setFrame:newFrame];
+	
+	if(needsDisplay && ![self.image.class isKindOfClass:TUIStretchableImage.class]) {
+		if([TUIView isInAnimationContext])
+			[self redraw];
+		else [self setNeedsDisplay];
+	}
+}
+
+- (void)setBounds:(CGRect)newBounds {
+	BOOL needsDisplay = !CGSizeEqualToSize(self.bounds.size, newBounds.size);
+	[super setBounds:newBounds];
+	
+	if(needsDisplay && ![self.image.class isKindOfClass:TUIStretchableImage.class]) {
+		if([TUIView isInAnimationContext])
+			[self redraw];
+		else [self setNeedsDisplay];
+	}
 }
 
 - (CGSize)sizeThatFits:(CGSize)size {
-	return _image.size;
+	return self.image? self.image.size : CGSizeZero;;
+}
+
+- (void)mouseDown:(NSEvent *)theEvent {
+	[super mouseDown:theEvent];
+	if(!self.editable || !self.image)
+		return;
+	
+	NSImage *thumbnail = [self.image tui_thumbnail:CGSizeMake(32, 32)];
+	
+	NSSize s = thumbnail.size;
+	NSPoint dragPoint = theEvent.locationInWindow;
+	dragPoint.x -= s.width / 2;
+	dragPoint.y -= s.height / 2;
+	
+	NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName:NSDragPboard];
+    [pasteboard declareTypes:@[NSTIFFPboardType] owner:self];
+    [pasteboard setData:self.image.TIFFRepresentation forType:NSTIFFPboardType];
+	
+	[self dragImage:thumbnail at:dragPoint offset:NSZeroSize event:theEvent
+		 pasteboard:pasteboard source:self slideBack:YES];
+}
+
+
+- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender {
+	if((sender.draggingSource != self) && (self.editable) && ([NSImage canInitWithPasteboard:sender.draggingPasteboard])) {
+		self.highlighted = YES;
+		return NSDragOperationCopy;
+	} else {
+		return NSDragOperationNone;
+	}
+}
+
+- (void)draggingExited:(id <NSDraggingInfo>)sender {
+	self.highlighted = NO;
+}
+
+- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender {
+	return ((sender.draggingSource != self) && self.editable);
+}
+
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender {
+	NSImage *image = [[NSImage alloc] initWithPasteboard:sender.draggingPasteboard];
+	
+	if(image)
+		self.image = image;
+	
+	return image == nil;
+}
+
+- (void)concludeDragOperation:(id <NSDraggingInfo>)sender {
+	self.highlighted = NO;
 }
 
 @end
