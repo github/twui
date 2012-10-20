@@ -55,6 +55,8 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 
 @property (nonatomic, assign) CGRectEdge popoverEdge;
 
+- (void)popoverWantsShadow:(BOOL)shadow;
+
 @end
 
 @interface TUIPopoverWindow : NSWindow
@@ -368,6 +370,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
     [backgroundView addSubview:self.contentViewController.view];
 	
 	// Apply the popover edge and update the drawing mask.
+	[contentView popoverWantsShadow:[self.backgroundViewClass requiresBackgroundShadow]];
 	contentView.popoverEdge = popoverEdge;
 	[backgroundView updateMaskLayer];
 	
@@ -709,6 +712,10 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
     self.layer.mask = maskLayer;
 }
 
++ (BOOL)requiresBackgroundShadow {
+	return YES;
+}
+
 @end
 
 @implementation TUIPopoverWindowContentView
@@ -718,9 +725,12 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 	
 	// Set a layer shadow because we lose the window shadow.
 	self.layer.shadowColor = [NSColor shadowColor].CGColor;
-	self.layer.shadowOpacity = 0.5f;
 	self.layer.shadowOffset = CGSizeMake(0.0f, -3.0f);
 	self.layer.shadowRadius = 5.0f;
+}
+
+- (void)popoverWantsShadow:(BOOL)shadow {
+	self.layer.shadowOpacity = shadow ? 0.5f : 0.0f;
 }
 
 - (void)setPopoverEdge:(CGRectEdge)popoverEdge {

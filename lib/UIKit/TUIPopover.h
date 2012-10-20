@@ -206,6 +206,10 @@ typedef enum {
 
 @interface TUIPopoverBackgroundView : TUIView
 
+// Returns whether the background view requires a shadow to be drawn under
+// the popover. The default value is YES. Override to change the default.
++ (BOOL)requiresBackgroundShadow;
+
 // Returns the size of the background either outset or inset from the
 // contentSize provided, and the popoverEdge of the popover.
 + (CGSize)sizeForBackgroundViewWithContentSize:(CGSize)contentSize
