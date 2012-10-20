@@ -15,85 +15,88 @@
  */
 
 #import "TUIView+PasteboardDragging.h"
-#import "TUICGAdditions.h"
-#import "TUINSView.h"
+#import "TUIView+Private.h"
+#import "TUINSView+Private.h"
 
-@implementation TUIView (PasteboardDragging)
+@implementation TUIView (Dragging)
 
-- (BOOL)pasteboardDraggingEnabled
-{
-	return _viewFlags.pasteboardDraggingEnabled;
+@dynamic draggingTypes;
+
+- (NSArray *)registeredDraggingTypes {
+	return self.draggingTypes;
 }
 
-- (void)setPasteboardDraggingEnabled:(BOOL)e
-{
-	_viewFlags.pasteboardDraggingEnabled = e;
+- (void)registerForDraggedTypes:(NSArray *)draggingTypes {
+	self.draggingTypes = draggingTypes;
+	[self updateRegisteredDraggingTypes];
 }
 
-- (void)startPasteboardDragging
-{
-	// implemented by subclasses
+- (void)unregisterDraggedTypes {
+	self.draggingTypes = nil;
 }
 
-- (void)endPasteboardDragging:(NSDragOperation)operation
-{
-	// implemented by subclasses
+- (void)updateRegisteredDraggingTypes {
+	if(self.draggingTypes)
+		[self.nsView registerForDraggedTypes:self.draggingTypes forView:self];
 }
 
-- (id<NSPasteboardWriting>)representedPasteboardObject
-{
-	return nil;
+- (void)dragImage:(NSImage *)anImage at:(NSPoint)viewLocation
+		   offset:(NSSize)initialOffset event:(NSEvent *)event
+	   pasteboard:(NSPasteboard *)pboard source:(id)sourceObj
+		slideBack:(BOOL)slideFlag {
+	
+	[self.nsView dragImage:anImage at:viewLocation
+					offset:initialOffset event:event
+				pasteboard:pboard source:sourceObj
+				 slideBack:slideFlag];
 }
 
-- (TUIView *)handleForPasteboardDragView
-{
-	return self;
+- (BOOL)dragFile:(NSString *)filename fromRect:(NSRect)rect
+	   slideBack:(BOOL)aFlag event:(NSEvent *)event {
+	
+	return [self.nsView dragFile:filename fromRect:rect
+					   slideBack:aFlag event:event];
 }
 
-- (void)pasteboardDragMouseDown:(NSEvent *)event
-{
-	_viewFlags.pasteboardDraggingIsDragging = NO;
+- (BOOL)dragPromisedFilesOfTypes:(NSArray *)typeArray
+						fromRect:(NSRect)rect source:(id)sourceObject
+					   slideBack:(BOOL)aFlag event:(NSEvent *)event {
+	
+	return [self.nsView dragPromisedFilesOfTypes:typeArray
+										fromRect:rect source:sourceObject
+									   slideBack:aFlag event:event];
 }
 
-- (void)pasteboardDragMouseDragged:(NSEvent *)event
-{
-	if(!_viewFlags.pasteboardDraggingIsDragging) {
-		_viewFlags.pasteboardDraggingIsDragging = YES;
-		
-		TUIView *dragView = [self handleForPasteboardDragView];
-		id<NSPasteboardWriting> pasteboardObject = [dragView representedPasteboardObject];
-		
-		NSImage *dragNSImage = TUIGraphicsDrawAsImage(dragView.frame.size, ^{
-			[TUIGraphicsGetImageForView(dragView) drawAtPoint:CGPointZero fromRect:CGRectZero operation:NSCompositeSourceOver fraction:0.75];
-		});
-		
-		NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-		[pasteboard clearContents];
-		[pasteboard writeObjects:[NSArray arrayWithObject:pasteboardObject]];
-		
-		[self.nsView dragImage:dragNSImage 
-							at:[dragView frameInNSView].origin
-						offset:NSZeroSize 
-						 event:event 
-					pasteboard:pasteboard 
-						source:self 
-					 slideBack:YES];
-	}
+- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender {
+	return NSDragOperationNone;
 }
 
-- (void)draggedImage:(NSImage *)anImage beganAt:(NSPoint)aPoint
-{
-	[[self handleForPasteboardDragView] startPasteboardDragging];
+- (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender {
+	return [self draggingEntered:sender];
 }
 
-- (void)draggedImage:(NSImage *)image movedTo:(NSPoint)screenPoint
-{
+- (void)draggingExited:(id <NSDraggingInfo>)sender {
+	
 }
 
-- (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
-{
-	[self.nsView mouseUp:nil]; // will clear _trackingView
-	[[self handleForPasteboardDragView] endPasteboardDragging:operation];
+- (void)draggingEnded:(id <NSDraggingInfo>)sender {
+	
+}
+
+- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender {
+	return NO;
+}
+
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender {
+	return NO;
+}
+
+- (void)concludeDragOperation:(id <NSDraggingInfo>)sender {
+	
+}
+
+- (void)updateDraggingItemsForDrag:(id <NSDraggingInfo>)sender {
+	
 }
 
 @end

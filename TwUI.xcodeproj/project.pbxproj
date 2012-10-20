@@ -24,6 +24,12 @@
 		48A10E8415B7769A007F9EE3 /* TUILayoutManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E8015B7769A007F9EE3 /* TUILayoutManager.m */; };
 		48A10E8915B778E8007F9EE3 /* TUIView+Layout.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E8715B778E8007F9EE3 /* TUIView+Layout.m */; };
 		48A10E8B15B77A46007F9EE3 /* TUIView+Layout.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E8A15B77A46007F9EE3 /* TUIView+Layout.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		48D07644163329400027721C /* TUINSView+PasteboardDragging.h in Headers */ = {isa = PBXBuildFile; fileRef = 48D076421633293E0027721C /* TUINSView+PasteboardDragging.h */; };
+		48D07645163329400027721C /* TUINSView+PasteboardDragging.h in Headers */ = {isa = PBXBuildFile; fileRef = 48D076421633293E0027721C /* TUINSView+PasteboardDragging.h */; };
+		48D07646163329400027721C /* TUINSView+PasteboardDragging.h in Headers */ = {isa = PBXBuildFile; fileRef = 48D076421633293E0027721C /* TUINSView+PasteboardDragging.h */; };
+		48D07647163329400027721C /* TUINSView+PasteboardDragging.m in Sources */ = {isa = PBXBuildFile; fileRef = 48D076431633293E0027721C /* TUINSView+PasteboardDragging.m */; };
+		48D07648163329400027721C /* TUINSView+PasteboardDragging.m in Sources */ = {isa = PBXBuildFile; fileRef = 48D076431633293E0027721C /* TUINSView+PasteboardDragging.m */; };
+		48D07649163329400027721C /* TUINSView+PasteboardDragging.m in Sources */ = {isa = PBXBuildFile; fileRef = 48D076431633293E0027721C /* TUINSView+PasteboardDragging.m */; };
 		5E6ECEB313BE791600109598 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EE9839C13BE7650005F430D /* ApplicationServices.framework */; };
 		5E6ECEB413BE791600109598 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CB5E31B613BE6F49004B7899 /* QuartzCore.framework */; };
 		5E6ECEB613BE791C00109598 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EE9839C13BE7650005F430D /* ApplicationServices.framework */; };
@@ -436,6 +442,8 @@
 		48A10E8015B7769A007F9EE3 /* TUILayoutManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TUILayoutManager.m; sourceTree = "<group>"; };
 		48A10E8715B778E8007F9EE3 /* TUIView+Layout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "TUIView+Layout.m"; sourceTree = "<group>"; };
 		48A10E8A15B77A46007F9EE3 /* TUIView+Layout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TUIView+Layout.h"; sourceTree = "<group>"; };
+		48D076421633293E0027721C /* TUINSView+PasteboardDragging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TUINSView+PasteboardDragging.h"; sourceTree = "<group>"; };
+		48D076431633293E0027721C /* TUINSView+PasteboardDragging.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "TUINSView+PasteboardDragging.m"; sourceTree = "<group>"; };
 		5EE9839C13BE7650005F430D /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
 		5EE983B713BE7809005F430D /* libtwui.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtwui.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8819794213E26E0200AA39EB /* TUIView+Accessibility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TUIView+Accessibility.h"; sourceTree = "<group>"; };
@@ -794,15 +802,17 @@
 				48A10E7E15B7769A007F9EE3 /* TUILayoutConstraint.m */,
 				48A10E7F15B7769A007F9EE3 /* TUILayoutManager.h */,
 				48A10E8015B7769A007F9EE3 /* TUILayoutManager.m */,
+				CBB74C6113BE6E1900C85CB5 /* TUINSView.h */,
+				CBB74C6213BE6E1900C85CB5 /* TUINSView.m */,
+				D0C7656915B62EFA00E7AC2C /* TUINSView+Private.h */,
 				8819794A13E26E5800AA39EB /* TUINSView+Accessibility.h */,
 				8819794B13E26E5800AA39EB /* TUINSView+Accessibility.m */,
 				CBB74C5E13BE6E1900C85CB5 /* TUINSView+Hyperfocus.h */,
 				CBB74C5F13BE6E1900C85CB5 /* TUINSView+Hyperfocus.m */,
 				D07AA82515BDD72D00F736C0 /* TUINSView+NSTextInputClient.h */,
 				CBB74C6013BE6E1900C85CB5 /* TUINSView+NSTextInputClient.m */,
-				D0C7656915B62EFA00E7AC2C /* TUINSView+Private.h */,
-				CBB74C6113BE6E1900C85CB5 /* TUINSView.h */,
-				CBB74C6213BE6E1900C85CB5 /* TUINSView.m */,
+				48D076421633293E0027721C /* TUINSView+PasteboardDragging.h */,
+				48D076431633293E0027721C /* TUINSView+PasteboardDragging.m */,
 				CBB74C6313BE6E1900C85CB5 /* TUINSWindow.h */,
 				CBB74C6413BE6E1900C85CB5 /* TUINSWindow.m */,
 				884E8F5015387E11000F7A8D /* TUIPopover.h */,
@@ -935,6 +945,7 @@
 				D0EA12F315C34FEA00FAA603 /* NSColor+TUIExtensions.h in Headers */,
 				48373DF7160EAE9400322CA7 /* TUITextRenderer+Private.h in Headers */,
 				488A5835162FBE9B006CBF8B /* TUITableViewController.h in Headers */,
+				48D07646163329400027721C /* TUINSView+PasteboardDragging.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1007,6 +1018,7 @@
 				D0EA12F115C34FEA00FAA603 /* NSColor+TUIExtensions.h in Headers */,
 				48373DF5160EAE9400322CA7 /* TUITextRenderer+Private.h in Headers */,
 				488A5833162FBE9B006CBF8B /* TUITableViewController.h in Headers */,
+				48D07644163329400027721C /* TUINSView+PasteboardDragging.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1042,6 +1054,7 @@
 				D0EA12F215C34FEA00FAA603 /* NSColor+TUIExtensions.h in Headers */,
 				48373DF6160EAE9400322CA7 /* TUITextRenderer+Private.h in Headers */,
 				488A5834162FBE9B006CBF8B /* TUITableViewController.h in Headers */,
+				48D07645163329400027721C /* TUINSView+PasteboardDragging.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1322,6 +1335,7 @@
 				D05D23A515BF7239000ED14F /* NSImage+TUIExtensions.m in Sources */,
 				D0EA12F615C34FEA00FAA603 /* NSColor+TUIExtensions.m in Sources */,
 				488A5838162FBE9B006CBF8B /* TUITableViewController.m in Sources */,
+				48D07649163329400027721C /* TUINSView+PasteboardDragging.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1396,6 +1410,7 @@
 				887C227C15C1C7BB006EC31D /* NSFont+TUIExtensions.m in Sources */,
 				D0EA12F415C34FEA00FAA603 /* NSColor+TUIExtensions.m in Sources */,
 				488A5836162FBE9B006CBF8B /* TUITableViewController.m in Sources */,
+				48D07647163329400027721C /* TUINSView+PasteboardDragging.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1476,6 +1491,7 @@
 				D05D23A415BF7239000ED14F /* NSImage+TUIExtensions.m in Sources */,
 				D0EA12F515C34FEA00FAA603 /* NSColor+TUIExtensions.m in Sources */,
 				488A5837162FBE9B006CBF8B /* TUITableViewController.m in Sources */,
+				48D07648163329400027721C /* TUINSView+PasteboardDragging.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

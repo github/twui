@@ -1117,6 +1117,7 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 		[self.subviews makeObjectsPerformSelector:@selector(setNSView:) withObject:n];
 		[self didMoveToWindow];
 		[[NSNotificationCenter defaultCenter] postNotificationName:TUIViewDidMoveToWindowNotification object:self userInfo:[n window] ? [NSDictionary dictionaryWithObject:[n window] forKey:TUIViewWindow] : nil];
+		[self updateRegisteredDraggingTypes];
 	}
 }
 

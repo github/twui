@@ -29,6 +29,8 @@
 		[self addSubview:_scrollView];
 		
 		TUIImageView *imageView = [[TUIImageView alloc] initWithImage:[NSImage imageNamed:@"large-image.jpeg"]];
+		imageView.userInteractionEnabled = YES;
+		imageView.editable = YES;
 		[_scrollView addSubview:imageView];
 		[_scrollView setContentSize:imageView.frame.size];
 		

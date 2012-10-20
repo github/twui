@@ -88,6 +88,8 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
  */
 @property (nonatomic, strong) CAShapeLayer *maskLayer;
 
+@property (nonatomic, strong) NSMutableDictionary *draggingTypesByViews;
+
 /*
  * Returns any existing AppKit-created focus ring layer for the given view, or
  * nil if one could not be found.
@@ -656,6 +658,8 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	self.appKitHostView.layer.mask = self.maskLayer;
 	[self recalculateNSViewClipping];
 	#endif
+	
+	self.draggingTypesByViews = [NSMutableDictionary dictionary];
 }
 
 - (void)didAddSubview:(NSView *)view {

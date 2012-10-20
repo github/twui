@@ -38,8 +38,8 @@
 	_currentTextRenderer = [self _textRendererForEvent:event];
 	[_currentTextRenderer mouseDown:event];
 	
-	if(!_currentTextRenderer && _viewFlags.pasteboardDraggingEnabled)
-		[self pasteboardDragMouseDown:event];
+	//if(!_currentTextRenderer && _viewFlags.pasteboardDraggingEnabled)
+	//	[self pasteboardDragMouseDown:event];
 	
 	startDrag = [self localPointForEvent:event];
 	_viewFlags.dragDistanceLock = 1;
@@ -156,8 +156,8 @@
 		
 		[window setFrame:r display:YES];
 	} else {
-		if(!_currentTextRenderer && _viewFlags.pasteboardDraggingEnabled)
-			[self pasteboardDragMouseDragged:event];
+		//if(!_currentTextRenderer && _viewFlags.pasteboardDraggingEnabled)
+		//	[self pasteboardDragMouseDragged:event];
 	}
 
 	if(self.superview != nil) {

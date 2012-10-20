@@ -16,17 +16,42 @@
 
 #import "TUIView.h"
 
-@interface TUIView (PasteboardDragging)
+@interface TUIView (Dragging)
 
-@property (nonatomic, assign) BOOL pasteboardDraggingEnabled; // default NO
+@property (nonatomic, copy, getter = registeredDraggingTypes, setter = registerForDraggedTypes:) NSArray *draggingTypes;
 
-- (void)startPasteboardDragging;
-- (void)endPasteboardDragging:(NSDragOperation)operation;
+- (void)unregisterDraggedTypes;
+- (void)updateRegisteredDraggingTypes;
 
-- (id<NSPasteboardWriting>)representedPasteboardObject;
-- (TUIView *)handleForPasteboardDragView; // reciever can act as a "drag handle" for another view, returns self by default
+- (void)dragImage:(NSImage *)anImage at:(NSPoint)viewLocation
+		   offset:(NSSize)initialOffset event:(NSEvent *)event
+	   pasteboard:(NSPasteboard *)pboard source:(id)sourceObj
+		slideBack:(BOOL)slideFlag;
 
-- (void)pasteboardDragMouseDown:(NSEvent *)event;
-- (void)pasteboardDragMouseDragged:(NSEvent *)event;
+- (BOOL)dragFile:(NSString *)filename fromRect:(NSRect)rect
+	   slideBack:(BOOL)aFlag event:(NSEvent *)event;
+
+- (BOOL)dragPromisedFilesOfTypes:(NSArray *)typeArray
+						fromRect:(NSRect)rect source:(id)sourceObject
+					   slideBack:(BOOL)aFlag event:(NSEvent *)event;
+
+- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender;
+- (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender;
+- (void)draggingExited:(id <NSDraggingInfo>)sender;
+- (void)draggingEnded:(id <NSDraggingInfo>)sender;
+
+- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender;
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender;
+- (void)concludeDragOperation:(id <NSDraggingInfo>)sender;
+
+// While a destination may change the dragging images at any time,
+// it is recommended to wait until this method is called before
+// updating the dragging image. This allows the system to delay
+// changing the dragging images until it is likely that the user
+// will drop on this destination. Otherwise, the dragging images
+// will change too often during the drag which would be distracting
+// to the user. The destination may update the dragging images by
+// calling one of the -enumerateDraggingItems methods on the sender.
+- (void)updateDraggingItemsForDrag:(id <NSDraggingInfo>)sender;
 
 @end

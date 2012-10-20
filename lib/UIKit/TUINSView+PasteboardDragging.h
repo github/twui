@@ -14,22 +14,12 @@
  limitations under the License.
  */
 
-#import "TUIView.h"
+#import "TUINSView.h"
 
-typedef void (^TUIMouseDraggedHandler)(NSEvent *dragEvent);
+@interface TUINSView (PasteboardDragging)
 
-@class TUITextRenderer;
+@property (nonatomic, strong) NSMutableDictionary *draggingTypesByViews;
 
-@interface TUIView ()
-
-@property (nonatomic, strong) NSArray *draggingTypes;
-
-@property (nonatomic, retain) NSArray *textRenderers;
-@property (nonatomic, copy) TUIMouseDraggedHandler dragHandler;
-
-- (TUITextRenderer *)textRendererAtPoint:(CGPoint)point;
-- (void)_updateLayerScaleFactor;
+- (void)registerForDraggedTypes:(NSArray *)draggedTypes forView:(TUIView *)view;
 
 @end
-
-extern CGFloat TUICurrentContextScaleFactor(void);
