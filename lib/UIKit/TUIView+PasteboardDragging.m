@@ -31,23 +31,13 @@
 	[self updateRegisteredDraggingTypes];
 }
 
-- (void)unregisterDraggedTypes {
-	self.draggingTypes = nil;
-}
-
-- (void)updateRegisteredDraggingTypes {
-	if(self.draggingTypes)
-		[self.nsView registerForDraggedTypes:self.draggingTypes forView:self];
-}
-
-- (void)dragImage:(NSImage *)anImage at:(NSPoint)viewLocation
-		   offset:(NSSize)initialOffset event:(NSEvent *)event
-	   pasteboard:(NSPasteboard *)pboard source:(id)sourceObj
-		slideBack:(BOOL)slideFlag {
+- (void)dragImage:(NSImage *)image at:(NSPoint)viewLocation
+			event:(NSEvent *)event pasteboard:(NSPasteboard *)pasteboard
+		   source:(id)source slideBack:(BOOL)slideFlag {
 	
-	[self.nsView dragImage:anImage at:viewLocation
-					offset:initialOffset event:event
-				pasteboard:pboard source:sourceObj
+	[self.nsView dragImage:image at:viewLocation
+					offset:CGSizeZero event:event
+				pasteboard:pasteboard source:source
 				 slideBack:slideFlag];
 }
 

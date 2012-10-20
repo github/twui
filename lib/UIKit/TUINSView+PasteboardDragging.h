@@ -18,8 +18,10 @@
 
 @interface TUINSView (PasteboardDragging)
 
+// The dragging types registered by each contained TUIView.
 @property (nonatomic, strong) NSMutableDictionary *draggingTypesByViews;
 
+// Register dragging types for a view.
 - (void)registerForDraggedTypes:(NSArray *)draggedTypes forView:(TUIView *)view;
 
 @end

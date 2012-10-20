@@ -26,7 +26,7 @@
         self.userInteractionEnabled = NO;
         self.opaque = NO;
 		self.editable = NO;
-		self.adjustsToImageSize = YES;
+		self.editingSizesToFit = NO;
     }
     return self;
 }
@@ -34,6 +34,13 @@
 - (id)initWithImage:(NSImage *)image {
 	if((self = [self initWithFrame:image ? CGRectMake(0, 0, image.size.width, image.size.height) : CGRectZero])) {
 		self.image = image;
+	}
+	return self;
+}
+
+- (id)initWithImage:(NSImage *)image highlightedImage:(NSImage *)highlightedImage {
+	if((self = [self initWithImage:image])) {
+		self.highlightedImage = highlightedImage;
 	}
 	return self;
 }
@@ -115,7 +122,7 @@
 		 NSTIFFPboardType,
 		 NSFileContentsPboardType,
 		 NSPDFPboardType]];
-	else [self unregisterDraggedTypes];
+	else self.draggingTypes = nil;
 }
 
 - (void)displayIfSizeChangedFrom:(CGSize)oldSize to:(CGSize)newSize {
@@ -147,32 +154,17 @@
 }
 
 - (CGSize)sizeThatFits:(CGSize)size {
-	return self.image? self.image.size : CGSizeZero;;
+	return self.image? self.image.size : CGSizeZero;
 }
 
-- (void)mouseDown:(NSEvent *)theEvent {
-	[super mouseDown:theEvent];
-	if(!self.editable || !self.image)
-		return;
-	
-	NSImage *thumbnail = [self.image tui_thumbnail:CGSizeMake(32, 32)];
-	
-	NSSize s = thumbnail.size;
-	NSPoint dragPoint = theEvent.locationInWindow;
-	dragPoint.x -= s.width / 2;
-	dragPoint.y -= s.height / 2;
-	
-	NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-    [pasteboard declareTypes:@[NSTIFFPboardType] owner:self];
-    [pasteboard setData:self.image.TIFFRepresentation forType:NSTIFFPboardType];
-	
-	[self dragImage:thumbnail at:dragPoint offset:NSZeroSize event:theEvent
-		 pasteboard:pasteboard source:self slideBack:YES];
+- (void)sizeToFit {
+	CGSize fittingSize = [self sizeThatFits:CGSizeZero];
+	self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y,
+							fittingSize.width, fittingSize.height);
 }
-
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender {
-	if((sender.draggingSource != self) && (self.editable) && ([NSImage canInitWithPasteboard:sender.draggingPasteboard])) {
+	if(![sender.draggingSource isEqual:self] && self.editable && [NSImage canInitWithPasteboard:sender.draggingPasteboard]) {
 		self.highlighted = YES;
 		return NSDragOperationCopy;
 	} else {
@@ -185,14 +177,17 @@
 }
 
 - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender {
-	return ((sender.draggingSource != self) && self.editable);
+	return (![sender.draggingSource isEqual:self] && self.editable);
 }
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender {
 	NSImage *image = [[NSImage alloc] initWithPasteboard:sender.draggingPasteboard];
 	
-	if(image)
+	if(image) {
 		self.image = image;
+		if(self.editingSizesToFit)
+			[self sizeToFit];
+	}
 	
 	return image == nil;
 }

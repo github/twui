@@ -30,6 +30,9 @@ typedef void (^TUIMouseDraggedHandler)(NSEvent *dragEvent);
 - (TUITextRenderer *)textRendererAtPoint:(CGPoint)point;
 - (void)_updateLayerScaleFactor;
 
+// Update the registered dragging types for the view.
+- (void)updateRegisteredDraggingTypes;
+
 @end
 
 extern CGFloat TUICurrentContextScaleFactor(void);

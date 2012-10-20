@@ -544,6 +544,12 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 	return nil;
 }
 
+// Register for dragging types with the nsView.
+- (void)updateRegisteredDraggingTypes {
+	if(self.draggingTypes)
+		[self.nsView registerForDraggedTypes:self.draggingTypes forView:self];
+}
+
 - (void)_updateLayerScaleFactor
 {
 	if([self nsWindow] != nil) {
