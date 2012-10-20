@@ -131,6 +131,8 @@ static pthread_key_t TUICurrentContextScaleFactorTLSKey;
     [[TUILayoutManager sharedLayoutManager] removeLayoutConstraintsFromView:self];
     [[TUILayoutManager sharedLayoutManager] setLayoutName:nil forView:self];
     
+	self.draggingTypes = nil;
+	
 	[self setTextRenderers:nil];
 	_layer.delegate = nil;
 	if(_context.context) {

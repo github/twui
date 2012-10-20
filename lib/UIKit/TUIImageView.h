@@ -45,9 +45,23 @@
 // overwrite the old image, otherwise, NO. The default value is NO.
 @property (nonatomic, assign, getter = isEditable) BOOL editable;
 
+// Set whether or not to allow drag-to-desktop saving of the image view's
+// image. If YES, the user can drag the image out to the desktop, and save it
+// using the specified filename as a Portable Network Graphics [PNG] file.
+// The default value is NO;
+@property (nonatomic, assign, getter = isSavable) BOOL savable;
+
 // Set whether a newly dragged image causes the image view to resize itself
 // to fit. If NO, the image is scaled to fit the bounds. The default is NO.
 @property (nonatomic, assign) BOOL editingSizesToFit;
+
+// If the image view is allowed to save the file, the savedFilename is
+// used as the file name of the saved image with a .png extension. By
+// default, it is set to "Photo". If a file with this name already exists,
+// it is not overwritten, but a count extension is added to the file.
+// i.e. "Photo.png" exists, so "Photo (n).png" is used, where n is the
+// number of pre-existing files with  an identical filename.
+@property (nonatomic, strong) NSString *savedFilename;
 
 // An array of NSImages to use for an animation. The array must contain
 // NSImage objects. You may use the same image object more than once in

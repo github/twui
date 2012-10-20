@@ -19,16 +19,22 @@
 #import "NSImage+TUIExtensions.h"
 #import "TUIStretchableImage.h"
 
+@interface TUIImageView ()
+
+@property (nonatomic, strong) NSURL *currentDropDestination;
+
+@end
+
 @implementation TUIImageView
 
 - (id)initWithFrame:(CGRect)frame {
-    if((self = [super initWithFrame:frame])) {
-        self.userInteractionEnabled = NO;
-        self.opaque = NO;
+	if((self = [super initWithFrame:frame])) {
+		self.userInteractionEnabled = NO;
+		self.opaque = NO;
 		self.editable = NO;
 		self.editingSizesToFit = NO;
-    }
-    return self;
+	}
+	return self;
 }
 
 - (id)initWithImage:(NSImage *)image {
@@ -45,39 +51,43 @@
 	return self;
 }
 
+- (BOOL)acceptsFirstMouse:(NSEvent *)event {
+	return YES;
+}
+
 - (void)drawRect:(CGRect)rect {
 	[super drawRect:rect];
 	if(!self.image)
 		return;
-    
-    [self.image drawInRect:rect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+	
+	[self.image drawInRect:rect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
 }
 
 - (void)startAnimating {
-    NSArray *images = _highlighted ? _highlightedAnimationImages : _animationImages;
+	NSArray *images = _highlighted ? _highlightedAnimationImages : _animationImages;
 	
 	NSMutableArray *CGImages = [NSMutableArray array];
 	for(NSImage *image in images) {
 		[CGImages addObject:(__bridge id)image.tui_CGImage];
 	}
 	
-    CAKeyframeAnimation *animation = [CAKeyframeAnimation animationWithKeyPath:@"contents"];
-    animation.calculationMode = kCAAnimationDiscrete;
-    animation.fillMode = kCAFillModeBoth;
-    animation.removedOnCompletion = NO;
-    animation.duration = self.animationDuration ?: ([images count] * (1/30.0));
-    animation.repeatCount = self.animationRepeatCount ?: HUGE_VALF;
-    animation.values = CGImages;
+	CAKeyframeAnimation *animation = [CAKeyframeAnimation animationWithKeyPath:@"contents"];
+	animation.calculationMode = kCAAnimationDiscrete;
+	animation.fillMode = kCAFillModeBoth;
+	animation.removedOnCompletion = NO;
+	animation.duration = self.animationDuration ?: ([images count] * (1/30.0));
+	animation.repeatCount = self.animationRepeatCount ?: HUGE_VALF;
+	animation.values = CGImages;
 	
-    [self.layer addAnimation:animation forKey:@"contents"];
+	[self.layer addAnimation:animation forKey:@"contents"];
 }
 
 - (void)stopAnimating {
-    [self.layer removeAnimationForKey:@"contents"];
+	[self.layer removeAnimationForKey:@"contents"];
 }
 
 - (BOOL)isAnimating {
-    return [self.layer animationForKey:@"contents"] != nil;
+	return [self.layer animationForKey:@"contents"] != nil;
 }
 
 - (void)setImage:(NSImage *)image {
@@ -90,7 +100,7 @@
 }
 
 - (void)setHighlightedImage:(NSImage *)newImage {
-    if([_highlightedImage isEqual:newImage])
+	if([_highlightedImage isEqual:newImage])
 		return;
 	
 	_highlightedImage = newImage;
@@ -102,7 +112,7 @@
 	if(_highlighted == h)
 		return;
 	
-    _highlighted = h;
+	_highlighted = h;
 	if([TUIView isInAnimationContext])
 		[self redraw];
 	else [self setNeedsDisplay];
@@ -114,21 +124,14 @@
 - (void)setEditable:(BOOL)editable {
 	_editable = editable;
 	if(editable)
-		[self registerForDraggedTypes:@[NSPasteboardTypePDF,
-		 NSPasteboardTypeTIFF,
-		 NSPasteboardTypePNG,
-		 NSFilenamesPboardType,
-		 NSPostScriptPboardType,
-		 NSTIFFPboardType,
-		 NSFileContentsPboardType,
-		 NSPDFPboardType]];
+		[self registerForDraggedTypes:[NSImage imagePasteboardTypes]];
 	else self.draggingTypes = nil;
 }
 
 - (void)displayIfSizeChangedFrom:(CGSize)oldSize to:(CGSize)newSize {
-    if(!CGSizeEqualToSize(newSize, oldSize) && [self.image.class isKindOfClass:TUIStretchableImage.class]) {
-        [self setNeedsDisplay];
-    }
+	if(!CGSizeEqualToSize(newSize, oldSize) && [self.image.class isKindOfClass:TUIStretchableImage.class]) {
+		[self setNeedsDisplay];
+	}
 }
 
 - (void)setFrame:(CGRect)newFrame {
@@ -163,6 +166,24 @@
 							fittingSize.width, fittingSize.height);
 }
 
+- (void)mouseDown:(NSEvent *)event {
+	[super mouseDown:event];
+	if(!self.savable || !self.image)
+		return;
+
+	NSImage *thumbnail = [self.image tui_thumbnail:CGSizeMake(32, 32)];
+
+	NSSize dragSize = thumbnail.size;
+	NSPoint dragPoint = event.locationInWindow;
+	dragPoint.x -= dragSize.width / 2;
+	dragPoint.y -= dragSize.height / 2;
+	NSRect dragRect;
+	dragRect.origin = dragPoint;
+	dragRect.size = dragSize;
+	
+	[self dragPromisedFilesOfTypes:@[NSPasteboardTypeTIFF] fromRect:dragRect source:self slideBack:YES event:event];
+}
+
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender {
 	if(![sender.draggingSource isEqual:self] && self.editable && [NSImage canInitWithPasteboard:sender.draggingPasteboard]) {
 		self.highlighted = YES;
@@ -194,6 +215,35 @@
 
 - (void)concludeDragOperation:(id <NSDraggingInfo>)sender {
 	self.highlighted = NO;
+}
+
+- (NSDragOperation)draggingSourceOperationMaskForLocal:(BOOL)flag {
+	return NSDragOperationCopy;
+}
+
+- (NSArray *)namesOfPromisedFilesDroppedAtDestination:(NSURL *)dropDestination {
+	self.currentDropDestination = dropDestination;
+	return @[[self.savedFilename ?: @"Photo" stringByAppendingPathExtension:@"png"]];
+}
+
+- (void)draggedImage:(NSImage *)image endedAt:(NSPoint)screenPoint operation:(NSDragOperation)operation {
+	if(!self.currentDropDestination)
+		return;
+	
+	NSArray *representations = self.image.representations;
+	NSString *path = [self.currentDropDestination.path stringByAppendingPathComponent:self.savedFilename ?: @"Photo"];
+	NSData *bitmapData = [NSBitmapImageRep representationOfImageRepsInArray:representations
+																  usingType:NSPNGFileType properties:nil];
+	
+	NSUInteger existingFileCount = 0;
+	NSString *newPath = path;
+	while([[NSFileManager defaultManager] fileExistsAtPath:[newPath stringByAppendingPathExtension:@"png"]]) {
+		existingFileCount++;
+		newPath = [path stringByAppendingFormat:@" (%lu)", existingFileCount];
+	}
+	
+	[bitmapData writeToFile:[newPath stringByAppendingPathExtension:@"png"] atomically:YES];
+	self.currentDropDestination = nil;
 }
 
 @end
