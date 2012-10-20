@@ -128,38 +128,6 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 	return self;
 }
 
-- (void)setDelegate:(id<TUIPopoverDelegate>)delegate {
-	_delegate = delegate;
-	
-	if([delegate respondsToSelector:@selector(popoverWillShow:)]) {
-		[[NSNotificationCenter defaultCenter] addObserver:self.delegate
-												 selector:@selector(popoverWillShow:)
-													 name:TUIPopoverWillShowNotification
-												   object:self];
-	}
-	
-	if([delegate respondsToSelector:@selector(popoverDidShow:)]) {
-		[[NSNotificationCenter defaultCenter] addObserver:self.delegate
-												 selector:@selector(popoverDidShow:)
-													 name:TUIPopoverDidShowNotification
-												   object:self];
-	}
-	
-	if([delegate respondsToSelector:@selector(popoverWillClose:)]) {
-		[[NSNotificationCenter defaultCenter] addObserver:self.delegate
-												 selector:@selector(popoverWillClose:)
-													 name:TUIPopoverWillCloseNotification
-												   object:self];
-	}
-	
-	if([delegate respondsToSelector:@selector(popoverDidClose:)]) {
-		[[NSNotificationCenter defaultCenter] addObserver:self.delegate
-												 selector:@selector(popoverDidClose:)
-													 name:TUIPopoverDidCloseNotification
-												   object:self];
-	}
-}
-
 - (void)setContentViewController:(TUIViewController *)controller {
 	if(self.shown) {
 		TUIPopoverBackgroundView *backgroundView = (TUIPopoverBackgroundView *)self.popoverWindow.frameView.rootView;
@@ -504,9 +472,6 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 	if(self.shouldClose != nil) {
 		if(self.shouldClose(self))
 			[self close];
-	} else if([self.delegate respondsToSelector:@selector(popoverShouldClose:)]) {
-		if([self.delegate popoverShouldClose:self])
-			[self close];
 	} else {
 		[self close];
 	}
@@ -536,9 +501,6 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 		} else if(event.keyCode == escapeKey) {
 			if(self.shouldClose != nil) {
 				if(self.shouldClose())
-					[self close];
-			} else if([self.delegate respondsToSelector:@selector(popoverShouldClose:)]) {
-				if([self.delegate popoverShouldClose:self])
 					[self close];
 			}
 		}

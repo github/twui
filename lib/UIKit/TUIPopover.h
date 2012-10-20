@@ -18,7 +18,6 @@
 
 @class TUIPopover;
 @class TUIViewController;
-@protocol TUIPopoverDelegate;
 
 typedef void (^TUIPopoverDelegateBlock)(TUIPopover *popover);
 typedef NSWindow * (^TUIPopoverWindowBlock)(TUIPopover *popover);
@@ -144,20 +143,31 @@ typedef enum {
 // the default duration will be used.
 @property (nonatomic, assign) NSTimeInterval animationDuration;
 
+// Returns YES if the popover should close, NO otherwise. The popover invokes
+// this block whenever it is about to close to give a chance to veto the close.
+// This block is only called when -performClose: is invoked, not -close.
+@property (nonatomic, copy) TUIPopoverConfirmationBlock shouldClose;
+
 // You can optionally use block callbacks instead of a delegate, in which
 // case, both the delegate method and the block will be called. For
 // information on the usage of these delegate blocks, refer to the delegate
-// methods below. The shouldClose and detachableWindow blocks take priority
-// over delegate method calls.
-@property (nonatomic, copy) TUIPopoverConfirmationBlock shouldClose;
-@property (nonatomic, copy) TUIPopoverWindowBlock detachableWindow;
-@property (nonatomic, copy) TUIPopoverDelegateBlock willShowBlock;
-@property (nonatomic, copy) TUIPopoverDelegateBlock didShowBlock;
-@property (nonatomic, copy) TUIPopoverDelegateBlock willCloseBlock;
-@property (nonatomic, copy) TUIPopoverDelegateBlock didCloseBlock;
+// methods below.
 
-// The delegate of the popover.
-@property (nonatomic, unsafe_unretained) id <TUIPopoverDelegate> delegate;
+// Invoked at the same time as when the TUIPopoverWillShowNotification
+// notification is sent. The popover is about to show itself.
+@property (nonatomic, copy) TUIPopoverDelegateBlock willShowBlock;
+
+// Invoked on the delegate when the TUIPopoverDidShowNotification
+// notification is sent.  This method will also be invoked on the popover.
+@property (nonatomic, copy) TUIPopoverDelegateBlock didShowBlock;
+
+// Invoked on the delegate when the TUIPopoverWillCloseNotification
+// notification is sent.  This method will also be invoked on the popover.
+@property (nonatomic, copy) TUIPopoverDelegateBlock willCloseBlock;
+
+// Invoked on the delegate when the TUIPopoverDidCloseNotification
+// notification is sent.  This method will also be invoked on the popover.
+@property (nonatomic, copy) TUIPopoverDelegateBlock didCloseBlock;
 
 // Initialize the popover with a view controller, whose view will be used
 // as the content view inside the popover.
@@ -221,47 +231,5 @@ typedef enum {
 // of the popover, override the standard drawRect: and add an invocation
 // to this method to retrieve the popover path and draw with it.
 - (CGPathRef)popoverPathForEdge:(CGRectEdge)popoverEdge inFrame:(CGRect)frame;
-
-@end
-
-@protocol TUIPopoverDelegate <NSObject>
-@optional
-
-// Returns YES if the popover should close, NO otherwise. The popover invokes
-// this method on its delegate whenever it is about to close to give the
-// delegate a chance to veto the close.  If the delegate returns YES,
-// -popoverShouldClose: will also be invoked on the popover to allow the
-// popover to veto the close.
-- (BOOL)popoverShouldClose:(TUIPopover *)popover;
-
-// Return a window to which the popover should be detached.  You should not
-// remove the popover's content view as part of your implementation of this
-// method. The popover and the detachable window may be shown at the same
-// time and therefore cannot share a content view (or a content view controller).
-// If the popover and the detachable window should have the same content, you
-// should define the content in a separate nib file and use a view controller
-// to instantiate separate copies of the content for the popover and the
-// detachable window.  The popover will animate to appear as though it morphs
-// into the detachable window (unless the animates property is set to NO. The
-// exact animation used is not guaranteed).  Subclasses of TUIPopover may also
-// implement this method, in which case the subclass method will be invoked
-// only if the delegate does not implement the method.
-- (NSWindow *)detachableWindowForPopover:(TUIPopover *)popover;
-
-// Invoked on the delegate when the TUIPopoverWillShowNotification
-// notification is sent.  This method will also be invoked on the popover.
-- (void)popoverWillShow:(NSNotification *)notification;
-
-// Invoked on the delegate when the TUIPopoverDidShowNotification
-// notification is sent.  This method will also be invoked on the popover.
-- (void)popoverDidShow:(NSNotification *)notification;
-
-// Invoked on the delegate when the TUIPopoverWillCloseNotification
-// notification is sent.  This method will also be invoked on the popover.
-- (void)popoverWillClose:(NSNotification *)notification;
-
-// Invoked on the delegate when the TUIPopoverDidCloseNotification
-// notification is sent.  This method will also be invoked on the popover.
-- (void)popoverDidClose:(NSNotification *)notification;
 
 @end
