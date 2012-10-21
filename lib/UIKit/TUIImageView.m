@@ -32,6 +32,7 @@
 		self.userInteractionEnabled = NO;
 		self.opaque = NO;
 		self.editable = NO;
+		self.savable = NO;
 		self.editingSizesToFit = NO;
 	}
 	return self;
@@ -170,22 +171,20 @@
 	[super mouseDown:event];
 	if(!self.savable || !self.image)
 		return;
-
-	NSImage *thumbnail = [self.image tui_thumbnail:CGSizeMake(32, 32)];
-
-	NSSize dragSize = thumbnail.size;
-	NSPoint dragPoint = event.locationInWindow;
-	dragPoint.x -= dragSize.width / 2;
-	dragPoint.y -= dragSize.height / 2;
-	NSRect dragRect;
-	dragRect.origin = dragPoint;
-	dragRect.size = dragSize;
 	
-	[self dragPromisedFilesOfTypes:@[NSPasteboardTypeTIFF] fromRect:dragRect source:self slideBack:YES event:event];
+	CGRect dragRect = (CGRect) {
+		.origin = event.locationInWindow,
+		.size = CGSizeMake(32, 32)
+	};
+	
+	[self dragPromisedFilesOfTypes:@[NSPasteboardTypeTIFF] fromRect:dragRect
+							source:self slideBack:YES event:event];
 }
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender {
-	if(![sender.draggingSource isEqual:self] && self.editable && [NSImage canInitWithPasteboard:sender.draggingPasteboard]) {
+	if(![sender.draggingSource isEqual:self] && self.editable &&
+	   [NSImage canInitWithPasteboard:sender.draggingPasteboard]) {
+		
 		self.highlighted = YES;
 		return NSDragOperationCopy;
 	} else {
@@ -226,6 +225,18 @@
 - (NSArray *)namesOfPromisedFilesDroppedAtDestination:(NSURL *)dropDestination {
 	self.currentDropDestination = dropDestination;
 	return @[[self.savedFilename ?: @"Photo" stringByAppendingPathExtension:@"png"]];
+}
+
+- (NSImage *)dragImageForPromisedFilesOfTypes:(NSArray *)typeArray {
+	CGRect imageRect = (CGRect) {
+		.origin = CGPointZero,
+		.size = CGRectIntersection(self.frame, self.superview.frame).size
+	};
+	
+	return [NSImage tui_imageWithSize:imageRect.size drawing:^(CGContextRef ctx) {
+		CGContextSetAlpha(ctx, 0.5);
+		CGContextDrawImage(ctx, imageRect, self.image.tui_CGImage);
+	}];
 }
 
 - (void)draggedImage:(NSImage *)image endedAt:(NSPoint)screenPoint operation:(NSDragOperation)operation {

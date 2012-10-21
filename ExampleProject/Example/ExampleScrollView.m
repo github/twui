@@ -31,6 +31,8 @@
 		TUIImageView *imageView = [[TUIImageView alloc] initWithImage:[NSImage imageNamed:@"large-image.jpeg"]];
 		imageView.userInteractionEnabled = YES;
 		imageView.editable = YES;
+		imageView.savable = YES;
+		imageView.savedFilename = @"Starry Night";
 		[_scrollView addSubview:imageView];
 		[_scrollView setContentSize:imageView.frame.size];
 		

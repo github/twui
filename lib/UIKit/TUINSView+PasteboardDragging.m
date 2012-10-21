@@ -15,10 +15,45 @@
  */
 
 #import "TUINSView+PasteboardDragging.h"
+#import "TUINSView+Private.h"
 
 @implementation TUINSView (PasteboardDragging)
 
 @dynamic draggingTypesByViews;
+
+- (void)dragImage:(NSImage *)anImage at:(NSPoint)viewLocation
+		   offset:(NSSize)initialOffset event:(NSEvent *)event
+	   pasteboard:(NSPasteboard *)pboard source:(id)sourceObj
+		slideBack:(BOOL)slideFlag {
+	
+	NSImage *dragImage = anImage;
+	NSPoint dragLocation = viewLocation;
+	if(self.promisedFileDraggingView) {
+		dragImage = [self.promisedFileDraggingView dragImageForPromisedFilesOfTypes:self.promisedFileDraggingTypes];
+		
+		dragLocation.x -= dragImage.size.width / 2;
+		dragLocation.y -= dragImage.size.height / 2;
+		
+		self.promisedFileDraggingView = nil;
+		self.promisedFileDraggingTypes = nil;
+	}
+	
+	[super dragImage:dragImage at:dragLocation offset:initialOffset
+			   event:event pasteboard:pboard source:sourceObj
+		   slideBack:slideFlag];
+}
+
+- (BOOL)dragPromisedFilesOfTypes:(NSArray *)typeArray fromRect:(NSRect)rect
+						  source:(id)sourceObject slideBack:(BOOL)aFlag event:(NSEvent *)event {
+	
+	if(self.promisedFileDraggingView) {
+		self.promisedFileDraggingTypes = typeArray;
+		return [super dragPromisedFilesOfTypes:typeArray fromRect:rect
+										source:sourceObject slideBack:aFlag event:event];
+	} else {
+		return NO;
+	}
+}
 
 - (void)registerForDraggedTypes:(NSArray *)draggedTypes forView:(TUIView *)view {
 	[self.draggingTypesByViews removeObjectForKey:@(view.hash)];
@@ -55,29 +90,38 @@
 }
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender {
-	TUIView *view = [self viewForDraggingInfo:sender];
-	if(view)
-		return [view draggingEntered:sender];
 	return NSDragOperationNone;
 }
 
 - (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender {
 	TUIView *view = [self viewForDraggingInfo:sender];
-	if(view)
+	if(self.currentDraggingView != view) {
+		[self.currentDraggingView draggingExited:sender];
+		self.currentDraggingView = nil;
+	}
+	
+	if(view) {
+		if(self.currentDraggingView != view) {
+			self.currentDraggingView = view;
+			[self.currentDraggingView draggingEntered:sender];
+		}
 		return [view draggingUpdated:sender];
+	}
 	return NSDragOperationNone;
 }
 
 - (void)draggingExited:(id <NSDraggingInfo>)sender {
-	TUIView *view = [self viewForDraggingInfo:sender];
-	if(view)
-		[view draggingExited:sender];
+	if(self.currentDraggingView) {
+		[self.currentDraggingView draggingExited:sender];
+		self.currentDraggingView = nil;
+	}
 }
 
 - (void)draggingEnded:(id <NSDraggingInfo>)sender {
-	TUIView *view = [self viewForDraggingInfo:sender];
-	if(view)
-		[view draggingEnded:sender];
+	if(self.currentDraggingView) {
+		[self.currentDraggingView draggingEnded:sender];
+		self.currentDraggingView = nil;
+	}
 }
 
 - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender {
@@ -98,12 +142,6 @@
 	TUIView *view = [self viewForDraggingInfo:sender];
 	if(view)
 		[view concludeDragOperation:sender];
-}
-
-- (void)updateDraggingItemsForDrag:(id <NSDraggingInfo>)sender {
-	TUIView *view = [self viewForDraggingInfo:sender];
-	if(view)
-		[view updateDraggingItemsForDrag:sender];
 }
 
 @end

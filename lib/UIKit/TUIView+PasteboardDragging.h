@@ -57,7 +57,7 @@
 
 // Initiates a dragging operation from the view, allowing the user to drag a
 // file icon to any application that has window or view objects that accept
-// files. The fullPath is a string that specifies the absolute path for the file
+// files. The filename is a string that specifies the absolute path for the file
 // that is dragged. The passed rect describes the position of the icon in the
 // view's coordinate system. The slideBack boolean indicates whether the icon
 // being dragged should slide back to its position in the view if the file
@@ -97,6 +97,13 @@
 - (BOOL)dragPromisedFilesOfTypes:(NSArray *)typeArray
 						fromRect:(NSRect)rect source:(id)sourceObject
 					   slideBack:(BOOL)aFlag event:(NSEvent *)event;
+
+// If a view decides to use dragPromisedFilesOfTypes:fromRect:source:slideBack:event:
+// but also wishes to replace the image representing the promised file, the view
+// can do so by overriding the dragImageForPromisedFilesOfTypes: method, and
+// returning a custom image that will instead be used to represent the promised files.
+// If this method returns nil, the value is not used as the dragging image.
+- (NSImage *)dragImageForPromisedFilesOfTypes:(NSArray *)typeArray;
 
 // Invoked when the dragged image enters destination bounds or frame; delegate
 // returns dragging operation to perform. Returns one (and only one) of the dragging
@@ -180,13 +187,5 @@
 // the drag image is removed form the screen. If your final visual representation
 // matches the visual representation in the drag, this is a seamless transition.
 - (void)concludeDragOperation:(id <NSDraggingInfo>)sender;
-
-// While a destination may change the dragging images at any time, it is recommended
-// to wait until this method is called before updating the dragging image. This
-// allows the system to delay changing the dragging images until it is likely that
-// the user will drop on this destination. Otherwise, the dragging images will change
-// too often during the drag which would be distracting to the user. The destination
-// may update the dragging images by calling one of the sender's enumeration methods.
-- (void)updateDraggingItemsForDrag:(id <NSDraggingInfo>)sender;
 
 @end
