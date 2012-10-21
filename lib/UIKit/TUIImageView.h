@@ -16,6 +16,8 @@
 
 #import "TUIView.h"
 
+typedef void (^TUIImageViewHandler)(void);
+
 @interface TUIImageView : TUIView
 
 // The initial value of this property is the image passed into the
@@ -84,6 +86,12 @@
 // Specifies the number of times to repeat the animation. The default
 // value is 0, which specifies to repeat the animation indefinitely.
 @property (nonatomic, assign) NSInteger animationRepeatCount;
+
+// Block-based callbacks that allow you to be notified of when the image view
+// has been edited, by dragging in a new image, or when it has been saved,
+// by dragging it out to the desktop.
+@property (nonatomic, copy) TUIImageViewHandler imageEditedHandler;
+@property (nonatomic, copy) TUIImageViewHandler imageSavedHandler;
 
 // Returns an image view initialized with the specified image. This method
 // adjusts the frame of the receiver to match the size of the specified image.

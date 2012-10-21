@@ -208,6 +208,8 @@
 		self.image = image;
 		if(self.editingSizesToFit)
 			[self sizeToFit];
+		if(self.imageEditedHandler)
+			self.imageEditedHandler();
 	}
 	
 	return image == nil;
@@ -244,6 +246,9 @@
 	
 	[bitmapData writeToFile:[newPath stringByAppendingPathExtension:@"png"] atomically:YES];
 	self.currentDropDestination = nil;
+	
+	if(self.imageSavedHandler)
+		self.imageSavedHandler();
 }
 
 @end
