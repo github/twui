@@ -1,0 +1,29 @@
+/*
+ Copyright 2011 Twitter, Inc.
+ 
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this work except in compliance with the License.
+ You may obtain a copy of the License in the LICENSE file, or at:
+ 
+ http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
+
+#import "TUIControl.h"
+
+@interface TUISwitch : TUIControl
+
+@property (nonatomic, copy) NSString *onText;
+@property (nonatomic, copy) NSString *offText;
+
+@property (nonatomic, assign, getter = isOn) BOOL on;
+@property (nonatomic, assign, getter = knobIsGrippsed) BOOL knobGripped;
+
+- (void)setOn:(BOOL)on animated:(BOOL)animated;
+
+@end

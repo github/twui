@@ -16,6 +16,13 @@
 		_labelRenderer = [[TUITextRenderer alloc] init];
 		self.textRenderers = [NSArray arrayWithObjects:_labelRenderer, nil];
 		self.opaque = TRUE;
+		
+		self.switchControl = [[TUISwitch alloc] initWithFrame:CGRectZero];
+		self.switchControl.layer.shadowColor = [NSColor whiteColor].CGColor;
+		self.switchControl.layer.shadowOffset = CGSizeMake(0, -1);
+		self.switchControl.layer.shadowRadius = 1.0f;
+		self.switchControl.layer.shadowOpacity = 1.0f;
+		[self addSubview:self.switchControl];
 	}
 	return self;
 }
@@ -63,9 +70,17 @@
     CGFloat labelHeight = 18;
     self.labelRenderer.frame = CGRectMake(15, roundf((self.bounds.size.height - labelHeight) / 2.0), self.bounds.size.width - 30, labelHeight);
     [self.labelRenderer draw];
-    
   }
   
+}
+
+- (void)layoutSubviews {
+	CGSize switchSize = CGSizeMake(64, 24);
+	self.switchControl.frame = (CGRect) {
+		.origin.x = CGRectGetMidX(self.bounds) - (switchSize.width / 2),
+		.origin.y = CGRectGetMidY(self.bounds) - (switchSize.height / 2),
+		.size = switchSize
+	};
 }
 
 @end

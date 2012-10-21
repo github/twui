@@ -10,5 +10,7 @@
 
 @property (readonly) TUITextRenderer  * labelRenderer;
 
+@property (nonatomic, strong) TUISwitch *switchControl;
+
 @end
 
