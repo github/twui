@@ -38,7 +38,7 @@
 		self.promisedFileDraggingTypes = nil;
 	}
 	
-	[super dragImage:dragImage at:dragLocation offset:initialOffset
+	[super dragImage:dragImage ?: anImage at:dragLocation offset:initialOffset
 			   event:event pasteboard:pboard source:sourceObj
 		   slideBack:slideFlag];
 }
@@ -103,9 +103,9 @@
 	if(view) {
 		if(self.currentDraggingView != view) {
 			self.currentDraggingView = view;
-			[self.currentDraggingView draggingEntered:sender];
-		}
-		return [view draggingUpdated:sender];
+			return [self.currentDraggingView draggingEntered:sender];
+		} else
+			return [view draggingUpdated:sender];
 	}
 	return NSDragOperationNone;
 }

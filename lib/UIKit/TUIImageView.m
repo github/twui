@@ -31,9 +31,7 @@
 	if((self = [super initWithFrame:frame])) {
 		self.userInteractionEnabled = NO;
 		self.opaque = NO;
-		self.editable = NO;
-		self.savable = NO;
-		self.editingSizesToFit = NO;
+		self.savedFiletype = NSPNGFileType;
 	}
 	return self;
 }
@@ -124,9 +122,16 @@
 
 - (void)setEditable:(BOOL)editable {
 	_editable = editable;
-	if(editable)
-		[self registerForDraggedTypes:[NSImage imagePasteboardTypes]];
-	else self.draggingTypes = nil;
+	if(editable) {
+		self.draggingTypes = @[ NSPasteboardTypePDF,
+								NSPasteboardTypeTIFF,
+								NSPasteboardTypePNG,
+								NSFilenamesPboardType,
+								NSPostScriptPboardType,
+								NSTIFFPboardType,
+								NSFileContentsPboardType,
+								NSPDFPboardType ];
+	} else self.draggingTypes = nil;
 }
 
 - (void)displayIfSizeChangedFrom:(CGSize)oldSize to:(CGSize)newSize {
@@ -230,7 +235,7 @@
 - (NSImage *)dragImageForPromisedFilesOfTypes:(NSArray *)typeArray {
 	CGRect imageRect = (CGRect) {
 		.origin = CGPointZero,
-		.size = CGRectIntersection(self.frame, self.superview.frame).size
+		.size = self.layer.visibleRect.size
 	};
 	
 	return [NSImage tui_imageWithSize:imageRect.size drawing:^(CGContextRef ctx) {
@@ -243,19 +248,29 @@
 	if(!self.currentDropDestination)
 		return;
 	
-	NSArray *representations = self.image.representations;
 	NSString *path = [self.currentDropDestination.path stringByAppendingPathComponent:self.savedFilename ?: @"Photo"];
-	NSData *bitmapData = [NSBitmapImageRep representationOfImageRepsInArray:representations
-																  usingType:NSPNGFileType properties:nil];
+	NSString *extension = @"png";
+	if(self.savedFiletype == NSTIFFFileType)
+		extension = @"tiff";
+	else if(self.savedFiletype == NSBMPFileType)
+		extension = @"bmp";
+	else if(self.savedFiletype == NSGIFFileType)
+		extension = @"gif";
+	else if(self.savedFiletype == NSJPEGFileType ||
+			self.savedFiletype == NSJPEG2000FileType)
+		extension = @"jpg";
+	
+    NSBitmapImageRep *imageRep = [NSBitmapImageRep imageRepWithData:self.image.TIFFRepresentation];
+    NSData *bitmapData = [imageRep representationUsingType:self.savedFiletype ?: NSPNGFileType properties:nil];
 	
 	NSUInteger existingFileCount = 0;
 	NSString *newPath = path;
-	while([[NSFileManager defaultManager] fileExistsAtPath:[newPath stringByAppendingPathExtension:@"png"]]) {
+	while([[NSFileManager defaultManager] fileExistsAtPath:[newPath stringByAppendingPathExtension:extension]]) {
 		existingFileCount++;
 		newPath = [path stringByAppendingFormat:@" (%lu)", existingFileCount];
 	}
 	
-	[bitmapData writeToFile:[newPath stringByAppendingPathExtension:@"png"] atomically:YES];
+	[bitmapData writeToFile:[newPath stringByAppendingPathExtension:extension] atomically:YES];
 	self.currentDropDestination = nil;
 	
 	if(self.imageSavedHandler)

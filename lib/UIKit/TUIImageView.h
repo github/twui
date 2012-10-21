@@ -58,12 +58,16 @@ typedef void (^TUIImageViewHandler)(void);
 @property (nonatomic, assign) BOOL editingSizesToFit;
 
 // If the image view is allowed to save the file, the savedFilename is
-// used as the file name of the saved image with a .png extension. By
-// default, it is set to "Photo". If a file with this name already exists,
+// used as the file name of the saved image with the savedFileType extension.
+// By default, it is set to "Photo". If a file with this name already exists,
 // it is not overwritten, but a count extension is added to the file.
 // i.e. "Photo.png" exists, so "Photo (n).png" is used, where n is the
 // number of pre-existing files with  an identical filename.
 @property (nonatomic, strong) NSString *savedFilename;
+
+// If the image view is allowed to save the file, the savedFiletype is
+// used as the file type of the saved image. The default is NSPNGFileType.
+@property (nonatomic, assign) NSBitmapImageFileType savedFiletype;
 
 // An array of NSImages to use for an animation. The array must contain
 // NSImage objects. You may use the same image object more than once in
