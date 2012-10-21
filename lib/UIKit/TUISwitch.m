@@ -18,20 +18,26 @@
 #import "TUIStringDrawing.h"
 #import "TUICGAdditions.h"
 
-@implementation TUISwitch {
-	TUIView *proxy;
-	TUIView *toggle;
-	TUIView *outline;
-	TUIView *knob;
-}
+@interface TUISwitch ()
+
+@property (nonatomic, strong) TUIView *proxy;
+@property (nonatomic, strong) TUIView *toggle;
+@property (nonatomic, strong) TUIView *outline;
+@property (nonatomic, strong) TUIView *knob;
+
+@property (nonatomic, readwrite, getter = knobIsGrippsed) BOOL knobGripped;
+
+@end
+
+@implementation TUISwitch
 
 - (id)initWithFrame:(CGRect)frame {
 	if((self = [super initWithFrame:frame])) {
-		proxy = [[TUIView alloc] initWithFrame:self.bounds];
+		self.proxy = [[TUIView alloc] initWithFrame:self.bounds];
 		self.backgroundColor = [NSColor clearColor];
 		
-		toggle = [[TUIView alloc] initWithFrame:self.bounds];
-		toggle.drawRect = ^(TUIView *view, CGRect rect) {
+		self.toggle = [[TUIView alloc] initWithFrame:self.bounds];
+		self.toggle.drawRect = ^(TUIView *view, CGRect rect) {
 			CGRect half = view.bounds;
 			half.size.width /= 2.0f;
 			
@@ -42,8 +48,8 @@
 			NSRectFill(half);
 		};
 		
-		outline = [[TUIView alloc] initWithFrame:self.bounds];
-		outline.drawRect = ^(TUIView *view, CGRect rect) {
+		self.outline = [[TUIView alloc] initWithFrame:self.bounds];
+		self.outline.drawRect = ^(TUIView *view, CGRect rect) {
 			CGContextRef ctx = TUIGraphicsGetCurrentContext();
 			
 			CGContextSaveGState(ctx);
@@ -67,8 +73,8 @@
 			CGContextRestoreGState(ctx);
 		};
 		
-		knob = [[TUIView alloc] initWithFrame:self.bounds];
-		knob.drawRect = ^(TUIView *view, CGRect rect) {
+		self.knob = [[TUIView alloc] initWithFrame:self.bounds];
+		self.knob.drawRect = ^(TUIView *view, CGRect rect) {
 			NSArray *knobColors = @[[NSColor colorWithCalibratedWhite:self.knobGripped ? 0.89 : 0.99 alpha:1.0],
 			[NSColor colorWithCalibratedWhite:0.82 alpha:1.0]];
 			NSArray *highlightColors = @[[NSColor whiteColor], [NSColor colorWithCalibratedWhite:1.0 alpha:0.5]];
@@ -91,19 +97,21 @@
 			CGContextRestoreGState(ctx);
 		};
 		
-		proxy.userInteractionEnabled = NO;
-		proxy.backgroundColor = [NSColor clearColor];
-		toggle.userInteractionEnabled = NO;
-		toggle.backgroundColor = [NSColor clearColor];
-		outline.userInteractionEnabled = NO;
-		outline.backgroundColor = [NSColor clearColor];
-		knob.userInteractionEnabled = NO;
-		knob.backgroundColor = [NSColor clearColor];
+		self.proxy.userInteractionEnabled = NO;
+		self.proxy.backgroundColor = [NSColor clearColor];
+		self.toggle.userInteractionEnabled = NO;
+		self.toggle.backgroundColor = [NSColor clearColor];
+		self.outline.userInteractionEnabled = NO;
+		self.outline.backgroundColor = [NSColor clearColor];
+		self.knob.userInteractionEnabled = NO;
+		self.knob.backgroundColor = [NSColor clearColor];
 		
-		[proxy addSubview:toggle];
-		[proxy addSubview:outline];
-		[proxy addSubview:knob];
-		[self addSubview:proxy];
+		[self.proxy addSubview:self.toggle];
+		[self.proxy addSubview:self.outline];
+		[self.proxy addSubview:self.knob];
+		[self addSubview:self.proxy];
+		
+		_on = NO;
 	}
 	return self;
 }
@@ -116,15 +124,14 @@
 	backRect.size.width *= 2.0f;
 	backRect.size.width -= knobRect.size.width;
 	
-	knob.frame = CGRectInset(knobRect, padding, padding);
-	outline.frame = self.bounds;
-	toggle.frame = backRect;
+	self.knob.frame = CGRectInset(knobRect, padding, padding);
+	self.outline.frame = self.bounds;
+	self.toggle.frame = backRect;
 	
 	CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];
     maskLayer.path = self.switchMask;
     maskLayer.fillColor = CGColorGetConstantColor(kCGColorBlack);
-    
-    proxy.layer.mask = maskLayer;
+    self.proxy.layer.mask = maskLayer;
 }
 
 - (CGPathRef)switchMask {
@@ -143,17 +150,30 @@
 }
 
 - (BOOL)beginTrackingWithEvent:(NSEvent *)event {
+	CGRect knobRect = CGRectIntegral(self.knob.frame);
+	CGRect toggleRect = CGRectIntegral(self.toggle.frame);
+	
 	self.knobGripped = YES;
-	[knob setNeedsDisplay];
-	[outline setNeedsDisplay];
-	[toggle setNeedsDisplay];
+	[self.knob setNeedsDisplay];
+	[self.outline setNeedsDisplay];
+	[self.toggle setNeedsDisplay];
+	
+	CGPoint eventPoint = [self convertPoint:event.locationInWindow fromView:nil];
+	knobRect.origin.x += (eventPoint.x - CGRectGetMidX(knobRect));
+	toggleRect.origin.x += (eventPoint.x - CGRectGetMidX(toggleRect));
+	
+	[TUIView animateWithDuration:0.1 animations:^{
+		[TUIView setAnimationCurve:TUIViewAnimationCurveLinear];
+		self.knob.frame = knobRect;
+		self.toggle.frame = toggleRect;
+	}];
 	
 	return YES;
 }
 
 - (BOOL)continueTrackingWithEvent:(NSEvent *)event {
-	CGRect knobRect = CGRectIntegral(knob.frame);
-	CGRect toggleRect = CGRectIntegral(toggle.frame);
+	CGRect knobRect = CGRectIntegral(self.knob.frame);
+	CGRect toggleRect = CGRectIntegral(self.toggle.frame);
 	
 	toggleRect.origin.x += event.deltaX;
 	knobRect.origin.x += event.deltaX;
@@ -165,21 +185,21 @@
 	
 	[TUIView animateWithDuration:0.1 animations:^{
 		[TUIView setAnimationCurve:TUIViewAnimationCurveLinear];
-		knob.frame = knobRect;
-		toggle.frame = toggleRect;
+		self.knob.frame = knobRect;
+		self.toggle.frame = toggleRect;
 	}];
 	
 	return YES;
 }
 
 - (void)endTrackingWithEvent:(NSEvent *)event {
-	CGRect knobRect = CGRectIntegral(knob.frame);
-	CGRect toggleRect = CGRectIntegral(toggle.frame);
+	CGRect knobRect = CGRectIntegral(self.knob.frame);
+	CGRect toggleRect = CGRectIntegral(self.toggle.frame);
 	
 	self.knobGripped = NO;
-	[knob setNeedsDisplay];
-	[outline setNeedsDisplay];
-	[toggle setNeedsDisplay];
+	[self.knob setNeedsDisplay];
+	[self.outline setNeedsDisplay];
+	[self.toggle setNeedsDisplay];
 	
 	CGRect switchFrame = CGPathGetBoundingBox(self.switchMask);
 	if(CGRectGetMidX(knobRect) < CGRectGetMidX(switchFrame))
@@ -190,9 +210,45 @@
 	
 	[TUIView animateWithDuration:0.2 animations:^{
 		[TUIView setAnimationCurve:TUIViewAnimationCurveEaseInOut];
-		knob.frame = knobRect;
-		toggle.frame = toggleRect;
+		self.knob.frame = knobRect;
+		self.toggle.frame = toggleRect;
 	}];
+}
+
+- (void)setOn:(BOOL)on {
+	[self setOn:on animated:NO];
+}
+
+- (void)setOn:(BOOL)on animated:(BOOL)animated {
+	_on = on;
+	NSLog(@"animated? %d", animated);
+	
+	CGRect knobRect = CGRectIntegral(self.knob.frame);
+	CGRect toggleRect = CGRectIntegral(self.toggle.frame);
+	
+	CGRect switchFrame = CGPathGetBoundingBox(self.switchMask);
+	knobRect.origin.x = on ? CGRectGetMinX(switchFrame) : CGRectGetMaxX(switchFrame) - knobRect.size.width;
+	toggleRect.origin.x = CGRectGetMidX(knobRect) - CGRectGetWidth(toggleRect) / 2;
+	
+	self.knobGripped = NO;
+	if(animated) {
+		[TUIView animateWithDuration:1.5 animations:^{
+			[TUIView setAnimationCurve:TUIViewAnimationCurveEaseInOut];
+			self.knob.frame = knobRect;
+			self.toggle.frame = toggleRect;
+			
+			[self.knob redraw];
+			[self.outline redraw];
+			[self.toggle redraw];
+		}];
+	} else {
+		self.knob.frame = knobRect;
+		self.toggle.frame = toggleRect;
+		
+		[self.knob setNeedsDisplay];
+		[self.outline setNeedsDisplay];
+		[self.toggle setNeedsDisplay];
+	}
 }
 
 @end

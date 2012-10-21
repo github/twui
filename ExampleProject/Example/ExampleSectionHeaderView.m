@@ -33,6 +33,7 @@
 -(void)headerWillBecomePinned {
   self.opaque = FALSE;
   [super headerWillBecomePinned];
+	[self.switchControl setOn:NO animated:YES];
 }
 
 /**
@@ -40,7 +41,8 @@
  */
 -(void)headerWillBecomeUnpinned {
   self.opaque = TRUE;
-  [super headerWillBecomeUnpinned];
+	[super headerWillBecomeUnpinned];
+	[self.switchControl setOn:YES animated:YES];
 }
 
 /**

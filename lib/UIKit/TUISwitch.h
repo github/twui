@@ -18,11 +18,8 @@
 
 @interface TUISwitch : TUIControl
 
-@property (nonatomic, copy) NSString *onText;
-@property (nonatomic, copy) NSString *offText;
-
 @property (nonatomic, assign, getter = isOn) BOOL on;
-@property (nonatomic, assign, getter = knobIsGrippsed) BOOL knobGripped;
+@property (nonatomic, readonly, getter = knobIsGrippsed) BOOL knobGripped;
 
 - (void)setOn:(BOOL)on animated:(BOOL)animated;
 
