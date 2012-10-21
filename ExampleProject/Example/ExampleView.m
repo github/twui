@@ -40,7 +40,7 @@
 		 have clipsToBounds enabled.  Set only if needed.  In this case
 		 we don't, so it could potentially save us some rendering costs.
 		 */
-		_tableView = [[TUITableView alloc] initWithFrame:b];
+		_tableView = [[TUITableView alloc] initWithFrame:b style:TUITableViewStyleGrouped];
 		_tableView.alwaysBounceVertical = YES;
 		_tableView.autoresizingMask = TUIViewAutoresizingFlexibleSize;
 		_tableView.dataSource = self;

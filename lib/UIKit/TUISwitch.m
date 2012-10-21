@@ -153,15 +153,32 @@
 	CGRect knobRect = CGRectIntegral(self.knob.frame);
 	CGRect toggleRect = CGRectIntegral(self.toggle.frame);
 	
-	self.knobGripped = YES;
-	[self.knob setNeedsDisplay];
-	[self.outline setNeedsDisplay];
-	[self.toggle setNeedsDisplay];
-	
+	CGRect switchFrame = CGPathGetBoundingBox(self.switchMask);
 	CGPoint eventPoint = [self convertPoint:event.locationInWindow fromView:nil];
-	knobRect.origin.x += (eventPoint.x - CGRectGetMidX(knobRect));
-	toggleRect.origin.x += (eventPoint.x - CGRectGetMidX(toggleRect));
 	
+	// If the user clicked the knob, tell it that it's gripped.
+	if([self.knob pointInside:[self.knob convertPoint:eventPoint fromView:self] withEvent:event]) {
+		self.knobGripped = YES;
+		
+		[self.knob setNeedsDisplay];
+		[self.outline setNeedsDisplay];
+		[self.toggle setNeedsDisplay];
+	}
+	
+	// Attempt to calculate the point to slide the knob to,
+	// which would be right where the user clicked the track.
+	knobRect.origin.x += floor(eventPoint.x - CGRectGetMidX(knobRect));
+	toggleRect.origin.x += floor(eventPoint.x - CGRectGetMidX(toggleRect));
+	
+	// If the user pressed the knob close the the edges, and the
+	// knob might poke out of the track, adjust it so it stays in.
+	if(CGRectGetMinX(knobRect) < CGRectGetMinX(switchFrame))
+		knobRect.origin.x = CGRectGetMinX(switchFrame);
+	else if(CGRectGetMaxX(knobRect) > CGRectGetMaxX(switchFrame))
+		knobRect.origin.x = CGRectGetMaxX(switchFrame) - CGRectGetWidth(knobRect);
+	toggleRect.origin.x = CGRectGetMidX(knobRect) - CGRectGetWidth(toggleRect) / 2;
+	
+	// Animate its new position by sliding it.
 	[TUIView animateWithDuration:0.1 animations:^{
 		[TUIView setAnimationCurve:TUIViewAnimationCurveLinear];
 		self.knob.frame = knobRect;
@@ -174,15 +191,19 @@
 - (BOOL)continueTrackingWithEvent:(NSEvent *)event {
 	CGRect knobRect = CGRectIntegral(self.knob.frame);
 	CGRect toggleRect = CGRectIntegral(self.toggle.frame);
+	CGRect switchFrame = CGPathGetBoundingBox(self.switchMask);
 	
+	// If the user drags the knob, move the knob and its track.
 	toggleRect.origin.x += event.deltaX;
 	knobRect.origin.x += event.deltaX;
 	
-	CGRect switchFrame = CGPathGetBoundingBox(self.switchMask);
-	if(knobRect.origin.x < switchFrame.origin.x ||
-	   (knobRect.origin.x + knobRect.size.width) > (switchFrame.origin.x + switchFrame.size.width))
+	// If they dragged it out of the track's bounds, don't move it.
+	if(CGRectGetMinX(knobRect) < CGRectGetMinX(switchFrame) ||
+	   CGRectGetMaxX(knobRect) > CGRectGetMaxX(switchFrame))
 		return YES;
 	
+	// If the knob is still within bounds, interpolate it by
+	// using a linear animation curve, so any "jumps" aren't seen.
 	[TUIView animateWithDuration:0.1 animations:^{
 		[TUIView setAnimationCurve:TUIViewAnimationCurveLinear];
 		self.knob.frame = knobRect;
@@ -194,25 +215,11 @@
 
 - (void)endTrackingWithEvent:(NSEvent *)event {
 	CGRect knobRect = CGRectIntegral(self.knob.frame);
-	CGRect toggleRect = CGRectIntegral(self.toggle.frame);
-	
-	self.knobGripped = NO;
-	[self.knob setNeedsDisplay];
-	[self.outline setNeedsDisplay];
-	[self.toggle setNeedsDisplay];
-	
 	CGRect switchFrame = CGPathGetBoundingBox(self.switchMask);
-	if(CGRectGetMidX(knobRect) < CGRectGetMidX(switchFrame))
-		knobRect.origin.x = CGRectGetMinX(switchFrame);
-	else
-		knobRect.origin.x = CGRectGetMaxX(switchFrame) - knobRect.size.width;
-	toggleRect.origin.x = CGRectGetMidX(knobRect) - CGRectGetWidth(toggleRect) / 2;
 	
-	[TUIView animateWithDuration:0.2 animations:^{
-		[TUIView setAnimationCurve:TUIViewAnimationCurveEaseInOut];
-		self.knob.frame = knobRect;
-		self.toggle.frame = toggleRect;
-	}];
+	// If the knob ended on the right half of the track, it's on.
+	// Tell ourselves to animate and cache the state of the switch.
+	[self setOn:(CGRectGetMidX(knobRect) > CGRectGetMidX(switchFrame)) animated:YES];
 }
 
 - (void)setOn:(BOOL)on {
@@ -221,18 +228,21 @@
 
 - (void)setOn:(BOOL)on animated:(BOOL)animated {
 	_on = on;
-	NSLog(@"animated? %d", animated);
 	
 	CGRect knobRect = CGRectIntegral(self.knob.frame);
 	CGRect toggleRect = CGRectIntegral(self.toggle.frame);
-	
 	CGRect switchFrame = CGPathGetBoundingBox(self.switchMask);
-	knobRect.origin.x = on ? CGRectGetMinX(switchFrame) : CGRectGetMaxX(switchFrame) - knobRect.size.width;
+	
+	// Adjust the knob to slide to the left or right track edge
+	// depending on whether it's on or off.
+	knobRect.origin.x = on ? CGRectGetMaxX(switchFrame) - CGRectGetWidth(knobRect) : CGRectGetMinX(switchFrame);
 	toggleRect.origin.x = CGRectGetMidX(knobRect) - CGRectGetWidth(toggleRect) / 2;
 	
+	// The knob can't be gripped anymore, so un-grip it, and animate
+	// the knob slide. Ease the knob over so it seems natural.
 	self.knobGripped = NO;
 	if(animated) {
-		[TUIView animateWithDuration:1.5 animations:^{
+		[TUIView animateWithDuration:0.2 animations:^{
 			[TUIView setAnimationCurve:TUIViewAnimationCurveEaseInOut];
 			self.knob.frame = knobRect;
 			self.toggle.frame = toggleRect;
@@ -249,6 +259,9 @@
 		[self.outline setNeedsDisplay];
 		[self.toggle setNeedsDisplay];
 	}
+	
+	// Alert listeners that the value of the switch changed.
+	[self sendActionsForControlEvents:TUIControlEventValueChanged];
 }
 
 @end
