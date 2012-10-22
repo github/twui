@@ -37,65 +37,14 @@
 		self.backgroundColor = [NSColor clearColor];
 		
 		self.toggle = [[TUIView alloc] initWithFrame:self.bounds];
-		self.toggle.drawRect = ^(TUIView *view, CGRect rect) {
-			CGRect half = view.bounds;
-			half.size.width /= 2.0f;
-			
-			[[NSColor colorWithCalibratedRed:0.0 green:0.46 blue:0.91 alpha:1.0] set];
-			NSRectFill(half);
-			half.origin.x = half.size.width;
-			[[NSColor colorWithCalibratedWhite:0.96 alpha:1.0] set];
-			NSRectFill(half);
-		};
-		
 		self.outline = [[TUIView alloc] initWithFrame:self.bounds];
-		self.outline.drawRect = ^(TUIView *view, CGRect rect) {
-			CGContextRef ctx = TUIGraphicsGetCurrentContext();
-			
-			CGContextSaveGState(ctx);
-			CGRect glossRect = CGPathGetBoundingBox(self.switchMask);
-			glossRect.size.height /= 2.0f;
-			
-			CGContextClipToRoundRect(ctx, glossRect, self.bounds.size.height * 0.3f);
-			NSGradient *gradient = [[NSGradient alloc] initWithColors:@[[NSColor colorWithCalibratedWhite:1.0 alpha:0.15],
-																		[NSColor colorWithCalibratedWhite:1.0 alpha:0.50]]];
-			[gradient drawInRect:glossRect angle:270.0f];
-			CGContextRestoreGState(ctx);
-			
-			CGContextSaveGState(ctx);
-			CGContextAddPath(ctx, self.switchMask);
-			CGContextSetShadowWithColor(ctx, CGSizeMake(0, -1), 3.0f,
-										[NSColor colorWithCalibratedWhite:0.15 alpha:0.7].CGColor);
-			
-			CGContextSetGrayStrokeColor(ctx, 0.6f, 1.0f);
-			CGContextSetLineWidth(ctx, 1.0f);
-			CGContextStrokePath(ctx);
-			CGContextRestoreGState(ctx);
-		};
-		
 		self.knob = [[TUIView alloc] initWithFrame:self.bounds];
-		self.knob.drawRect = ^(TUIView *view, CGRect rect) {
-			NSArray *knobColors = @[[NSColor colorWithCalibratedWhite:self.knobGripped ? 0.89 : 0.99 alpha:1.0],
-			[NSColor colorWithCalibratedWhite:0.82 alpha:1.0]];
-			NSArray *highlightColors = @[[NSColor whiteColor], [NSColor colorWithCalibratedWhite:1.0 alpha:0.5]];
-			
-			NSBezierPath *knobPath = [NSBezierPath bezierPathWithOvalInRect:CGRectInset(rect, 0.5, 0.5)];
-			NSGradient *knobGradient = [[NSGradient alloc] initWithColors:knobColors];
-			
-			[knobGradient drawInBezierPath:knobPath angle:90.0f];
-			[[NSColor colorWithCalibratedWhite:0.5 alpha:1.0f] set];
-			[knobPath stroke];
-			
-			CGContextRef ctx = TUIGraphicsGetCurrentContext();
-			CGContextSaveGState(ctx);
-			
-			CGContextAddEllipseInRect(ctx, CGRectInset(rect, 1.0, 1.0));
-			CGContextAddEllipseInRect(ctx, CGRectInset(rect, 2.0, 2.0));
-			CGContextEOClip(ctx);
-			
-			[[[NSGradient alloc] initWithColors:highlightColors] drawInRect:rect angle:270.0f];
-			CGContextRestoreGState(ctx);
-		};
+		
+		NSLog(@"bounds height %f", self.bounds.size.height);
+		if(arc4random() % 2)
+			[self configureEllipseSwitch];
+		else
+			[self configureRoundedSwitch];
 		
 		self.proxy.userInteractionEnabled = NO;
 		self.proxy.backgroundColor = [NSColor clearColor];
@@ -116,15 +65,176 @@
 	return self;
 }
 
+- (void)configureEllipseSwitch {
+	self.knobInset = 2.0f;
+	self.knobWidth = self.bounds.size.height;
+	[self setNeedsLayout];
+	
+	self.knobTrackMask = ^{
+		CGFloat padding = self.knobInset;
+		CGRect rect = CGRectInset(self.bounds, padding, padding);
+		CGFloat radius = rect.size.height / 2.0;
+		
+		CGMutablePathRef path = CGPathCreateMutable();
+		CGPathAddArc(path, NULL, radius + padding, radius + padding,
+					 radius, M_PI / 2 , 3 * M_PI / 2, NO);
+		CGPathAddArc(path, NULL, rect.size.width - radius + padding, radius + padding,
+					 radius, 3 * M_PI / 2, M_PI / 2, NO);
+		CGPathCloseSubpath(path);
+		
+		return CGPathCreateCopy(path);
+	};
+	
+	self.toggle.drawRect = ^(TUIView *view, CGRect rect) {
+		CGRect half = view.bounds;
+		half.size.width /= 2.0f;
+		
+		[[NSColor colorWithCalibratedRed:0.0 green:0.46 blue:0.91 alpha:1.0] set];
+		NSRectFill(half);
+		
+		half.origin.x = half.size.width;
+		[[NSColor colorWithCalibratedWhite:0.96 alpha:1.0] set];
+		NSRectFill(half);
+	};
+	
+	self.outline.drawRect = ^(TUIView *view, CGRect rect) {
+		CGContextRef ctx = TUIGraphicsGetCurrentContext();
+		
+		CGContextSaveGState(ctx);
+		CGRect glossRect = CGPathGetBoundingBox(self.switchMask);
+		glossRect.size.height /= 2.0f;
+		
+		CGContextClipToRoundRect(ctx, glossRect, self.bounds.size.height * 0.3f);
+		NSGradient *gradient = [[NSGradient alloc] initWithColors:@[[NSColor colorWithCalibratedWhite:1.0 alpha:0.15],
+								[NSColor colorWithCalibratedWhite:1.0 alpha:0.50]]];
+		[gradient drawInRect:glossRect angle:270.0f];
+		CGContextRestoreGState(ctx);
+		
+		CGContextSaveGState(ctx);
+		CGContextAddPath(ctx, self.switchMask);
+		CGContextSetShadowWithColor(ctx, CGSizeMake(0, -1), 3.0f,
+									[NSColor colorWithCalibratedWhite:0.15 alpha:0.7].CGColor);
+		
+		CGContextSetGrayStrokeColor(ctx, 0.6f, 1.0f);
+		CGContextSetLineWidth(ctx, 1.0f);
+		CGContextStrokePath(ctx);
+		CGContextRestoreGState(ctx);
+	};
+	
+	self.knob.drawRect = ^(TUIView *view, CGRect rect) {
+		NSArray *knobColors = @[[NSColor colorWithCalibratedWhite:self.knobGripped ? 0.89 : 0.99 alpha:1.0],
+		[NSColor colorWithCalibratedWhite:0.82 alpha:1.0]];
+		NSArray *highlightColors = @[[NSColor whiteColor], [NSColor colorWithCalibratedWhite:1.0 alpha:0.5]];
+		
+		NSBezierPath *knobPath = [NSBezierPath bezierPathWithOvalInRect:CGRectInset(rect, 0.5, 0.5)];
+		NSGradient *knobGradient = [[NSGradient alloc] initWithColors:knobColors];
+		
+		[knobGradient drawInBezierPath:knobPath angle:90.0f];
+		[[NSColor colorWithCalibratedWhite:0.5 alpha:1.0f] set];
+		[knobPath stroke];
+		
+		CGContextRef ctx = TUIGraphicsGetCurrentContext();
+		CGContextSaveGState(ctx);
+		
+		CGContextAddEllipseInRect(ctx, CGRectInset(rect, 1.0, 1.0));
+		CGContextAddEllipseInRect(ctx, CGRectInset(rect, 2.0, 2.0));
+		CGContextEOClip(ctx);
+		
+		[[[NSGradient alloc] initWithColors:highlightColors] drawInRect:rect angle:270.0f];
+		CGContextRestoreGState(ctx);
+	};
+}
+
+- (void)configureRoundedSwitch {
+	self.knobInset = 0.0f;
+	self.knobWidth = self.bounds.size.width / 2;
+	[self setNeedsLayout];
+	
+	self.knobTrackMask = ^{
+		CGFloat radius = 5.0f;
+		CGRect rect = self.bounds;
+		
+		CGMutablePathRef path = CGPathCreateMutable();
+		CGRect innerRect = CGRectInset(rect, radius, radius);
+		
+		CGFloat insideRight = innerRect.origin.x + innerRect.size.width;
+		CGFloat outsideRight = rect.origin.x + rect.size.width;
+		CGFloat insideBottom = innerRect.origin.y + innerRect.size.height;
+		CGFloat outsideBottom = rect.origin.y + rect.size.height;
+		
+		CGFloat insideTop = innerRect.origin.y;
+		CGFloat outsideTop = rect.origin.y;
+		CGFloat outsideLeft = rect.origin.x;
+		
+		CGPathMoveToPoint (path, NULL, innerRect.origin.x, outsideTop);
+		
+		CGPathAddLineToPoint (path, NULL, insideRight, outsideTop);
+		CGPathAddArcToPoint (path, NULL, outsideRight, outsideTop,
+							 outsideRight, insideTop, radius);
+		
+		CGPathAddLineToPoint (path, NULL, outsideRight, insideBottom);
+		CGPathAddArcToPoint (path, NULL,  outsideRight, outsideBottom,
+							 insideRight, outsideBottom, radius);
+		
+		CGPathAddLineToPoint (path, NULL, innerRect.origin.x, outsideBottom);
+		CGPathAddArcToPoint (path, NULL,  outsideLeft, outsideBottom,
+							 outsideLeft, insideBottom, radius);
+		
+		CGPathAddLineToPoint (path, NULL, outsideLeft, insideTop);
+		CGPathAddArcToPoint (path, NULL,  outsideLeft, outsideTop,
+							 innerRect.origin.x, outsideTop, radius);
+		
+		CGPathCloseSubpath (path);
+		
+		return CGPathCreateCopy(path);
+	};
+	
+	self.toggle.drawRect = ^(TUIView *view, CGRect rect) {
+		NSGradient *gradient = [[NSGradient alloc] initWithColors:@[[NSColor colorWithCalibratedWhite:0.6 alpha:1.0],
+								[NSColor colorWithCalibratedWhite:0.7 alpha:1.0]]];
+		[gradient drawInRect:view.bounds angle:270.0f];
+	};
+	
+	self.outline.drawRect = ^(TUIView *view, CGRect rect) {
+		CGContextRef ctx = TUIGraphicsGetCurrentContext();
+		
+		CGContextSaveGState(ctx);
+		CGContextAddRoundRect(ctx, rect, 5.0f);
+		CGContextSetShadowWithColor(ctx, CGSizeMake(0, -1), 3.0f,
+									[NSColor colorWithCalibratedWhite:0.15 alpha:0.7].CGColor);
+		
+		CGContextSetGrayStrokeColor(ctx, 0.6f, 1.0f);
+		CGContextSetLineWidth(ctx, 1.0f);
+		CGContextStrokePath(ctx);
+		CGContextRestoreGState(ctx);
+	};
+	
+	self.knob.drawRect = ^(TUIView *view, CGRect rect) {
+		NSArray *knobColors = @[[NSColor colorWithCalibratedWhite:self.knobGripped ? 0.89 : 0.99 alpha:1.0],
+		[NSColor colorWithCalibratedWhite:0.82 alpha:1.0]];
+		
+		NSBezierPath *knobPath = [NSBezierPath bezierPathWithRoundedRect:CGRectInset(rect, 0.5, 0.5)
+																 xRadius:5.0f yRadius:5.0f];
+		NSGradient *knobGradient = [[NSGradient alloc] initWithColors:knobColors];
+		
+		[knobGradient drawInBezierPath:knobPath angle:270.0f];
+		[[NSColor colorWithCalibratedWhite:0.5 alpha:1.0f] set];
+		[knobPath stroke];
+	};
+}
+
 - (void)layoutSubviews {
-	CGFloat padding = 2.0f;
 	CGRect backRect = self.bounds;
-	CGRect knobRect = CGRectMake(self.bounds.size.width - self.bounds.size.height, 0,
-								 self.bounds.size.height, self.bounds.size.height);
+	NSLog(@"knob width %f", self.knobWidth);
+	BOOL adjustKnob = (self.knobWidth > self.bounds.size.width / 2.0f) || (self.knobWidth == 0.0f);
+	CGFloat adjustedKnobWidth = adjustKnob ? self.bounds.size.width / 2 : self.knobWidth;
+	
+	CGRect knobRect = CGRectMake(self.bounds.size.width - adjustedKnobWidth, 0,
+								 adjustedKnobWidth, self.bounds.size.height);
 	backRect.size.width *= 2.0f;
 	backRect.size.width -= knobRect.size.width;
 	
-	self.knob.frame = CGRectInset(knobRect, padding, padding);
+	self.knob.frame = CGRectInset(knobRect, self.knobInset, self.knobInset);
 	self.outline.frame = self.bounds;
 	self.toggle.frame = backRect;
 	
@@ -135,18 +245,7 @@
 }
 
 - (CGPathRef)switchMask {
-	CGFloat padding = 2.0f;
-	CGRect rect = CGRectInset(self.bounds, padding, padding);
-	CGFloat radius = rect.size.height / 2.0;
-	
-	CGMutablePathRef path = CGPathCreateMutable();
-	CGPathAddArc(path, NULL, radius + padding, radius + padding,
-				 radius, M_PI / 2 , 3 * M_PI / 2, NO);
-	CGPathAddArc(path, NULL, rect.size.width - radius + padding, radius + padding,
-				 radius, 3 * M_PI / 2, M_PI / 2, NO);
-	CGPathCloseSubpath(path);
-	
-	return path;
+	return self.knobTrackMask ? self.knobTrackMask() : CGPathCreateWithRect(self.bounds, NULL);
 }
 
 - (BOOL)beginTrackingWithEvent:(NSEvent *)event {

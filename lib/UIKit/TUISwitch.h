@@ -18,8 +18,12 @@
 
 @interface TUISwitch : TUIControl
 
+@property (nonatomic, assign) CGFloat knobInset;
+@property (nonatomic, assign) CGFloat knobWidth;
+@property (nonatomic, copy) CGPathRef (^knobTrackMask)(void);
+
 @property (nonatomic, assign, getter = isOn) BOOL on;
-@property (nonatomic, readonly, getter = knobIsGrippsed) BOOL knobGripped;
+@property (nonatomic, readonly, getter = knobIsGripped) BOOL knobGripped;
 
 - (void)setOn:(BOOL)on animated:(BOOL)animated;
 
