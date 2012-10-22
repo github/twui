@@ -2,14 +2,9 @@
 
 #import "TUIKit.h"
 
-@interface ExampleSectionHeaderView : TUITableViewSectionHeader {
-  
-  TUITextRenderer * _labelRenderer;
-  
-}
+@interface ExampleSectionHeaderView : TUITableViewSectionHeader
 
-@property (readonly) TUITextRenderer  * labelRenderer;
-
+@property (nonatomic, strong) TUITextRenderer *labelRenderer;
 @property (nonatomic, strong) TUISwitch *switchControl;
 
 @end

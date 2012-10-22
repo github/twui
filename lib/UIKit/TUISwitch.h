@@ -18,13 +18,19 @@
 
 @interface TUISwitch : TUIControl
 
-@property (nonatomic, assign) CGFloat knobInset;
-@property (nonatomic, assign) CGFloat knobWidth;
-@property (nonatomic, copy) CGPathRef (^knobTrackMask)(void);
-
 @property (nonatomic, assign, getter = isOn) BOOL on;
 @property (nonatomic, readonly, getter = knobIsGripped) BOOL knobGripped;
 
+@property (nonatomic, copy) CGFloat (^knobInset)(void);
+@property (nonatomic, copy) CGFloat (^knobWidth)(void);
+@property (nonatomic, copy) CGPathRef (^knobTrackMask)(void);
+@property (nonatomic, copy) TUIViewDrawRect drawTrack;
+@property (nonatomic, copy) TUIViewDrawRect drawTrackOutline;
+@property (nonatomic, copy) TUIViewDrawRect drawKnob;
+
 - (void)setOn:(BOOL)on animated:(BOOL)animated;
+
+- (void)configureModernSwitch;
+- (void)configureClassicSwitch;
 
 @end

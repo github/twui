@@ -40,12 +40,6 @@
 		self.outline = [[TUIView alloc] initWithFrame:self.bounds];
 		self.knob = [[TUIView alloc] initWithFrame:self.bounds];
 		
-		NSLog(@"bounds height %f", self.bounds.size.height);
-		if(arc4random() % 2)
-			[self configureEllipseSwitch];
-		else
-			[self configureRoundedSwitch];
-		
 		self.proxy.userInteractionEnabled = NO;
 		self.proxy.backgroundColor = [NSColor clearColor];
 		self.toggle.userInteractionEnabled = NO;
@@ -60,18 +54,23 @@
 		[self.proxy addSubview:self.knob];
 		[self addSubview:self.proxy];
 		
-		_on = NO;
+		[self configureModernSwitch];
+		self.on = YES;
 	}
 	return self;
 }
 
-- (void)configureEllipseSwitch {
-	self.knobInset = 2.0f;
-	self.knobWidth = self.bounds.size.height;
-	[self setNeedsLayout];
+- (void)configureModernSwitch {
+	self.knobInset = ^{
+		return (CGFloat)2.0f;
+	};
+	
+	self.knobWidth = ^{
+		return self.bounds.size.height;
+	};
 	
 	self.knobTrackMask = ^{
-		CGFloat padding = self.knobInset;
+		CGFloat padding = 2.0f;
 		CGRect rect = CGRectInset(self.bounds, padding, padding);
 		CGFloat radius = rect.size.height / 2.0;
 		
@@ -85,7 +84,7 @@
 		return CGPathCreateCopy(path);
 	};
 	
-	self.toggle.drawRect = ^(TUIView *view, CGRect rect) {
+	self.drawTrack = ^(TUIView *view, CGRect rect) {
 		CGRect half = view.bounds;
 		half.size.width /= 2.0f;
 		
@@ -93,11 +92,11 @@
 		NSRectFill(half);
 		
 		half.origin.x = half.size.width;
-		[[NSColor colorWithCalibratedWhite:0.96 alpha:1.0] set];
+		[[NSColor colorWithCalibratedWhite:0.93 alpha:1.0] set];
 		NSRectFill(half);
 	};
 	
-	self.outline.drawRect = ^(TUIView *view, CGRect rect) {
+	self.drawTrackOutline = ^(TUIView *view, CGRect rect) {
 		CGContextRef ctx = TUIGraphicsGetCurrentContext();
 		
 		CGContextSaveGState(ctx);
@@ -121,7 +120,7 @@
 		CGContextRestoreGState(ctx);
 	};
 	
-	self.knob.drawRect = ^(TUIView *view, CGRect rect) {
+	self.drawKnob = ^(TUIView *view, CGRect rect) {
 		NSArray *knobColors = @[[NSColor colorWithCalibratedWhite:self.knobGripped ? 0.89 : 0.99 alpha:1.0],
 		[NSColor colorWithCalibratedWhite:0.82 alpha:1.0]];
 		NSArray *highlightColors = @[[NSColor whiteColor], [NSColor colorWithCalibratedWhite:1.0 alpha:0.5]];
@@ -145,10 +144,14 @@
 	};
 }
 
-- (void)configureRoundedSwitch {
-	self.knobInset = 0.0f;
-	self.knobWidth = self.bounds.size.width / 2;
-	[self setNeedsLayout];
+- (void)configureClassicSwitch {
+	self.knobInset = ^{
+		return (CGFloat)0.0f;
+	};
+	
+	self.knobWidth = ^{
+		return self.bounds.size.width / 2;
+	};
 	
 	self.knobTrackMask = ^{
 		CGFloat radius = 5.0f;
@@ -189,13 +192,13 @@
 		return CGPathCreateCopy(path);
 	};
 	
-	self.toggle.drawRect = ^(TUIView *view, CGRect rect) {
+	self.drawTrack = ^(TUIView *view, CGRect rect) {
 		NSGradient *gradient = [[NSGradient alloc] initWithColors:@[[NSColor colorWithCalibratedWhite:0.6 alpha:1.0],
 								[NSColor colorWithCalibratedWhite:0.7 alpha:1.0]]];
 		[gradient drawInRect:view.bounds angle:270.0f];
 	};
 	
-	self.outline.drawRect = ^(TUIView *view, CGRect rect) {
+	self.drawTrackOutline = ^(TUIView *view, CGRect rect) {
 		CGContextRef ctx = TUIGraphicsGetCurrentContext();
 		
 		CGContextSaveGState(ctx);
@@ -209,7 +212,7 @@
 		CGContextRestoreGState(ctx);
 	};
 	
-	self.knob.drawRect = ^(TUIView *view, CGRect rect) {
+	self.drawKnob = ^(TUIView *view, CGRect rect) {
 		NSArray *knobColors = @[[NSColor colorWithCalibratedWhite:self.knobGripped ? 0.89 : 0.99 alpha:1.0],
 		[NSColor colorWithCalibratedWhite:0.82 alpha:1.0]];
 		
@@ -224,19 +227,21 @@
 }
 
 - (void)layoutSubviews {
-	CGRect backRect = self.bounds;
-	NSLog(@"knob width %f", self.knobWidth);
-	BOOL adjustKnob = (self.knobWidth > self.bounds.size.width / 2.0f) || (self.knobWidth == 0.0f);
-	CGFloat adjustedKnobWidth = adjustKnob ? self.bounds.size.width / 2 : self.knobWidth;
+	CGFloat knobWidth = self.knobWidth ? self.knobWidth() : 0.0f;
+	CGFloat knobInset = self.knobInset ? self.knobInset() : 0.0f;
 	
-	CGRect knobRect = CGRectMake(self.bounds.size.width - adjustedKnobWidth, 0,
-								 adjustedKnobWidth, self.bounds.size.height);
-	backRect.size.width *= 2.0f;
-	backRect.size.width -= knobRect.size.width;
+	BOOL adjustKnob = (knobWidth > self.bounds.size.width / 2.0f) || (knobWidth == 0.0f);
+	CGFloat adjustedKnobWidth = adjustKnob ? self.bounds.size.width / 2 : knobWidth;
 	
-	self.knob.frame = CGRectInset(knobRect, self.knobInset, self.knobInset);
+	CGRect knobRect = CGRectMake(self.on ? self.bounds.origin.x : self.bounds.size.width - adjustedKnobWidth,
+								 0, adjustedKnobWidth, self.bounds.size.height);
+	CGRect toggleRect = self.bounds;
+	toggleRect.size.width = (self.bounds.size.width * 2) - knobRect.size.width;
+	toggleRect.origin.x = CGRectGetMidX(knobRect) - CGRectGetWidth(toggleRect) / 2;
+	
+	self.knob.frame = CGRectInset(knobRect, knobInset, knobInset);
 	self.outline.frame = self.bounds;
-	self.toggle.frame = backRect;
+	self.toggle.frame = toggleRect;
 	
 	CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];
     maskLayer.path = self.switchMask;
@@ -361,6 +366,30 @@
 	
 	// Alert listeners that the value of the switch changed.
 	[self sendActionsForControlEvents:TUIControlEventValueChanged];
+}
+
+- (TUIViewDrawRect)drawTrack {
+	return self.toggle.drawRect;
+}
+
+- (TUIViewDrawRect)drawTrackOutline {
+	return self.outline.drawRect;
+}
+
+- (TUIViewDrawRect)drawKnob {
+	return self.knob.drawRect;
+}
+
+- (void)setDrawTrack:(TUIViewDrawRect)drawTrack {
+	self.toggle.drawRect = drawTrack;
+}
+
+- (void)setDrawTrackOutline:(TUIViewDrawRect)drawTrackOutline {
+	self.outline.drawRect = drawTrackOutline;
+}
+
+- (void)setDrawKnob:(TUIViewDrawRect)drawKnob {
+	self.knob.drawRect = drawKnob;
 }
 
 @end
