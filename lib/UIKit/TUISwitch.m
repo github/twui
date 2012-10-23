@@ -18,6 +18,10 @@
 #import "TUIStringDrawing.h"
 #import "TUICGAdditions.h"
 
+#define kNaturalScrollDirection @"com.apple.swipescrolldirection"
+#define kSwipeScrollEnabled @"AppleEnableSwipeNavigateWithScrolls"
+#define kSwipeMinimumDistance (0.3f)
+
 @interface TUISwitch ()
 
 @property (nonatomic, strong) TUIView *proxy;
@@ -26,6 +30,7 @@
 @property (nonatomic, strong) TUIView *knob;
 
 @property (nonatomic, readwrite, getter = knobIsGrippsed) BOOL knobGripped;
+@property (nonatomic, strong) NSMutableDictionary *twoFingersTouches;
 
 @end
 
@@ -251,6 +256,64 @@
 
 - (CGPathRef)switchMask {
 	return self.knobTrackMask ? self.knobTrackMask() : CGPathCreateWithRect(self.bounds, NULL);
+}
+
+- (void)beginGestureWithEvent:(NSEvent *)event {
+	
+	// Only check for swipes if the user defaults allow this.
+	if(![[NSUserDefaults standardUserDefaults] boolForKey:kSwipeScrollEnabled])
+		return;
+	
+    NSSet *touches = [event touchesMatchingPhase:NSTouchPhaseAny inView:nil];
+    self.twoFingersTouches = [NSMutableDictionary dictionaryWithCapacity:touches.count];
+    
+    for(NSTouch *touch in touches) {
+        [self.twoFingersTouches setObject:touch forKey:touch.identity];
+    }
+}
+
+- (void)endGestureWithEvent:(NSEvent *)event {
+	
+	// Return if we weren't initiating the swipe event.
+    if(!self.twoFingersTouches)
+		return;
+    
+	// Allow the next gesture to begin as soon as soon as we update.
+    NSSet *touches = [event touchesMatchingPhase:NSTouchPhaseAny inView:nil];
+    NSMutableDictionary *beginTouches = [self.twoFingersTouches copy];
+    self.twoFingersTouches = nil;
+    
+	// Get all the swipe magnitudes so we know the total distance swiped.
+    NSMutableArray *magnitudes = [NSMutableArray array];
+    for(NSTouch *touch in touches) {
+        NSTouch *beginTouch = [beginTouches objectForKey:touch.identity];
+        
+		// If the current swipe has no beginning point, skip it.
+        if(!beginTouch)
+			continue;
+        
+        [magnitudes addObject:@(touch.normalizedPosition.x - beginTouch.normalizedPosition.x)];
+	}
+    
+	// If there were less than 2 swipes, we can't complete it.
+    if([magnitudes count] < 2)
+		return;
+    
+	// Total up the swipe distance.
+    CGFloat totalSwipe = 0;
+    for(NSNumber *magnitude in magnitudes)
+        totalSwipe += [magnitude floatValue];
+    
+	// If the user has natural scroll direction enabled, the distance is reversed.
+    BOOL naturalDirectionEnabled = [[[NSUserDefaults standardUserDefaults] valueForKey:kNaturalScrollDirection] boolValue];
+    totalSwipe *= naturalDirectionEnabled ? -1 : 1;
+    
+	// Check if they swiped "enough" to complete an action.
+	if(fabsf(totalSwipe) < kSwipeMinimumDistance)
+		return;
+	
+	// Now set the switch's value while animating it.
+	[self setOn:(totalSwipe > 0) animated:YES];
 }
 
 - (BOOL)beginTrackingWithEvent:(NSEvent *)event {
