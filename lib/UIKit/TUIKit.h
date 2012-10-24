@@ -44,6 +44,7 @@
 #import "TUIScrollView+TUIBridgedScrollView.h"
 #import "TUIStretchableImage.h"
 #import "TUIStringDrawing.h"
+#import "TUISwitch.h"
 #import "TUITableView+Additions.h"
 #import "TUITableView.h"
 #import "TUITableViewCell.h"
