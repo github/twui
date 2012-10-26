@@ -23,16 +23,6 @@
 		self.backgroundColor = [NSColor colorWithCalibratedWhite:0.9 alpha:1.0];
 		
 		TUIImageView *imageView = [[TUIImageView alloc] initWithImage:[NSImage imageNamed:@"large-image.jpeg"]];
-		imageView.userInteractionEnabled = YES;
-		imageView.editable = YES;
-		imageView.editingSizesToFit = YES;
-		imageView.savable = YES;
-		imageView.savedFilename = @"TUIImageView Example";
-		
-		imageView.imageEditedHandler = ^{
-			self.scrollView.contentSize = imageView.frame.size;
-		};
-		
 		self.scrollView = [[TUIScrollView alloc] initWithFrame:self.bounds];
 		self.scrollView.autoresizingMask = TUIViewAutoresizingFlexibleSize;
 		
