@@ -14,12 +14,14 @@
  limitations under the License.
  */
 
-#import "TUIView.h"
+#import "TUINSView.h"
 
-@interface TUIImageView : TUIView
+@interface TUINSView (PasteboardDragging)
 
-- (id)initWithImage:(NSImage *)image;
+// The dragging types registered by each contained TUIView.
+@property (nonatomic, strong) NSMutableDictionary *draggingTypesByViews;
 
-@property(nonatomic, strong) NSImage *image;
+// Register dragging types for a view.
+- (void)registerForDraggedTypes:(NSArray *)draggedTypes forView:(TUIView *)view;
 
 @end

@@ -15,85 +15,79 @@
  */
 
 #import "TUIView+PasteboardDragging.h"
-#import "TUICGAdditions.h"
-#import "TUINSView.h"
+#import "TUIView+Private.h"
+#import "TUINSView+Private.h"
 
-@implementation TUIView (PasteboardDragging)
+@implementation TUIView (Dragging)
 
-- (BOOL)pasteboardDraggingEnabled
-{
-	return _viewFlags.pasteboardDraggingEnabled;
+@dynamic draggingTypes;
+
+- (NSArray *)registeredDraggingTypes {
+	return self.draggingTypes;
 }
 
-- (void)setPasteboardDraggingEnabled:(BOOL)e
-{
-	_viewFlags.pasteboardDraggingEnabled = e;
+- (void)registerForDraggedTypes:(NSArray *)draggingTypes {
+	self.draggingTypes = draggingTypes;
+	[self updateRegisteredDraggingTypes];
 }
 
-- (void)startPasteboardDragging
-{
-	// implemented by subclasses
+- (void)dragImage:(NSImage *)image at:(NSPoint)viewLocation
+			event:(NSEvent *)event pasteboard:(NSPasteboard *)pasteboard
+		   source:(id)source slideBack:(BOOL)slideFlag {
+	
+	[self.nsView dragImage:image at:viewLocation
+					offset:CGSizeZero event:event
+				pasteboard:pasteboard source:source
+				 slideBack:slideFlag];
 }
 
-- (void)endPasteboardDragging:(NSDragOperation)operation
-{
-	// implemented by subclasses
+- (BOOL)dragFile:(NSString *)filename fromRect:(NSRect)rect
+	   slideBack:(BOOL)aFlag event:(NSEvent *)event {
+	
+	return [self.nsView dragFile:filename fromRect:rect
+					   slideBack:aFlag event:event];
 }
 
-- (id<NSPasteboardWriting>)representedPasteboardObject
-{
+- (BOOL)dragPromisedFilesOfTypes:(NSArray *)typeArray
+						fromRect:(NSRect)rect source:(id)sourceObject
+					   slideBack:(BOOL)aFlag event:(NSEvent *)event {
+	
+	[self.nsView registerViewToDragPromisedFiles:self];
+	return [self.nsView dragPromisedFilesOfTypes:typeArray
+										fromRect:rect source:sourceObject
+									   slideBack:aFlag event:event];
+}
+
+- (NSImage *)dragImageForPromisedFilesOfTypes:(NSArray *)typeArray {
 	return nil;
 }
 
-- (TUIView *)handleForPasteboardDragView
-{
-	return self;
+- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender {
+	return NSDragOperationNone;
 }
 
-- (void)pasteboardDragMouseDown:(NSEvent *)event
-{
-	_viewFlags.pasteboardDraggingIsDragging = NO;
+- (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender {
+	return [self draggingEntered:sender];
 }
 
-- (void)pasteboardDragMouseDragged:(NSEvent *)event
-{
-	if(!_viewFlags.pasteboardDraggingIsDragging) {
-		_viewFlags.pasteboardDraggingIsDragging = YES;
-		
-		TUIView *dragView = [self handleForPasteboardDragView];
-		id<NSPasteboardWriting> pasteboardObject = [dragView representedPasteboardObject];
-		
-		NSImage *dragNSImage = TUIGraphicsDrawAsImage(dragView.frame.size, ^{
-			[TUIGraphicsGetImageForView(dragView) drawAtPoint:CGPointZero fromRect:CGRectZero operation:NSCompositeSourceOver fraction:0.75];
-		});
-		
-		NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-		[pasteboard clearContents];
-		[pasteboard writeObjects:[NSArray arrayWithObject:pasteboardObject]];
-		
-		[self.nsView dragImage:dragNSImage 
-							at:[dragView frameInNSView].origin
-						offset:NSZeroSize 
-						 event:event 
-					pasteboard:pasteboard 
-						source:self 
-					 slideBack:YES];
-	}
+- (void)draggingExited:(id <NSDraggingInfo>)sender {
+	
 }
 
-- (void)draggedImage:(NSImage *)anImage beganAt:(NSPoint)aPoint
-{
-	[[self handleForPasteboardDragView] startPasteboardDragging];
+- (void)draggingEnded:(id <NSDraggingInfo>)sender {
+	
 }
 
-- (void)draggedImage:(NSImage *)image movedTo:(NSPoint)screenPoint
-{
+- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender {
+	return NO;
 }
 
-- (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
-{
-	[self.nsView mouseUp:nil]; // will clear _trackingView
-	[[self handleForPasteboardDragView] endPasteboardDragging:operation];
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender {
+	return NO;
+}
+
+- (void)concludeDragOperation:(id <NSDraggingInfo>)sender {
+	
 }
 
 @end

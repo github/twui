@@ -22,11 +22,16 @@ typedef void (^TUIMouseDraggedHandler)(NSEvent *dragEvent);
 
 @interface TUIView ()
 
+@property (nonatomic, strong) NSArray *draggingTypes;
+
 @property (nonatomic, retain) NSArray *textRenderers;
 @property (nonatomic, copy) TUIMouseDraggedHandler dragHandler;
 
 - (TUITextRenderer *)textRendererAtPoint:(CGPoint)point;
 - (void)_updateLayerScaleFactor;
+
+// Update the registered dragging types for the view.
+- (void)updateRegisteredDraggingTypes;
 
 @end
 

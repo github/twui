@@ -131,6 +131,8 @@ static pthread_key_t TUICurrentContextScaleFactorTLSKey;
     [[TUILayoutManager sharedLayoutManager] removeLayoutConstraintsFromView:self];
     [[TUILayoutManager sharedLayoutManager] setLayoutName:nil forView:self];
     
+	self.draggingTypes = nil;
+	
 	[self setTextRenderers:nil];
 	_layer.delegate = nil;
 	if(_context.context) {
@@ -542,6 +544,12 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 			return r;
 	}
 	return nil;
+}
+
+// Register for dragging types with the nsView.
+- (void)updateRegisteredDraggingTypes {
+	if(self.draggingTypes)
+		[self.nsView registerForDraggedTypes:self.draggingTypes forView:self];
 }
 
 - (void)_updateLayerScaleFactor
@@ -1117,6 +1125,7 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 		[self.subviews makeObjectsPerformSelector:@selector(setNSView:) withObject:n];
 		[self didMoveToWindow];
 		[[NSNotificationCenter defaultCenter] postNotificationName:TUIViewDidMoveToWindowNotification object:self userInfo:[n window] ? [NSDictionary dictionaryWithObject:[n window] forKey:TUIViewWindow] : nil];
+		[self updateRegisteredDraggingTypes];
 	}
 }
 

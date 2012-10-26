@@ -65,3 +65,5 @@
 - (BOOL)isWindowKey;
 
 @end
+
+#import "TUINSView+PasteboardDragging.h"

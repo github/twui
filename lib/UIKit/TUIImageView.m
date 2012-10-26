@@ -29,13 +29,13 @@
 {
 	CGRect frame = CGRectZero;
 	if (image) frame = CGRectMake(0, 0, image.size.width, image.size.height);
-
+	
 	self = [super initWithFrame:frame];
 	if (self == nil) return nil;
-
+	
 	self.userInteractionEnabled = NO;
 	_image = image;
-
+	
 	return self;
 }
 
