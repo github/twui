@@ -16,6 +16,7 @@
 
 #import "TUIViewController.h"
 #import "TUIView.h"
+#import "TUINavigationController.h"
 
 @implementation TUIViewController
 
@@ -61,15 +62,8 @@
 	// subclasses must implement
 }
 
-- (void)viewDidLoad
-{
-	
-}
-
-- (void)viewDidUnload
-{
-	
-}
+- (void)viewDidLoad { }
+- (void)viewDidUnload{ }
 
 - (BOOL)isViewLoaded
 {
@@ -110,6 +104,25 @@
 	self.view = v;
 	
 	return v;
+}
+
+
+//Borrowed from Chameleon's UIViewController port at
+//https://github.com/BigZaphod/Chameleon/blob/master/UIKit/Classes/UIViewController.m
+- (id)_nearestParentViewControllerThatIsKindOf:(Class)c
+{
+    TUIViewController *controller = _parentViewController;
+	
+    while (controller && ![controller isKindOfClass:c]) {
+        controller = [controller parentViewController];
+    }
+	
+    return controller;
+}
+
+- (TUINavigationController *)navigationController
+{
+    return [self _nearestParentViewControllerThatIsKindOf:[TUINavigationController class]];
 }
 
 @end

@@ -18,6 +18,7 @@
 
 @class TUINavigationItem;
 @class TUIView;
+@class TUINavigationController;
 
 @interface TUIViewController : TUIResponder <NSCopying>
 {
