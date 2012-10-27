@@ -92,6 +92,8 @@
 			[targetActionsToRemove addObject:t];
 		}
 	}
+	
+	[[self _targetActions] removeObjectsInArray:targetActionsToRemove];
 }
 
 - (NSSet *)allTargets                                                                     // set may include NSNull to indicate at least one nil target

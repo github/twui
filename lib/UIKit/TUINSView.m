@@ -269,6 +269,11 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	
 	if(newWindow == nil) {
 		[_rootView removeFromSuperview];
+		// since the layer retains the layoutManger, we need to set it to nil to
+		// make sure TUINSView will be deallocated
+		self.appKitHostView.layer.layoutManager = nil;
+	} else {
+		self.appKitHostView.layer.layoutManager = self;
 	}
 }
 

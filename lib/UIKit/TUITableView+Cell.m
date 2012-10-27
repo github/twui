@@ -15,6 +15,7 @@
  */
 
 #import "TUITableView+Cell.h"
+#import "TUITableViewCell+Private.h"
 
 // Dragged cells should be just above pinned headers
 #define kTUITableViewDraggedCellZPosition 1001
@@ -114,6 +115,9 @@
   [[cell superview] bringSubviewToFront:cell];
   // move the cell
   cell.frame = dest;
+	
+	// Tell the cell that it's floating so it can update.
+	[cell setFloating:YES animated:animate display:YES];
   
   // constraint the location to the viewport
   location = CGPointMake(location.x, MAX(0, MIN(visible.size.height, location.y)));
@@ -321,6 +325,10 @@
         // do nothing. this case is just here to avoid complier complaints...
         break;
     }
+	  
+	  // Tell the cell that it's floating so it can update.
+	  // Don't display it, because we'll trigger a display anyway.
+	  [cell setFloating:YES animated:animate display:NO];
     
     // move the cell to its final frame and layout to make sure all the internal caching/geometry
     // stuff is consistent.
