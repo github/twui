@@ -11,27 +11,22 @@
 
 #import "TUINSView.h"
 
-/*
- * Private functionality of TUINSView that needs to be exposed to other parts of
- * the framework.
- */
+// Private functionality of TUINSView that needs to be exposed to other parts of
+// the framework.
 @interface TUINSView ()
 
-/*
- * The layer-backed view which actually holds the AppKit hierarchy.
- */
+// The layer-backed view which actually holds the AppKit hierarchy.
 @property (nonatomic, readonly, strong) NSView *appKitHostView;
 
-/*
- * Informs the receiver that the clipping of a TUIViewNSViewContainer it is hosting has
- * changed, and asks it to update clipping paths accordingly.
- */
+// The view currently tracking mouse events.
+@property (nonatomic, unsafe_unretained) TUIView *trackingView;
+
+// Informs the receiver that the clipping of a TUIViewNSViewContainer it is hosting has
+// changed, and asks it to update clipping paths accordingly.
 - (void)recalculateNSViewClipping;
 
-/*
- * Informs the receiver that the ordering of a TUIViewNSViewContainer it is hosting has
- * changed, and asks it to reorder its subviews to match TwUI.
- */
+// Informs the receiver that the ordering of a TUIViewNSViewContainer it is hosting has
+// changed, and asks it to reorder its subviews to match TwUI.
 - (void)recalculateNSViewOrdering;
 
 - (TUIView *)viewForLocalPoint:(NSPoint)p;
