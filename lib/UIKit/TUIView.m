@@ -20,6 +20,7 @@
 #import "TUIView.h"
 #import "TUILayoutManager.h"
 #import "TUINSView.h"
+#import "TUINSView+Private.h"
 #import "TUINSWindow.h"
 #import "TUITextRenderer.h"
 #import "TUIViewController.h"
@@ -128,8 +129,10 @@ static pthread_key_t TUICurrentContextScaleFactorTLSKey;
 
 - (void)dealloc
 {
-    [[TUILayoutManager sharedLayoutManager] removeLayoutConstraintsFromView:self];
-    [[TUILayoutManager sharedLayoutManager] setLayoutName:nil forView:self];
+	[[TUILayoutManager sharedLayoutManager] removeLayoutConstraintsFromView:self];
+	[[TUILayoutManager sharedLayoutManager] setLayoutName:nil forView:self];
+
+	if (self.nsView.trackingView == self) self.nsView.trackingView = nil;
     
 	[self setTextRenderers:nil];
 	_layer.delegate = nil;
