@@ -146,6 +146,31 @@
 	// Dragging a title can drag the window too.
 	[view setMoveWindowByDragging:YES];
 	
+	// Add an activity indicator to the header view with a 24x24 size.
+	// Since we know the height of the header won't change we can pre-
+	// pad it to 4. However, since the table view's width can change,
+	// we'll create a layout constraint to keep the activity indicator
+	// anchored 16px left of the right side of the header view.
+	TUIActivityIndicatorView *indicator = [[TUIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 4, 24, 24)
+																   activityIndicatorStyle:TUIActivityIndicatorViewStyleGray];
+	[indicator addLayoutConstraint:[TUILayoutConstraint constraintWithAttribute:TUILayoutConstraintAttributeMaxX
+															 relativeTo:@"superview"
+															  attribute:TUILayoutConstraintAttributeMaxX
+																 offset:-16.0f]];
+	
+	// Add a simple embossing shadow to the white activity indicator.
+	// This way, we can see it better on a bright background. Using
+	// the standard layer property keeps the shadow stable through
+	// animations.
+	indicator.layer.shadowColor = [NSColor whiteColor].tui_CGColor;
+	indicator.layer.shadowOffset = CGSizeMake(0, -1);
+	indicator.layer.shadowOpacity = 1.0f;
+	indicator.layer.shadowRadius = 1.0f;
+	
+	// We then add it as a subview and tell it to start animating.
+	[view addSubview:indicator];
+	[indicator startAnimating];
+	
 	return view;
 }
 
