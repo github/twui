@@ -22,8 +22,8 @@ typedef enum {
   TUIScrollViewIndicatorStyleDark,
   /** Light scroll indicator style suitable for dark backgrounds */
   TUIScrollViewIndicatorStyleLight,
-  /** Default scroll indicator style (dark) */
-  TUIScrollViewIndicatorStyleDefault = TUIScrollViewIndicatorStyleDark
+  /** Dark scroll indicator with a light border style suitable for all backgrounds */
+  TUIScrollViewIndicatorStyleDefault
 } TUIScrollViewIndicatorStyle;
 
 typedef enum {
@@ -46,18 +46,18 @@ typedef enum {
 
 @protocol TUIScrollViewDelegate;
 
-@class TUIScrollKnob;
+@class TUIScroller;
 
 /**
  
- Bouncing is enabled on [REDACTED]+ or if ForceEnableScrollBouncing defaults = YES
+ Bouncing is enabled on 10.7+ or if ForceEnableScrollBouncing defaults = YES
  (Only tested with vertical bouncing)
  
- The physics are different than AppKit on [REDACTED].  Namely:
+ The physics are different than AppKit on 10.7.  Namely:
  
  1. During a rubber band (finger down, pulling outside the allowed bounds)
  the rubber-band-force (force keeping it from pulling too far) isn't a
- fixed multiplier of the offset (iOS and [REDACTED] use 0.5x).  Rather
+ fixed multiplier of the offset (iOS and 10.7 use 0.5x).  Rather
  it's exponential, so the harder you pull the stronger it tugs.
  2. Again, during a rubber band (fingers down): if you push back the other way
  the rubber band doesn't fight you.  On iOS the this behavior makes 
@@ -124,7 +124,7 @@ typedef enum {
 		unsigned int alwaysBounceVertical:1;
 		unsigned int alwaysBounceHorizontal:1;
 		unsigned int mouseInside:1;
-		unsigned int mouseDownInScrollKnob:1;
+		unsigned int mouseDownInScroller:1;
 		unsigned int ignoreNextScrollPhaseNormal_10_7:1;
 		unsigned int gestureBegan:1;
 		unsigned int animationMode:2;
@@ -134,6 +134,8 @@ typedef enum {
 		unsigned int horizontalScrollIndicatorVisibility:2;
 		unsigned int verticalScrollIndicatorShowing:1;
 		unsigned int horizontalScrollIndicatorShowing:1;
+		unsigned int verticalScrollIndicatorExpanded:1;
+		unsigned int horizontalScrollIndicatorExpanded:1;
 		unsigned int delegateScrollViewDidScroll:1;
 		unsigned int delegateScrollViewWillBeginDragging:1;
 		unsigned int delegateScrollViewDidEndDragging:1;
@@ -164,8 +166,8 @@ typedef enum {
 @property (nonatomic, readonly) CGRect visibleRect;
 @property (nonatomic, readonly) TUIEdgeInsets scrollIndicatorInsets;
 
-@property (nonatomic, strong, readonly) TUIScrollKnob *verticalScrollKnob;
-@property (nonatomic, strong, readonly) TUIScrollKnob *horizontalScrollKnob;
+@property (nonatomic, strong, readonly) TUIScroller *verticalScroller;
+@property (nonatomic, strong, readonly) TUIScroller *horizontalScroller;
 
 @property (nonatomic, readonly) CGPoint pullOffset;
 @property (nonatomic, readonly) CGPoint bounceOffset;
