@@ -51,7 +51,7 @@ static inline void tui_viewAnimateRedrawConditionally(TUIView *view, BOOL condit
 		_reuseIdentifier = [reuseIdentifier copy];
 		
 		self.animatesAppearanceChanges = YES;
-		self.separatorStyle = TUITableViewCellSeparatorStyleEtched;
+		self.separatorStyle = TUITableViewCellSeparatorStyleNone;
 		
 		self.backgroundColor = [NSColor colorWithCalibratedWhite:0.95 alpha:1.0f];
 		self.highlightColor = [NSColor colorWithCalibratedWhite:0.85 alpha:1.0f];

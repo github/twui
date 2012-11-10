@@ -15,16 +15,16 @@
  */
 
 #import <CoreServices/CoreServices.h>
-#import "TUIScrollView.h"
+#import "TUIScrollView+Private.h"
 #import "TUIKit.h"
-#import "TUIScrollKnob.h"
+#import "TUIScroller.h"
 
 #define KNOB_Z_POSITION 6000
 
 #define FORCE_ENABLE_BOUNCE 1
 
 #define TUIScrollViewContinuousScrollDragBoundary 25.0
-#define TUIScrollViewContinuousScrollRate         10.0
+#define TUIScrollViewContinuousScrollRate 10.0
 
 enum {
 	ScrollPhaseNormal = 0,
@@ -42,16 +42,16 @@ enum {
 
 @interface TUIScrollView ()
 
-@property (nonatomic, strong, readwrite) TUIScrollKnob *verticalScrollKnob;
-@property (nonatomic, strong, readwrite) TUIScrollKnob *horizontalScrollKnob;
+@property (nonatomic, strong, readwrite) TUIScroller *verticalScroller;
+@property (nonatomic, strong, readwrite) TUIScroller *horizontalScroller;
 
 - (BOOL)_pulling;
-- (BOOL)_verticalScrollKnobNeededForContentSize:(CGSize)size;
-- (BOOL)_horizontalScrollKnobNeededForContentSize:(CGSize)size;
-- (void)_updateScrollKnobs;
-- (void)_updateScrollKnobsAnimated:(BOOL)animated;
+- (BOOL)_verticalScrollerNeededForContentSize:(CGSize)size;
+- (BOOL)_horizontalScrollerNeededForContentSize:(CGSize)size;
+- (void)_updateScrollers;
+- (void)_updateScrollersAnimated:(BOOL)animated;
 - (void)_updateBounce;
-- (void)_startTimer:(int)scrollMode;
+- (void)_startDisplayLink:(int)scrollMode;
 
 @end
 
@@ -60,11 +60,13 @@ enum {
 @synthesize decelerationRate;
 @synthesize resizeKnobSize;
 
-// Default to non-Lion behavior to prevent breakage.
+// Default to non-Lion and non-MountainLion behavior to prevent breakage.
 static BOOL isAtleastLion = NO;
+static BOOL isAtleastMountainLion = NO;
 
+// Apply Lion or Mountain Lion specific features.
 + (void)initialize {
-	if(self.class != TUIScrollView.class)
+	if (self.class != TUIScrollView.class)
 		return;
 	
 	SInt32 major = 0;
@@ -74,6 +76,25 @@ static BOOL isAtleastLion = NO;
 	Gestalt(gestaltSystemVersionMinor, &minor);
 	
 	isAtleastLion = ((major == 10 && minor >= 7) || major > 11);
+	isAtleastMountainLion = ((major == 10 && minor >= 8) || major > 11);
+}
+
++ (BOOL)requiresLegacyScrollers {
+	// If it's not at least Lion, it's not at least ML by context.
+	return !isAtleastLion;
+}
+
++ (BOOL)requiresSlimScrollers {
+	return isAtleastLion;
+}
+
++ (BOOL)requiresExpandingScrollers {
+	return isAtleastMountainLion;
+}
+
++ (BOOL)requiresElasticSrolling {
+	return (FORCE_ENABLE_BOUNCE || isAtleastLion ||
+			[[NSUserDefaults standardUserDefaults] boolForKey:@"ForceEnableScrollBouncing"]);
 }
 
 + (Class)layerClass
@@ -83,40 +104,42 @@ static BOOL isAtleastLion = NO;
 
 - (id)initWithFrame:(CGRect)frame
 {
-	if((self = [super initWithFrame:frame]))
+	if ((self = [super initWithFrame:frame]))
 	{
 		_layer.masksToBounds = NO; // differs from UIKit
-
+		
 		decelerationRate = 0.88;
 		
-		_scrollViewFlags.bounceEnabled = (FORCE_ENABLE_BOUNCE || isAtleastLion || [[NSUserDefaults standardUserDefaults] boolForKey:@"ForceEnableScrollBouncing"]);
-		_scrollViewFlags.alwaysBounceVertical = FALSE;
-		_scrollViewFlags.alwaysBounceHorizontal = FALSE;
+		_scrollViewFlags.bounceEnabled = [self.class requiresElasticSrolling];
+		_scrollViewFlags.alwaysBounceVertical = NO;
+		_scrollViewFlags.alwaysBounceHorizontal = NO;
 		
 		_scrollViewFlags.scrollIndicatorStyle = TUIScrollViewIndicatorVisibleDefault;
 		_scrollViewFlags.verticalScrollIndicatorVisibility = TUIScrollViewIndicatorVisibleDefault;
 		_scrollViewFlags.horizontalScrollIndicatorVisibility = TUIScrollViewIndicatorVisibleDefault;
 		
-		self.horizontalScrollKnob = [[TUIScrollKnob alloc] initWithFrame:CGRectZero];
-		self.horizontalScrollKnob.scrollView = self;
-		self.horizontalScrollKnob.layer.zPosition = KNOB_Z_POSITION;
-		self.horizontalScrollKnob.hidden = YES;
-		self.horizontalScrollKnob.opaque = NO;
-		[self addSubview:self.horizontalScrollKnob];
+		self.horizontalScroller = [[TUIScroller alloc] initWithFrame:CGRectZero];
+		self.horizontalScroller.scrollView = self;
+		self.horizontalScroller.layer.zPosition = KNOB_Z_POSITION;
+		self.horizontalScroller.hidden = YES;
+		self.horizontalScroller.opaque = NO;
+		[self addSubview:self.horizontalScroller];
 		
-		self.verticalScrollKnob = [[TUIScrollKnob alloc] initWithFrame:CGRectZero];
-		self.verticalScrollKnob.scrollView = self;
-		self.verticalScrollKnob.layer.zPosition = KNOB_Z_POSITION;
-		self.verticalScrollKnob.hidden = YES;
-		self.verticalScrollKnob.opaque = NO;
-		[self addSubview:self.verticalScrollKnob];
+		self.verticalScroller = [[TUIScroller alloc] initWithFrame:CGRectZero];
+		self.verticalScroller.scrollView = self;
+		self.verticalScroller.layer.zPosition = KNOB_Z_POSITION;
+		self.verticalScroller.hidden = YES;
+		self.verticalScroller.opaque = NO;
+		[self addSubview:self.verticalScroller];
 	}
 	return self;
 }
 
 - (void)dealloc
 {
-	[scrollTimer invalidate];
+	if (displayLink) {
+		CVDisplayLinkRelease(displayLink);
+	}
 }
 
 - (id<TUIScrollViewDelegate>)delegate
@@ -130,6 +153,7 @@ static BOOL isAtleastLion = NO;
 	_scrollViewFlags.delegateScrollViewDidScroll = [_delegate respondsToSelector:@selector(scrollViewDidScroll:)];
 	_scrollViewFlags.delegateScrollViewWillBeginDragging = [_delegate respondsToSelector:@selector(scrollViewWillBeginDragging:)];
 	_scrollViewFlags.delegateScrollViewDidEndDragging = [_delegate respondsToSelector:@selector(scrollViewDidEndDragging:)];
+	_scrollViewFlags.delegateScrollViewDidEndDecelerating = [_delegate respondsToSelector:@selector(scrollViewDidEndDecelerating:)];
 	_scrollViewFlags.delegateScrollViewWillShowScrollIndicator = [_delegate respondsToSelector:@selector(scrollView:willShowScrollIndicator:)];
 	_scrollViewFlags.delegateScrollViewDidShowScrollIndicator = [_delegate respondsToSelector:@selector(scrollView:didShowScrollIndicator:)];
 	_scrollViewFlags.delegateScrollViewWillHideScrollIndicator = [_delegate respondsToSelector:@selector(scrollView:willHideScrollIndicator:)];
@@ -144,60 +168,60 @@ static BOOL isAtleastLion = NO;
 - (void)setScrollIndicatorStyle:(TUIScrollViewIndicatorStyle)s
 {
 	_scrollViewFlags.scrollIndicatorStyle = s;
-	self.verticalScrollKnob.scrollIndicatorStyle = s;
-	self.horizontalScrollKnob.scrollIndicatorStyle = s;
+	self.verticalScroller.scrollIndicatorStyle = s;
+	self.horizontalScroller.scrollIndicatorStyle = s;
 }
 
 /**
  * @brief Obtain the vertical scroll indiciator visibility
- * 
+ *
  * The scroll indicator visibiliy determines when scroll indicators are displayed.
  * Note that scroll indicators are never displayed if the content in the scroll view
  * is not large enough to require them.
- * 
+ *
  * @return vertical scroll indicator visibility
  */
 -(TUIScrollViewIndicatorVisibility)verticalScrollIndicatorVisibility {
-  return _scrollViewFlags.verticalScrollIndicatorVisibility;
+	return _scrollViewFlags.verticalScrollIndicatorVisibility;
 }
 
 /**
  * @brief Set the vertical scroll indiciator visibility
- * 
+ *
  * The scroll indicator visibiliy determines when scroll indicators are displayed.
  * Note that scroll indicators are never displayed if the content in the scroll view
  * is not large enough to require them.
- * 
+ *
  * @param visibility vertical scroll indicator visibility
  */
 -(void)setVerticalScrollIndicatorVisibility:(TUIScrollViewIndicatorVisibility)visibility {
-   _scrollViewFlags.verticalScrollIndicatorVisibility = visibility;
+	_scrollViewFlags.verticalScrollIndicatorVisibility = visibility;
 }
 
 /**
  * @brief Obtain the horizontal scroll indiciator visibility
- * 
+ *
  * The scroll indicator visibiliy determines when scroll indicators are displayed.
  * Note that scroll indicators are never displayed if the content in the scroll view
  * is not large enough to require them.
- * 
+ *
  * @return horizontal scroll indicator visibility
  */
 -(TUIScrollViewIndicatorVisibility)horizontalScrollIndicatorVisibility {
-  return _scrollViewFlags.horizontalScrollIndicatorVisibility;
+	return _scrollViewFlags.horizontalScrollIndicatorVisibility;
 }
 
 /**
  * @brief Set the horizontal scroll indiciator visibility
- * 
+ *
  * The scroll indicator visibiliy determines when scroll indicators are displayed.
  * Note that scroll indicators are never displayed if the content in the scroll view
  * is not large enough to require them.
- * 
+ *
  * @param visibility horizontal scroll indicator visibility
  */
 -(void)setHorizontalScrollIndicatorVisibility:(TUIScrollViewIndicatorVisibility)visibility {
-   _scrollViewFlags.horizontalScrollIndicatorVisibility = visibility;
+	_scrollViewFlags.horizontalScrollIndicatorVisibility = visibility;
 }
 
 /**
@@ -205,7 +229,7 @@ static BOOL isAtleastLion = NO;
  * @return showing or not
  */
 -(BOOL)verticalScrollIndicatorShowing {
-  return _scrollViewFlags.verticalScrollIndicatorShowing;
+	return _scrollViewFlags.verticalScrollIndicatorShowing;
 }
 
 /**
@@ -213,7 +237,7 @@ static BOOL isAtleastLion = NO;
  * @return showing or not
  */
 -(BOOL)horizontalScrollIndicatorShowing {
-  return _scrollViewFlags.horizontalScrollIndicatorShowing;
+	return _scrollViewFlags.horizontalScrollIndicatorShowing;
 }
 
 - (BOOL)isScrollEnabled
@@ -233,12 +257,12 @@ static BOOL isAtleastLion = NO;
 
 - (void)setContentInset:(TUIEdgeInsets)i
 {
-	if(!TUIEdgeInsetsEqualToEdgeInsets(i, _contentInset)) {
+	if (!TUIEdgeInsetsEqualToEdgeInsets(i, _contentInset)) {
 		_contentInset = i;
-		if(self._pulling){
+		if (self._pulling){
 			_scrollViewFlags.didChangeContentInset = 1;
-		}else if(!self.dragging) {
-      self.contentOffset = self.contentOffset;
+		}else if (!self.dragging) {
+			self.contentOffset = self.contentOffset;
 		}
 	}
 }
@@ -255,46 +279,58 @@ static BOOL isAtleastLion = NO;
 
 /**
  * @brief Obtain the insets for currently visible scroll indicators
- * 
+ *
  * The insets describe the margins needed for content not to overlap the any
- * scroll indicators which are currently visible.  You can apply these insets
+ * scroll indicators which are currently visible.You can apply these insets
  * to #visibleRect to obtain a content frame what avoids the scroll indicators.
- * 
+ *
  * @return scroll indicator insets
  */
--(TUIEdgeInsets)scrollIndicatorInsets {
-  return TUIEdgeInsetsMake(0, 0, (_scrollViewFlags.horizontalScrollIndicatorShowing) ? self.horizontalScrollKnob.frame.size.height : 0, (_scrollViewFlags.verticalScrollIndicatorShowing) ? self.verticalScrollKnob.frame.size.width : 0);
+- (TUIEdgeInsets)scrollIndicatorInsets {
+	return TUIEdgeInsetsMake(0, 0, (_scrollViewFlags.horizontalScrollIndicatorShowing) ? self.horizontalScroller.frame.size.height : 0, (_scrollViewFlags.verticalScrollIndicatorShowing) ? self.verticalScroller.frame.size.width : 0);
 }
 
-- (void)_startTimer:(int)scrollMode
+static CVReturn scrollCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now, const CVTimeStamp *outputTime, CVOptionFlags flagsIn, CVOptionFlags *flagsOut, void *displayLinkContext)
+{
+	@autoreleasepool {
+		// perform drawing on the main thread
+		TUIScrollView *scrollView = (__bridge id)displayLinkContext;
+		[scrollView performSelectorOnMainThread:@selector(tick) withObject:nil waitUntilDone:NO];
+	}
+	return kCVReturnSuccess;
+}
+
+- (void)_startDisplayLink:(int)scrollMode
 {
 	_scrollViewFlags.animationMode = scrollMode;
 	_throw.t = CFAbsoluteTimeGetCurrent();
 	_bounce.bouncing = NO;
 	
-	if(!scrollTimer) {
-		scrollTimer = [NSTimer scheduledTimerWithTimeInterval:1/60. target:self selector:@selector(tick:) userInfo:nil repeats:YES];
+	if (!displayLink) {
+		CVDisplayLinkCreateWithActiveCGDisplays(&displayLink);
+		CVDisplayLinkSetOutputCallback(displayLink, &scrollCallback, (__bridge void *)self);
+		CVDisplayLinkSetCurrentCGDisplay(displayLink, kCGDirectMainDisplay);
 	}
+	CVDisplayLinkStart(displayLink);
 }
 
-- (void)_stopTimer
+- (void)_stopDisplayLink
 {
-	if(scrollTimer) {
-		[scrollTimer invalidate];
-		scrollTimer = nil;
+	if (displayLink) {
+		CVDisplayLinkStop(displayLink);
 	}
 	_scrollViewFlags.animationMode = AnimationModeNone;
 	_bounce.bouncing = 0;
 	[self _updateBounce];
-	[self _updateScrollKnobsAnimated:TRUE];
+	[self _updateScrollersAnimated:NO];
 }
 
 - (void)willMoveToWindow:(TUINSWindow *)newWindow
 {
 	[super willMoveToWindow:newWindow];
-	if(!newWindow) {
+	if (!newWindow) {
 		x = YES;
-		[self _stopTimer];
+		[self _stopDisplayLink];
 	}
 }
 
@@ -306,40 +342,40 @@ static BOOL isAtleastLion = NO;
 	s.height += _contentInset.top;
 	
 	CGFloat mx = offset.x + s.width;
-	if(s.width > b.size.width) {
-		if(mx < b.size.width) {
+	if (s.width > b.size.width) {
+		if (mx < b.size.width) {
 			offset.x = b.size.width - s.width;
 		}
-		if(offset.x > 0.0) {
+		if (offset.x > 0.0) {
 			offset.x = 0.0;
 		}
 	} else {
-		if(mx > b.size.width) {
+		if (mx > b.size.width) {
 			offset.x = b.size.width - s.width;
 		}
-		if(offset.x < 0.0) {
+		if (offset.x < 0.0) {
 			offset.x = 0.0;
 		}
 	}
-
+	
 	CGFloat my = offset.y + s.height;
-	if(s.height > b.size.height) { // content bigger than bounds
-		if(my < b.size.height) {
+	if (s.height > b.size.height) { // content bigger than bounds
+		if (my < b.size.height) {
 			offset.y = b.size.height - s.height;
 		}
-		if(offset.y > 0.0) {
+		if (offset.y > 0.0) {
 			offset.y = 0.0;
 		}
 	} else { // content smaller than bounds
-		if(0) { // let it move around in bounds
-			if(my > b.size.height) {
+		if (0) { // let it move around in bounds
+			if (my > b.size.height) {
 				offset.y = b.size.height - s.height;
 			}
-			if(offset.y < 0.0) {
+			if (offset.y < 0.0) {
 				offset.y = 0.0;
 			}
 		}
-		if(1) { // pin to top
+		if (1) { // pin to top
 			offset.y = b.size.height - s.height;
 		}
 	}
@@ -349,154 +385,214 @@ static BOOL isAtleastLion = NO;
 
 - (void)setResizeKnobSize:(CGSize)s
 {
-	if(!isAtleastLion)
+	if ([self.class requiresLegacyScrollers])
 		resizeKnobSize = s;
 }
 
-- (BOOL)_verticalScrollKnobNeededForContentSize:(CGSize)size {
-  return (size.height > self.bounds.size.height);
+- (BOOL)_verticalScrollerNeededForContentSize:(CGSize)size {
+	return (size.height > self.bounds.size.height);
 }
 
-- (BOOL)_horizontalScrollKnobNeededForContentSize:(CGSize)size {
-  return (size.width > self.bounds.size.width);
+- (BOOL)_horizontalScrollerNeededForContentSize:(CGSize)size {
+	return (size.width > self.bounds.size.width);
 }
 
-- (void)_updateScrollKnobs {
-  [self _updateScrollKnobsAnimated:FALSE];
+- (void)_updateScrollers {
+	[self _updateScrollersAnimated:NO];
 }
 
-- (void)_updateScrollKnobsAnimated:(BOOL)animated {
-  // note: the animated option is currently ignored.
-  
+- (void)_updateScrollersAnimated:(BOOL)animated {
 	CGPoint offset = _unroundedContentOffset;
 	CGRect bounds = self.bounds;
-	CGFloat knobSize = 12;
 	
+	// If one scroller was expanded, and the other one is now ALSO
+	// expanded, force unexpand the previous one. Cache the previous
+	// and current expansion values for scrollers.
+	BOOL verticalScrollerWasExpanded = _scrollViewFlags.verticalScrollIndicatorExpanded;
+	BOOL horizontalScrollerWasExpanded = _scrollViewFlags.horizontalScrollIndicatorExpanded;
+	BOOL verticalScrollerIsExpanded = self.verticalScroller.expanded;
+	BOOL horizontalScrollerIsExpanded = self.horizontalScroller.expanded;
+	
+	// Reset the forced values, so they don't bias the future values.
+	[self.verticalScroller forceDisableExpandedScroller:NO];
+	[self.horizontalScroller forceDisableExpandedScroller:NO];
+	
+	// Conditionally un-expand one scroller (if both are expanded).
+	if (verticalScrollerWasExpanded && horizontalScrollerIsExpanded)
+		[self.verticalScroller forceDisableExpandedScroller:YES];
+	else if (horizontalScrollerWasExpanded && verticalScrollerIsExpanded)
+		[self.horizontalScroller forceDisableExpandedScroller:YES];
+	
+	// Cache the new values for the next time.
+	_scrollViewFlags.verticalScrollIndicatorExpanded = verticalScrollerIsExpanded;
+	_scrollViewFlags.horizontalScrollIndicatorExpanded = horizontalScrollerIsExpanded;
+	
+	// Get the updated scroller widths.
+	CGFloat verticalScrollerSize = self.verticalScroller.updatedScrollerWidth;
+	CGFloat horizontalScrollerSize = self.horizontalScroller.updatedScrollerWidth;
+	
+	// Cache the previous, current, and possible visibility for the scrollers.
 	BOOL vWasVisible = _scrollViewFlags.verticalScrollIndicatorShowing;
-	BOOL vVisible = [self _verticalScrollKnobNeededForContentSize:self.contentSize];
+	BOOL vVisible = [self _verticalScrollerNeededForContentSize:self.contentSize];
 	BOOL vEffectiveVisible = vVisible;
+	
 	BOOL hWasVisible = _scrollViewFlags.horizontalScrollIndicatorShowing;
-	BOOL hVisible = [self _horizontalScrollKnobNeededForContentSize:self.contentSize];
+	BOOL hVisible = [self _horizontalScrollerNeededForContentSize:self.contentSize];
 	BOOL hEffectiveVisible = hVisible;
 	
-	switch(self.verticalScrollIndicatorVisibility){
-    case TUIScrollViewIndicatorVisibleNever:
-      vEffectiveVisible = self.verticalScrollKnob.flashing;
-      break;
-    case TUIScrollViewIndicatorVisibleWhenScrolling:
-	  vEffectiveVisible = vVisible && (_scrollViewFlags.animationMode != AnimationModeNone || self.verticalScrollKnob.flashing);
-      break;
-    case TUIScrollViewIndicatorVisibleWhenMouseInside:
-      vEffectiveVisible = vVisible && (_scrollViewFlags.animationMode != AnimationModeNone || _scrollViewFlags.mouseInside || _scrollViewFlags.mouseDownInScrollKnob || self.verticalScrollKnob.flashing);
-      break;
-    case TUIScrollViewIndicatorVisibleAlways:
-    default:
-      // don't alter the visibility
-      break;
+	// Determine the visibility of the vertical scroller.
+	switch (self.verticalScrollIndicatorVisibility) {
+		case TUIScrollViewIndicatorVisibleNever:
+			vEffectiveVisible = self.verticalScroller.flashing;
+			break;
+		case TUIScrollViewIndicatorVisibleWhenScrolling:
+			vEffectiveVisible = vVisible && (_scrollViewFlags.animationMode != AnimationModeNone ||
+											 self.verticalScroller.flashing);
+			break;
+		case TUIScrollViewIndicatorVisibleWhenMouseInside:
+			vEffectiveVisible = vVisible && (_scrollViewFlags.animationMode != AnimationModeNone ||
+											 _scrollViewFlags.mouseInside ||
+											 _scrollViewFlags.mouseDownInScroller ||
+											 self.verticalScroller.flashing);
+			break;
+		case TUIScrollViewIndicatorVisibleAlways:
+		default:
+			// Don't alter visibility.
+			break;
 	}
+	
+	// Determine the visibility of the horizontal scroller.
+	switch (self.horizontalScrollIndicatorVisibility) {
+		case TUIScrollViewIndicatorVisibleNever:
+			hEffectiveVisible = NO;
+			break;
+		case TUIScrollViewIndicatorVisibleWhenScrolling:
+			hEffectiveVisible = vVisible && (_scrollViewFlags.animationMode != AnimationModeNone ||
+											 self.horizontalScroller.flashing);
+			break;
+		case TUIScrollViewIndicatorVisibleWhenMouseInside:
+			hEffectiveVisible = vVisible && (_scrollViewFlags.animationMode != AnimationModeNone ||
+											 _scrollViewFlags.mouseInside ||
+											 _scrollViewFlags.mouseDownInScroller ||
+											 self.horizontalScroller.flashing);
+			break;
+		case TUIScrollViewIndicatorVisibleAlways:
+		default:
+			// Don't alter visibility.
+			break;
+	}
+	
+	// Determine the scroll view pull value as an offset.
+	CGFloat pullX = +(self.bounceOffset.x + self.pullOffset.x);
+	CGFloat pullY = -(self.bounceOffset.y + self.pullOffset.y);
+	
+	// Determine the frame origin and scroll view offset for the scrollers.
+	// If 10.7+, there should be no scroller offset- they're overlayed.
+	CGFloat verticalScrollerStart = bounds.size.width - verticalScrollerSize;
+	CGFloat horizontalScrollerStart = 0;
+	CGFloat verticalScrollerOffset = ((hVisible ? verticalScrollerSize : 0) + resizeKnobSize.height);
+	CGFloat horizontalScrollerOffset = ((vVisible ? horizontalScrollerSize : 0) + resizeKnobSize.width);
+	if (![self.class requiresLegacyScrollers]) {
+		verticalScrollerOffset = 0.0f;
+		horizontalScrollerOffset = 0.0f;
+	}
+	
+	// Anchor the scrollers to the side.
+	[self.verticalScroller anchorScroller];
+	[self.horizontalScroller anchorScroller];
+	
+	// Determine the final scroller rects for both vertical and
+	// horizontal scrollers.
+	CGRect newVScrollerRect = CGRectMake(roundf(-offset.x + verticalScrollerStart - pullX), roundf(-offset.y + pullY),
+										 verticalScrollerSize, bounds.size.height - verticalScrollerOffset);
+	CGRect newHScrollerRect = CGRectMake(roundf(-offset.x - pullX), roundf(-offset.y + horizontalScrollerStart + pullY),
+										 bounds.size.width - horizontalScrollerOffset, horizontalScrollerSize);
+	
+	// Optionally animate the scroller frame. Always trigger a cross-fade,
+	// to display the scroller track expansion. If animated is YES, then
+	// the scroller will also "scroll" to the frame.
+	void (^updateBlock)(void) = ^{
+		self.verticalScroller.frame = newVScrollerRect;
+		self.horizontalScroller.frame = newHScrollerRect;
+	};
+	if (!animated)
+		updateBlock();
+	
+	[TUIView animateWithDuration:TUIScrollerFadeSpeed animations:^{
+		if (animated)
+			updateBlock();
 		
-	switch(self.horizontalScrollIndicatorVisibility){
-    case TUIScrollViewIndicatorVisibleNever:
-      hEffectiveVisible = FALSE;
-      break;
-    case TUIScrollViewIndicatorVisibleWhenScrolling:
-      hEffectiveVisible = vVisible && (_scrollViewFlags.animationMode != AnimationModeNone || self.horizontalScrollKnob.flashing);
-      break;
-    case TUIScrollViewIndicatorVisibleWhenMouseInside:
-      hEffectiveVisible = vVisible && (_scrollViewFlags.animationMode != AnimationModeNone || _scrollViewFlags.mouseInside || _scrollViewFlags.mouseDownInScrollKnob || self.horizontalScrollKnob.flashing);
-      break;
-    case TUIScrollViewIndicatorVisibleAlways:
-    default:
-      // don't alter the visibility
-      break;
+		// If the scrollers aren't expanded, there's no need to draw them.
+		// Each animated redraw operation is just more toll, less scroll.
+		if (self.verticalScroller.expanded)
+			[self.verticalScroller redraw];
+		if (self.horizontalScroller.expanded)
+			[self.horizontalScroller redraw];
+	}];
+	
+	// Notify the delegate about changes in scroll indiciator visibility.
+	if (vWasVisible != vEffectiveVisible) {
+		if (vEffectiveVisible && _scrollViewFlags.delegateScrollViewWillShowScrollIndicator) {
+			[self.delegate scrollView:self willShowScrollIndicator:TUIScrollViewIndicatorVertical];
+		} else if (!vEffectiveVisible && _scrollViewFlags.delegateScrollViewWillHideScrollIndicator) {
+			[self.delegate scrollView:self willHideScrollIndicator:TUIScrollViewIndicatorVertical];
+		}
+	}
+	if (hWasVisible != hEffectiveVisible) {
+		if (hEffectiveVisible && _scrollViewFlags.delegateScrollViewWillShowScrollIndicator) {
+			[self.delegate scrollView:self willShowScrollIndicator:TUIScrollViewIndicatorHorizontal];
+		} else if (!hEffectiveVisible && _scrollViewFlags.delegateScrollViewWillHideScrollIndicator) {
+			[self.delegate scrollView:self willHideScrollIndicator:TUIScrollViewIndicatorHorizontal];
+		}
 	}
 	
-	float pullX =  self.bounceOffset.x + self.pullOffset.x;
-	float pullY = -self.bounceOffset.y - self.pullOffset.y;
-	float bounceX = pullX * 1.2;
-	float bounceY = pullY * 1.2;
+	// Update the scroller visibility.
+	self.verticalScroller.alpha = 1.0;
+	self.verticalScroller.hidden = !vEffectiveVisible;
+	self.horizontalScroller.alpha = 1.0;
+	self.horizontalScroller.hidden = !hEffectiveVisible;
+	_scrollViewFlags.verticalScrollIndicatorShowing = vEffectiveVisible;
+	_scrollViewFlags.horizontalScrollIndicatorShowing = hEffectiveVisible;
+  
+	// Notify the delegate about changes in scroller visibility.
+	if (vWasVisible != vEffectiveVisible) {
+	  if (vEffectiveVisible && _scrollViewFlags.delegateScrollViewDidShowScrollIndicator) {
+		  [self.delegate scrollView:self didShowScrollIndicator:TUIScrollViewIndicatorVertical];
+		} else if (!vEffectiveVisible && _scrollViewFlags.delegateScrollViewDidHideScrollIndicator) {
+			[self.delegate scrollView:self didHideScrollIndicator:TUIScrollViewIndicatorVertical];
+		}
+	}
 	
-	self.verticalScrollKnob.frame = CGRectMake(
-    round(-offset.x + bounds.size.width - knobSize - pullX), // x
-    round(-offset.y + (hVisible ? knobSize : 0) + resizeKnobSize.height + bounceY), // y
-    knobSize, // width
-    bounds.size.height - (hVisible ? knobSize : 0) - resizeKnobSize.height // height
-  );
-  
-	self.horizontalScrollKnob.frame = CGRectMake(
-    round(-offset.x - bounceX), // x
-    round(-offset.y + pullY), // y
-    bounds.size.width - (vVisible ? knobSize : 0) - resizeKnobSize.width, // width
-    knobSize // height
-  );
-  
-  // notify the delegate about changes in vertical scroll indiciator visibility
-  if(vWasVisible != vEffectiveVisible){
-    if(vEffectiveVisible && _scrollViewFlags.delegateScrollViewWillShowScrollIndicator){
-      [self.delegate scrollView:self willShowScrollIndicator:TUIScrollViewIndicatorVertical];
-    }else if(!vEffectiveVisible && _scrollViewFlags.delegateScrollViewWillHideScrollIndicator){
-      [self.delegate scrollView:self willHideScrollIndicator:TUIScrollViewIndicatorVertical];
-    }
-  }
-  
-  // notify the delegate about changes in horizontal scroll indiciator visibility
-  if(hWasVisible != hEffectiveVisible){
-    if(hEffectiveVisible && _scrollViewFlags.delegateScrollViewWillShowScrollIndicator){
-      [self.delegate scrollView:self willShowScrollIndicator:TUIScrollViewIndicatorHorizontal];
-    }else if(!hEffectiveVisible && _scrollViewFlags.delegateScrollViewWillHideScrollIndicator){
-      [self.delegate scrollView:self willHideScrollIndicator:TUIScrollViewIndicatorHorizontal];
-    }
-  }
-  
-  self.verticalScrollKnob.alpha = 1.0;
-  self.verticalScrollKnob.hidden = !vEffectiveVisible;
-  self.horizontalScrollKnob.alpha = 1.0;
-  self.horizontalScrollKnob.hidden = !hEffectiveVisible;
-  
-  // update scroll indiciator visible state
-  _scrollViewFlags.verticalScrollIndicatorShowing = vEffectiveVisible;
-  _scrollViewFlags.horizontalScrollIndicatorShowing = hEffectiveVisible;
-  
-  // notify the delegate about changes in vertical scroll indiciator visibility
-  if(vWasVisible != vEffectiveVisible){
-    if(vEffectiveVisible && _scrollViewFlags.delegateScrollViewDidShowScrollIndicator){
-      [self.delegate scrollView:self didShowScrollIndicator:TUIScrollViewIndicatorVertical];
-    }else if(!vEffectiveVisible && _scrollViewFlags.delegateScrollViewDidHideScrollIndicator){
-      [self.delegate scrollView:self didHideScrollIndicator:TUIScrollViewIndicatorVertical];
-    }
-  }
-  
-  // notify the delegate about changes in horizontal scroll indiciator visibility
-  if(hWasVisible != hEffectiveVisible){
-    if(hEffectiveVisible && _scrollViewFlags.delegateScrollViewDidShowScrollIndicator){
-      [self.delegate scrollView:self didShowScrollIndicator:TUIScrollViewIndicatorHorizontal];
-    }else if(!hEffectiveVisible && _scrollViewFlags.delegateScrollViewDidHideScrollIndicator){
-      [self.delegate scrollView:self didHideScrollIndicator:TUIScrollViewIndicatorHorizontal];
-    }
-  }
-  
-	if(vEffectiveVisible)
-		[self.verticalScrollKnob setNeedsLayout];
-	if(hEffectiveVisible)
-		[self.horizontalScrollKnob setNeedsLayout];
+	if (hWasVisible != hEffectiveVisible) {
+		if (hEffectiveVisible && _scrollViewFlags.delegateScrollViewDidShowScrollIndicator) {
+			[self.delegate scrollView:self didShowScrollIndicator:TUIScrollViewIndicatorHorizontal];
+		} else if (!hEffectiveVisible && _scrollViewFlags.delegateScrollViewDidHideScrollIndicator) {
+			[self.delegate scrollView:self didHideScrollIndicator:TUIScrollViewIndicatorHorizontal];
+		}
+	}
 	
+	// Update the scroller internal knobs.
+	if (vEffectiveVisible)
+		[self.verticalScroller setNeedsLayout];
+	if (hEffectiveVisible)
+		[self.horizontalScroller setNeedsLayout];
 }
 
 - (void)layoutSubviews
 {
 	self.contentOffset = _unroundedContentOffset;
-	[self _updateScrollKnobs];
+	[self _updateScrollers];
 }
 
 static CGFloat lerp(CGFloat a, CGFloat b, CGFloat t)
 {
 	return a - t * (a+b);
 }
-					
+
 static CGFloat clamp(CGFloat x, CGFloat min, CGFloat max)
 {
-	if(x < min) return min;
-	if(x > max) return max;
+	if (x < min) return min;
+	if (x > max) return max;
 	return x;
 }
 
@@ -529,24 +625,24 @@ static CGPoint PointLerp(CGPoint a, CGPoint b, CGFloat t)
  * @return pulling or not
  */
 - (BOOL)_pulling {
-  return _pull.xPulling || _pull.yPulling;
+	return _pull.xPulling || _pull.yPulling;
 }
 
 - (CGPoint)pullOffset
 {
-	if(_scrollViewFlags.bounceEnabled){
+	if (_scrollViewFlags.bounceEnabled){
 		return CGPointMake((_pull.xPulling) ? _pull.x : 0, (_pull.yPulling) ? _pull.y : 0);
 	}else{
-	  return CGPointZero;
+		return CGPointZero;
 	}
 }
 
 - (CGPoint)bounceOffset
 {
-	if(_scrollViewFlags.bounceEnabled){
+	if (_scrollViewFlags.bounceEnabled){
 		return _bounce.bouncing ? CGPointMake(_bounce.x, _bounce.y) : CGPointZero;
 	}else{
-	  return CGPointZero;
+		return CGPointZero;
 	}
 }
 
@@ -556,7 +652,7 @@ static CGPoint PointLerp(CGPoint a, CGPoint b, CGFloat t)
 	p.x = round(-p.x - self.bounceOffset.x - self.pullOffset.x);
 	p.y = round(-p.y - self.bounceOffset.y - self.pullOffset.y);
 	[((CAScrollLayer *)self.layer) scrollToPoint:p];
-	if(_scrollViewFlags.delegateScrollViewDidScroll){
+	if (_scrollViewFlags.delegateScrollViewDidScroll){
 		[_delegate scrollViewDidScroll:self];
 	}
 }
@@ -587,88 +683,88 @@ static CGPoint PointLerp(CGPoint a, CGPoint b, CGFloat t)
 }
 
 - (void)stopThrowing {
-	if(_scrollViewFlags.animationMode == AnimationModeThrow) {
-		// ignore - let the bounce finish (_updateBounce will kill the timer when it's ready)
-		if(!_bounce.bouncing)
-			[self _stopTimer];
+	if (_scrollViewFlags.animationMode == AnimationModeThrow) {
+		// ignore - let the bounce finish (_updateBounce will kill the display link when it's ready)
+		if (!_bounce.bouncing)
+			[self _stopDisplayLink];
 	}
 }
 
 /**
  * @brief Whether the scroll view bounces past the edge of content and back again
- * 
+ *
  * If the value of this property is YES, the scroll view bounces when it encounters a boundary of the content. Bouncing visually indicates
  * that scrolling has reached an edge of the content. If the value is NO, scrolling stops immediately at the content boundary without bouncing.
  * The default value varies based on the current AppKit version, user preferences, and other factors.
- * 
+ *
  * @return bounces or not
  */
 -(BOOL)bounces {
-  return _scrollViewFlags.bounceEnabled;
+	return _scrollViewFlags.bounceEnabled;
 }
 
 /**
  * @brief Whether the scroll view bounces past the edge of content and back again
- * 
+ *
  * If the value of this property is YES, the scroll view bounces when it encounters a boundary of the content. Bouncing visually indicates
  * that scrolling has reached an edge of the content. If the value is NO, scrolling stops immediately at the content boundary without bouncing.
  * The default value varies based on the current AppKit version, user preferences, and other factors.
- * 
+ *
  * @return bounces or not
  */
 -(void)setBounces:(BOOL)bounces {
-  _scrollViewFlags.bounceEnabled = bounces;
+	_scrollViewFlags.bounceEnabled = bounces;
 }
 
 /**
  * @brief Always bounce content vertically
- * 
+ *
  * If this property is set to YES and bounces is YES, vertical dragging is allowed even if the content is smaller than the bounds of the scroll view. The default value is NO.
- * 
+ *
  * @return always bounce vertically or not
  */
 -(BOOL)alwaysBounceVertical {
-  return _scrollViewFlags.alwaysBounceVertical;
+	return _scrollViewFlags.alwaysBounceVertical;
 }
 
 /**
  * @brief Always bounce content vertically
- * 
+ *
  * If this property is set to YES and bounces is YES, vertical dragging is allowed even if the content is smaller than the bounds of the scroll view. The default value is NO.
- * 
+ *
  * @param always always bounce vertically or not
  */
 -(void)setAlwaysBounceVertical:(BOOL)always {
-  _scrollViewFlags.alwaysBounceVertical = always;
+	_scrollViewFlags.alwaysBounceVertical = always;
 }
 
 /**
  * @brief Always bounce content horizontally
- * 
+ *
  * If this property is set to YES and bounces is YES, horizontal dragging is allowed even if the content is smaller than the bounds of the scroll view. The default value is NO.
- * 
+ *
  * @return always bounce vertically or not
  */
 -(BOOL)alwaysBounceHorizontal {
-  return _scrollViewFlags.alwaysBounceHorizontal;
+	return _scrollViewFlags.alwaysBounceHorizontal;
 }
 
 /**
  * @brief Always bounce content horizontally
- * 
+ *
  * If this property is set to YES and bounces is YES, horizontal dragging is allowed even if the content is smaller than the bounds of the scroll view. The default value is NO.
- * 
+ *
  * @param always always bounce vertically or not
  */
 -(void)setAlwaysBounceHorizontal:(BOOL)always {
-  _scrollViewFlags.alwaysBounceHorizontal = always;
+	_scrollViewFlags.alwaysBounceHorizontal = always;
 }
 
 - (BOOL)isScrollingToTop
 {
-	if(scrollTimer) {
-		if(_scrollViewFlags.animationMode == AnimationModeScrollTo) {
-			if(roundf(destinationOffset.y) == roundf([self topDestinationOffset]))
+	if (displayLink) {
+		if (_scrollViewFlags.animationMode == AnimationModeScrollTo) {
+			if (roundf(destinationOffset.y) == roundf([self topDestinationOffset]))
 				return YES;
 		}
 	}
@@ -677,9 +773,9 @@ static CGPoint PointLerp(CGPoint a, CGPoint b, CGFloat t)
 
 - (void)setContentOffset:(CGPoint)contentOffset animated:(BOOL)animated
 {
-	if(animated) {
+	if (animated) {
 		destinationOffset = contentOffset;
-		[self _startTimer:AnimationModeScrollTo];
+		[self _startDisplayLink:AnimationModeScrollTo];
 	} else {
 		destinationOffset = contentOffset;
 		[self setContentOffset:contentOffset];
@@ -688,42 +784,42 @@ static CGPoint PointLerp(CGPoint a, CGPoint b, CGFloat t)
 
 /**
  * @brief Begin scrolling continuously for a drag
- * 
+ *
  * Content is continuously scrolled in the direction of the drag until the end
  * of the content is reached or the operation is cancelled via
  * #endContinuousScrollAnimated:.
- * 
+ *
  * @param dragLocation the drag location
  * @param animated animate the scroll or not (this is currently ignored and the scroll is always animated)
  */
 - (void)beginContinuousScrollForDragAtPoint:(CGPoint)dragLocation animated:(BOOL)animated {
-  if(dragLocation.y <= TUIScrollViewContinuousScrollDragBoundary || dragLocation.y >= (self.bounds.size.height - TUIScrollViewContinuousScrollDragBoundary)){
-    // note the drag offset
-    _dragScrollLocation = dragLocation;
-    // begin a continuous scroll
-    [self _startTimer:AnimationModeScrollContinuous];
-  }else{
-    [self endContinuousScrollAnimated:animated];
-  }
+	if (dragLocation.y <= TUIScrollViewContinuousScrollDragBoundary || dragLocation.y >= (self.bounds.size.height - TUIScrollViewContinuousScrollDragBoundary)){
+		// note the drag offset
+		_dragScrollLocation = dragLocation;
+		// begin a continuous scroll
+		[self _startDisplayLink:AnimationModeScrollContinuous];
+	}else{
+		[self endContinuousScrollAnimated:animated];
+	}
 }
 
 /**
  * @brief Stop scrolling continuously for a drag
- * 
+ *
  * This method is the counterpart to #beginContinuousScrollForDragAtPoint:animated:
- * 
+ *
  * @param animated animate the scroll or not (this is currently ignored and the scroll is always animated)
  */
 - (void)endContinuousScrollAnimated:(BOOL)animated {
-  if(_scrollViewFlags.animationMode == AnimationModeScrollContinuous){
-    [self _stopTimer];
-  }
+	if (_scrollViewFlags.animationMode == AnimationModeScrollContinuous){
+		[self _stopDisplayLink];
+	}
 }
 
 static float clampBounce(float x) {
 	x *= 0.4;
 	float m = 60 * 60;
-	if(x > 0.0f)
+	if (x > 0.0f)
 		return MIN(x, m);
 	else
 		return MAX(x, -m);
@@ -731,8 +827,8 @@ static float clampBounce(float x) {
 
 - (void)_startBounce
 {
-	if(!_bounce.bouncing) {
-		_bounce.bouncing = TRUE;
+	if (!_bounce.bouncing) {
+		_bounce.bouncing = YES;
 		_bounce.x = 0.0f;
 		_bounce.y = 0.0f;
 		_bounce.vx = clampBounce( _throw.vx);
@@ -743,7 +839,7 @@ static float clampBounce(float x) {
 
 - (void)_updateBounce
 {
-	if(_bounce.bouncing) {
+	if (_bounce.bouncing) {
 		CFAbsoluteTime t = CFAbsoluteTimeGetCurrent();
 		double dt = t - _bounce.t;
 		
@@ -757,9 +853,9 @@ static float clampBounce(float x) {
 		F.y = -_bounce.y * tightness;
 		
 		// damper
-		if(fabsf(_bounce.x) > 0.0)
+		if (fabsf(_bounce.x) > 0.0)
 			F.x -= _bounce.vx * dampiness;
-		if(fabsf(_bounce.y) > 0.0)
+		if (fabsf(_bounce.y) > 0.0)
 			F.y -= _bounce.vy * dampiness;
 		
 		_bounce.vx += F.x; // mass=1
@@ -770,25 +866,28 @@ static float clampBounce(float x) {
 		
 		_bounce.t = t;
 		
-		if(fabsf(_bounce.vy) < 1.0 && fabsf(_bounce.y) < 1.0 && fabsf(_bounce.vx) < 1.0 && fabsf(_bounce.x) < 1.0) {
-			[self _stopTimer];
+		if (fabsf(_bounce.vy) < 1.0 && fabsf(_bounce.y) < 1.0 && fabsf(_bounce.vx) < 1.0 && fabsf(_bounce.x) < 1.0) {
+			[self _stopDisplayLink];
+			if (_scrollViewFlags.delegateScrollViewDidEndDecelerating) {
+				[_delegate scrollViewDidEndDecelerating:self];
+			}
 		}
 		
-		[self _updateScrollKnobs];
+		[self _updateScrollers];
 	}
 }
 
-- (void)tick:(NSTimer *)timer
+- (void)tick
 {
 	[self _updateBounce]; // can't do after _startBounce otherwise dt will be crazy
 	
-	if(self.nsWindow == nil) {
+	if (self.nsWindow == nil) {
 		NSLog(@"Warning: no window %d (should be 1)", x);
-		[self _stopTimer];
+		[self _stopDisplayLink];
 		return;
 	}
 	
-	switch(_scrollViewFlags.animationMode) {
+	switch (_scrollViewFlags.animationMode) {
 		case AnimationModeThrow: {
 			
 			CGPoint o = _unroundedContentOffset;
@@ -798,7 +897,7 @@ static float clampBounce(float x) {
 			o.y = o.y - _throw.vy * dt;
 			
 			CGPoint fixedOffset = [self _fixProposedContentOffset:o];
-			if(!CGPointEqualToPoint(fixedOffset, o)) {
+			if (!CGPointEqualToPoint(fixedOffset, o)) {
 				[self _startBounce];
 			}
 			
@@ -808,11 +907,11 @@ static float clampBounce(float x) {
 			_throw.vy *= decelerationRate;
 			_throw.t = t;
 			
-			if(_throw.throwing && !self._pulling && !_bounce.bouncing) {
-				// may happen in the case where our we scrolled, then stopped, then lifted finger (didn't do a system-started throw, but timer started anyway to do something else)
+			if (_throw.throwing && !self._pulling && !_bounce.bouncing) {
+				// may happen in the case where our we scrolled, then stopped, then lifted finger (didn't do a system-started throw, but display link started anyway to do something else)
 				// todo - handle this before it happens, but keep this sanity check
-				if(MAX(fabsf(_throw.vx), fabsf(_throw.vy)) < 0.1) {
-					[self _stopTimer];
+				if (MAX(fabsf(_throw.vx), fabsf(_throw.vy)) < 0.1) {
+					[self _stopDisplayLink];
 				}
 			}
 			
@@ -827,57 +926,57 @@ static float clampBounce(float x) {
 			o = [self _fixProposedContentOffset:o];
 			[self _setContentOffset:o];
 			
-			if((fabsf(o.x - lastOffset.x) < 0.1) && (fabsf(o.y - lastOffset.y) < 0.1)) {
-				[self _stopTimer];
+			if ((fabsf(o.x - lastOffset.x) < 0.1) && (fabsf(o.y - lastOffset.y) < 0.1)) {
+				[self _stopDisplayLink];
 				[self setContentOffset:destinationOffset];
 			}
 			
 			break;
 		}
-    case AnimationModeScrollContinuous: {
-      CGFloat direction;
-      CGFloat distance;
-      
-      if(_dragScrollLocation.y <= TUIScrollViewContinuousScrollDragBoundary){
-        distance = MAX(0, MIN(TUIScrollViewContinuousScrollDragBoundary, _dragScrollLocation.y));
-        direction = 1;
-      }else if(_dragScrollLocation.y >= (self.bounds.size.height - TUIScrollViewContinuousScrollDragBoundary)){
-        distance = MAX(0, MIN(TUIScrollViewContinuousScrollDragBoundary, self.bounds.size.height - _dragScrollLocation.y));
-        direction = -1;
-      }else{
-        return; // no scrolling; outside drag boundary
-      }
-      
+		case AnimationModeScrollContinuous: {
+			CGFloat direction;
+			CGFloat distance;
+			
+			if (_dragScrollLocation.y <= TUIScrollViewContinuousScrollDragBoundary){
+				distance = MAX(0, MIN(TUIScrollViewContinuousScrollDragBoundary, _dragScrollLocation.y));
+				direction = 1;
+			}else if (_dragScrollLocation.y >= (self.bounds.size.height - TUIScrollViewContinuousScrollDragBoundary)){
+				distance = MAX(0, MIN(TUIScrollViewContinuousScrollDragBoundary, self.bounds.size.height - _dragScrollLocation.y));
+				direction = -1;
+			}else{
+				return; // no scrolling; outside drag boundary
+			}
+			
 			CGPoint offset = _unroundedContentOffset;
-      CGFloat step = (1.0 - (distance / TUIScrollViewContinuousScrollDragBoundary)) * TUIScrollViewContinuousScrollRate;
+			CGFloat step = (1.0 - (distance / TUIScrollViewContinuousScrollDragBoundary)) * TUIScrollViewContinuousScrollRate;
 			CGPoint dest = CGPointMake(offset.x, offset.y + (step * direction));
-      
+			
 			[self setContentOffset:dest];
 			
-      break;
-    }
+			break;
+		}
 	}
 }
 
 - (void)scrollRectToVisible:(CGRect)rect animated:(BOOL)animated {
 	CGRect visible = self.visibleRect;
-	if(rect.origin.y < visible.origin.y) {
+	if (rect.origin.y < visible.origin.y) {
 		// scroll down, have rect be flush with bottom of visible view
 		[self setContentOffset:CGPointMake(self.contentOffset.x, -rect.origin.y)
-                      animated:animated];
-	} else if(rect.origin.y + rect.size.height > visible.origin.y + visible.size.height) {
+					  animated:animated];
+	} else if (rect.origin.y + rect.size.height > visible.origin.y + visible.size.height) {
 		// scroll up, rect to be flush with top of view
 		[self setContentOffset:CGPointMake(self.contentOffset.x, -rect.origin.y + visible.size.height - rect.size.height)
-                      animated:animated];
-	} else if(rect.origin.x < visible.origin.x) {
-        // scroll right
-        [self setContentOffset:CGPointMake(-rect.origin.x, self.contentOffset.y)
-                      animated:animated];
-    } else if(rect.origin.x + rect.size.width > visible.origin.x + visible.size.width) {
-        // scroll left
-        [self setContentOffset:CGPointMake(-rect.origin.x + visible.size.width - rect.size.width, self.contentOffset.y)
-                      animated:animated];
-    }
+					  animated:animated];
+	} else if (rect.origin.x < visible.origin.x) {
+		// scroll right
+		[self setContentOffset:CGPointMake(-rect.origin.x, self.contentOffset.y)
+					  animated:animated];
+	} else if (rect.origin.x + rect.size.width > visible.origin.x + visible.size.width) {
+		// scroll left
+		[self setContentOffset:CGPointMake(-rect.origin.x + visible.size.width - rect.size.width, self.contentOffset.y)
+					  animated:animated];
+	}
 	[self.nsView invalidateHoverForView:self];
 }
 
@@ -907,9 +1006,9 @@ static float clampBounce(float x) {
 
 - (void)flashScrollIndicators
 {
-	[self.horizontalScrollKnob flash];
-	[self.verticalScrollKnob flash];
-	[self _updateScrollKnobsAnimated:YES];
+	[self.horizontalScroller flash];
+	[self.verticalScroller flash];
+	[self _updateScrollersAnimated:NO];
 }
 
 - (BOOL)isDragging
@@ -932,26 +1031,26 @@ static float clampBounce(float x) {
  - endGestureWithEvent
  - ScrollPhaseThrowingBegan
  
- [REDACTED] throw sequence:
+ 10.7 throw sequence:
  
  - beginGestureWithEvent
  - ScrollPhaseNormal
  - ...
  - ScrollPhaseNormal
  - endGestureWithEvent
- - ScrollPhaseNormal         <- ignore this
+ - ScrollPhaseNormal <- ignore this
  - ScrollPhaseThrowingBegan
  
  */
 
 - (void)beginGestureWithEvent:(NSEvent *)event
 {
-  
-	if(_scrollViewFlags.delegateScrollViewWillBeginDragging){
+	
+	if (_scrollViewFlags.delegateScrollViewWillBeginDragging){
 		[_delegate scrollViewWillBeginDragging:self];
 	}
 	
-	if(_scrollViewFlags.bounceEnabled) {
+	if (_scrollViewFlags.bounceEnabled) {
 		_throw.throwing = 0;
 		_scrollViewFlags.gestureBegan = 1; // this won't happen if window isn't key on 10.6, lame
 	}
@@ -960,66 +1059,66 @@ static float clampBounce(float x) {
 
 - (void)_startThrow
 {
-  
-  if(!self._pulling){
-    if(fabsf(_lastScroll.dy) < 2.0 && fabsf(_lastScroll.dx) < 2.0){
-      return; // don't bother throwing
-    }
-  }
 	
-	if(!_throw.throwing) {
-		_throw.throwing = TRUE;
+	if (!self._pulling){
+		if (fabsf(_lastScroll.dy) < 2.0 && fabsf(_lastScroll.dx) < 2.0){
+			return; // don't bother throwing
+		}
+	}
+	
+	if (!_throw.throwing) {
+		_throw.throwing = YES;
 		
 		CFAbsoluteTime t = CFAbsoluteTimeGetCurrent();
 		CFTimeInterval dt = t - _lastScroll.t;
-		if(dt < 1 / 60.0) dt = 1 / 60.0;
+		if (dt < 1 / 60.0) dt = 1 / 60.0;
 		
 		_throw.vx = _lastScroll.dx / dt;
 		_throw.vy = _lastScroll.dy / dt;
 		_throw.t = t;
 		
-		[self _startTimer:AnimationModeThrow];
-			
+		[self _startDisplayLink:AnimationModeThrow];
+		
 		BOOL pulling = self._pulling; // prefetch the pulling state before resetting it
 		
-		if(_pull.xPulling) {
+		if (_pull.xPulling) {
 			_pull.xPulling = NO;
-			if(signbit(_throw.vx) != signbit(_pull.x)) _throw.vx = 0.0;
+			if (signbit(_throw.vx) != signbit(_pull.x)) _throw.vx = 0.0;
 			[self _startBounce];
 			_bounce.x = _pull.x;
 		}
 		
-		if(_pull.yPulling) {
+		if (_pull.yPulling) {
 			_pull.yPulling = NO;
-			if(signbit(_throw.vy) != signbit(_pull.y)) _throw.vy = 0.0;
+			if (signbit(_throw.vy) != signbit(_pull.y)) _throw.vy = 0.0;
 			[self _startBounce];
 			_bounce.y = _pull.y;
 		}
 		
-    if(pulling && _scrollViewFlags.didChangeContentInset){
-      _scrollViewFlags.didChangeContentInset = 0;
-      _bounce.x += _contentInset.left;
-      _bounce.y += _contentInset.top;
-      _unroundedContentOffset.x -= _contentInset.left;
-      _unroundedContentOffset.y -= _contentInset.top;
-    }
-    
+		if (pulling && _scrollViewFlags.didChangeContentInset){
+			_scrollViewFlags.didChangeContentInset = 0;
+			_bounce.x += _contentInset.left;
+			_bounce.y += _contentInset.top;
+			_unroundedContentOffset.x -= _contentInset.left;
+			_unroundedContentOffset.y -= _contentInset.top;
+		}
+		
 	}
 	
 }
 
 - (void)endGestureWithEvent:(NSEvent *)event
 {
-  
-	if(_scrollViewFlags.delegateScrollViewDidEndDragging){
+	
+	if (_scrollViewFlags.delegateScrollViewDidEndDragging){
 		[_delegate scrollViewDidEndDragging:self];
 	}
 	
-	if(_scrollViewFlags.bounceEnabled) {
+	if (_scrollViewFlags.bounceEnabled) {
 		_scrollViewFlags.gestureBegan = 0;
 		[self _startThrow];
 		
-		if(isAtleastLion) {
+		if ([self.class requiresElasticSrolling]) {
 			_scrollViewFlags.ignoreNextScrollPhaseNormal_10_7 = 1;
 		}
 	}
@@ -1028,21 +1127,21 @@ static float clampBounce(float x) {
 
 - (void)scrollWheel:(NSEvent *)event
 {
-	if(_contentSize.height <= CGRectGetHeight(self.bounds)) {
+	if (_contentSize.height <= CGRectGetHeight(self.bounds)) {
 		[super scrollWheel:event];
 	}
 	
-	if(self.scrollEnabled)
+	if (self.scrollEnabled)
 	{
 		int phase = ScrollPhaseNormal;
 		
-		if(isAtleastLion) {
+		if ([self.class requiresElasticSrolling]) {
 			SEL s = @selector(momentumPhase);
-			if([event respondsToSelector:s]) {
+			if ([event respondsToSelector:s]) {
 				NSInteger (*imp)(id,SEL) = (NSInteger(*)(id,SEL))[event methodForSelector:s];
 				NSInteger lionPhase = imp(event, s);
 				
-				switch(lionPhase) {
+				switch (lionPhase) {
 					case 1:
 						phase = ScrollPhaseThrowingBegan;
 						break;
@@ -1056,15 +1155,15 @@ static float clampBounce(float x) {
 			}
 		} else {
 			SEL s = @selector(_scrollPhase);
-			if([event respondsToSelector:s]) {
+			if ([event respondsToSelector:s]) {
 				int (*imp)(id,SEL) = (int(*)(id,SEL))[event methodForSelector:s];
 				phase = imp(event, s);
 			}
 		}
 		
-		switch(phase) {
+		switch (phase) {
 			case ScrollPhaseNormal: {
-				if(_scrollViewFlags.ignoreNextScrollPhaseNormal_10_7) {
+				if (_scrollViewFlags.ignoreNextScrollPhaseNormal_10_7) {
 					_scrollViewFlags.ignoreNextScrollPhaseNormal_10_7 = 0;
 					return;
 				}
@@ -1073,33 +1172,34 @@ static float clampBounce(float x) {
 				_throw.throwing = 0;
 				_scrollViewFlags.didChangeContentInset = 0;
 				
-				[self _stopTimer];
+				[self _stopDisplayLink];
 				CGEventRef cgEvent = [event CGEvent];
 				const int64_t isContinuous = CGEventGetIntegerValueField(cgEvent, kCGScrollWheelEventIsContinuous);
-
+				
 				double dx = 0.0;
 				double dy = 0.0;
 				
-				if(isContinuous) {
-				  if(_scrollViewFlags.alwaysBounceHorizontal || [self _horizontalScrollKnobNeededForContentSize:self.contentSize])
-            dx = CGEventGetDoubleValueField(cgEvent, kCGScrollWheelEventPointDeltaAxis2);
-				  if(_scrollViewFlags.alwaysBounceVertical || [self _verticalScrollKnobNeededForContentSize:self.contentSize])
-				    dy = CGEventGetDoubleValueField(cgEvent, kCGScrollWheelEventPointDeltaAxis1);
+				if (isContinuous) {
+					if (_scrollViewFlags.alwaysBounceHorizontal || [self _horizontalScrollerNeededForContentSize:self.contentSize])
+						dx = CGEventGetDoubleValueField(cgEvent, kCGScrollWheelEventPointDeltaAxis2);
+					if (_scrollViewFlags.alwaysBounceVertical || [self _verticalScrollerNeededForContentSize:self.contentSize])
+						dy = CGEventGetDoubleValueField(cgEvent, kCGScrollWheelEventPointDeltaAxis1);
 				} else {
 					CGEventSourceRef source = CGEventCreateSourceFromEvent(cgEvent);
-					if(source) {
+					if (source) {
 						const double pixelsPerLine = CGEventSourceGetPixelsPerLine(source);
-						if(_scrollViewFlags.alwaysBounceHorizontal || [self _horizontalScrollKnobNeededForContentSize:self.contentSize])
-              dx = CGEventGetDoubleValueField(cgEvent, kCGScrollWheelEventFixedPtDeltaAxis2) * pixelsPerLine;
-            if(_scrollViewFlags.alwaysBounceVertical || [self _verticalScrollKnobNeededForContentSize:self.contentSize])
-              dy = CGEventGetDoubleValueField(cgEvent, kCGScrollWheelEventFixedPtDeltaAxis1) * pixelsPerLine;
+						
+						if (_scrollViewFlags.alwaysBounceHorizontal || [self _horizontalScrollerNeededForContentSize:self.contentSize])
+							dx = CGEventGetDoubleValueField(cgEvent, kCGScrollWheelEventFixedPtDeltaAxis2) * pixelsPerLine;
+						if (_scrollViewFlags.alwaysBounceVertical || [self _verticalScrollerNeededForContentSize:self.contentSize])
+							dy = CGEventGetDoubleValueField(cgEvent, kCGScrollWheelEventFixedPtDeltaAxis1) * pixelsPerLine;
 						CFRelease(source);
 					} else {
 						NSLog(@"Critical: NULL source from CGEventCreateSourceFromEvent");
 					}
 				}
 				
-				if(MAX(fabsf(dx), fabsf(dy)) > 0.00001) { // ignore 0.0, 0.0
+				if (MAX(fabsf(dx), fabsf(dy)) > 0.00001) { // ignore 0.0, 0.0
 					_lastScroll.dx = dx;
 					_lastScroll.dy = dy;
 					_lastScroll.t = CFAbsoluteTimeGetCurrent();
@@ -1107,11 +1207,11 @@ static float clampBounce(float x) {
 				
 				CGPoint o = _unroundedContentOffset;
 				
-				if(!_pull.xPulling) o.x = o.x + dx;
-				if(!_pull.yPulling) o.y = o.y - dy;
+				if (!_pull.xPulling) o.x = o.x + dx;
+				if (!_pull.yPulling) o.y = o.y - dy;
 				
-				BOOL xPulling = FALSE;
-				BOOL yPulling = FALSE;
+				BOOL xPulling = NO;
+				BOOL yPulling = NO;
 				{
 					CGPoint pull = o;
 					pull.x += ((_pull.xPulling) ? _pull.x : 0);
@@ -1123,35 +1223,35 @@ static float clampBounce(float x) {
 					yPulling = fixedOffset.y != pull.y;
 				}
 				
-				if(_scrollViewFlags.gestureBegan){
-          float maxManualPull = 30.0;
-          
-					if(_pull.xPulling){
+				if (_scrollViewFlags.gestureBegan){
+					float maxManualPull = 30.0;
+					
+					if (_pull.xPulling){
 						CGFloat xCounter = pow(M_E, -1.0 / maxManualPull * fabsf(_pull.x));
 						// don't counter on un-pull
-						if(signbit(_pull.x) != signbit(dx))
+						if (signbit(_pull.x) != signbit(dx))
 							xCounter = 1;
 						// update x-axis pulling
-						if(xPulling)
+						if (xPulling)
 							_pull.x += dx * xCounter;
-					}else if(xPulling){
-            _pull.x = dx;
+					}else if (xPulling){
+						_pull.x = dx;
 					}
 					
-					if(_pull.yPulling){
+					if (_pull.yPulling){
 						CGFloat yCounter = pow(M_E, -1.0 / maxManualPull * fabsf(_pull.y));
 						// don't counter on un-pull
-						if(signbit(_pull.y) == signbit(dy))
+						if (signbit(_pull.y) == signbit(dy))
 							yCounter = 1; // don't counter
 						// update y-axis pulling
-						if(yPulling)
+						if (yPulling)
 							_pull.y -= dy * yCounter;
-					}else if(yPulling){
-            _pull.y = -dy;
+					}else if (yPulling){
+						_pull.y = -dy;
 					}
 					
-          _pull.xPulling = xPulling;
-          _pull.yPulling = yPulling;
+					_pull.xPulling = xPulling;
+					_pull.yPulling = yPulling;
 				}
 				
 				[self setContentOffset:o];
@@ -1165,11 +1265,14 @@ static float clampBounce(float x) {
 				break;
 			}
 			case ScrollPhaseThrowingEnded: {
-				if(_scrollViewFlags.animationMode == AnimationModeThrow) { // otherwise we may have started a scrollToTop:animated:, don't want to stop that)
-					if(_bounce.bouncing) {
-						// ignore - let the bounce finish (_updateBounce will kill the timer when it's ready)
+				if (_scrollViewFlags.animationMode == AnimationModeThrow) { // otherwise we may have started a scrollToTop:animated:, don't want to stop that)
+					if (_bounce.bouncing) {
+						// ignore - let the bounce finish (_updateBounce will kill the display link when it's ready)
 					} else {
-						[self _stopTimer];
+						[self _stopDisplayLink];
+						if (_scrollViewFlags.delegateScrollViewDidEndDecelerating) {
+							[_delegate scrollViewDidEndDecelerating:self];
+						}
 					}
 				}
 				break;
@@ -1178,45 +1281,46 @@ static float clampBounce(float x) {
 	}
 }
 
--(void)mouseDown:(NSEvent *)event onSubview:(TUIView *)subview {
-  if(subview == self.verticalScrollKnob || subview == self.horizontalScrollKnob){
-    _scrollViewFlags.mouseDownInScrollKnob = TRUE;
-    [self _updateScrollKnobsAnimated:TRUE];
-  }
+- (void)mouseDown:(NSEvent *)event onSubview:(TUIView *)subview {
+	if (subview == self.verticalScroller || subview == self.horizontalScroller){
+		_scrollViewFlags.mouseDownInScroller = YES;
+		[self _updateScrollersAnimated:YES];
+	}
 	
 	[super mouseDown:event onSubview:subview];
 }
 
--(void)mouseUp:(NSEvent *)event fromSubview:(TUIView *)subview {
-  if(subview == self.verticalScrollKnob || subview == self.horizontalScrollKnob){
-    _scrollViewFlags.mouseDownInScrollKnob = FALSE;
-    [self _updateScrollKnobsAnimated:TRUE];
-  }
+- (void)mouseUp:(NSEvent *)event fromSubview:(TUIView *)subview {
+	if (subview == self.verticalScroller || subview == self.horizontalScroller){
+		_scrollViewFlags.mouseDownInScroller = NO;
+		[self _updateScrollersAnimated:YES];
+	}
 	
 	[super mouseUp:event fromSubview:subview];
 }
 
--(void)mouseEntered:(NSEvent *)event onSubview:(TUIView *)subview {
-  [super mouseEntered:event onSubview:subview];
-  if(!_scrollViewFlags.mouseInside){
-    _scrollViewFlags.mouseInside = TRUE;
-    [self _updateScrollKnobsAnimated:TRUE];
-  }
+- (void)mouseEntered:(NSEvent *)event onSubview:(TUIView *)subview {
+	[super mouseEntered:event onSubview:subview];
+	
+	if (!_scrollViewFlags.mouseInside){
+		_scrollViewFlags.mouseInside = YES;
+	}
 }
 
--(void)mouseExited:(NSEvent *)event fromSubview:(TUIView *)subview {
-  [super mouseExited:event fromSubview:subview];
-  CGPoint location = [self localPointForEvent:event];
-  CGRect visible = [self visibleRect];
-  if(_scrollViewFlags.mouseInside && ![self pointInside:CGPointMake(location.x, location.y + visible.origin.y) withEvent:event]){
-    _scrollViewFlags.mouseInside = FALSE;
-    [self _updateScrollKnobsAnimated:TRUE];
-  }
+- (void)mouseExited:(NSEvent *)event fromSubview:(TUIView *)subview {
+	[super mouseExited:event fromSubview:subview];
+	
+	CGPoint location = [self localPointForEvent:event];
+	CGRect visible = [self visibleRect];
+	CGPoint updatedLocation = CGPointMake(location.x, location.y + visible.origin.y);
+	
+	if (_scrollViewFlags.mouseInside && ![self pointInside:updatedLocation withEvent:event]){
+		_scrollViewFlags.mouseInside = NO;
+	}
 }
 
-- (BOOL)performKeyAction:(NSEvent *)event
-{
-	switch([[event charactersIgnoringModifiers] characterAtIndex:0]) {
+- (BOOL)performKeyAction:(NSEvent *)event {
+	switch ([[event charactersIgnoringModifiers] characterAtIndex:0]) {
 		case 63276: // page up
 			[self pageUp:nil];
 			return YES;
@@ -1230,12 +1334,13 @@ static float clampBounce(float x) {
 			[self scrollToBottomAnimated:YES];
 			return YES;
 		case 32: // spacebar
-			if([NSEvent modifierFlags] & NSShiftKeyMask)
+			if ([NSEvent modifierFlags] & NSShiftKeyMask)
 				[self pageUp:nil];
 			else
 				[self pageDown:nil];
 			return YES;
 	}
+	
 	return NO;
 }
 
