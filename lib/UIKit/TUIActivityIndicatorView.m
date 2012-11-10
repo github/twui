@@ -15,80 +15,147 @@
  */
 
 #import "TUIActivityIndicatorView.h"
+#import "TUILayoutConstraint.h"
+#import "TUICGAdditions.h"
+
+static TUIActivityIndicatorViewStyle const TUIActivityIndicatorDefaultStyle = TUIActivityIndicatorViewStyleGray;
+static CGRect const TUIActivityIndicatorDefaultFrame = {
+	.size.width = 32,
+	.size.height = 32
+};
+
+static CGFloat const TUIActivityIndicatorDefaultToothCount = 12.0f;
+static CGFloat const TUIActivityIndicatorDefaultToothWidth = 2.0f;
+
+@interface TUIActivityIndicatorView ()
+
+@property (nonatomic, readonly) TUIView *proxyIndicator;
+
+@property (nonatomic, readwrite, getter = isAnimating) BOOL animating;
+
+@end
 
 @implementation TUIActivityIndicatorView
 
-- (id)initWithActivityIndicatorStyle:(TUIActivityIndicatorViewStyle)style
-{
-	if((self = [super initWithFrame:CGRectMake(0, 0, 20, 20)]))
-	{
-		_activityIndicatorViewStyle = style;
+- (id)initWithFrame:(CGRect)frame activityIndicatorStyle:(TUIActivityIndicatorViewStyle)style {
+	if((self = [super initWithFrame:frame])) {
+		_proxyIndicator = [[TUIView alloc] initWithFrame:self.bounds];
+		self.proxyIndicator.autoresizingMask = TUIViewAutoresizingFlexibleSize;
+		self.proxyIndicator.backgroundColor = [NSColor clearColor];
+		self.proxyIndicator.userInteractionEnabled = NO;
+		self.proxyIndicator.hidden = YES;
+		[self addSubview:self.proxyIndicator];
 		
-		spinner = [[TUIView alloc] initWithFrame:self.bounds];
-		spinner.backgroundColor = [NSColor blackColor];
-		spinner.alpha = 0.2;
-		spinner.layer.cornerRadius = 10.0;
-		[self addSubview:spinner];
+		self.activityIndicatorStyle = style;
+		self.hidesWhenStopped = YES;
+		
+		__unsafe_unretained TUIActivityIndicatorView *weakSelf = self;
+		self.proxyIndicator.drawRect = ^(TUIView *indicator, CGRect rect) {
+			CGFloat radius = rect.size.width / 2.0f;
+			NSColor *toothColor = [NSColor whiteColor];
+			
+			if(weakSelf.activityIndicatorStyle == TUIActivityIndicatorViewStyleGray)
+				toothColor = [NSColor grayColor];
+			else if(weakSelf.activityIndicatorStyle == TUIActivityIndicatorViewStyleBlack)
+				toothColor = [NSColor blackColor];
+			
+			CGContextRef ctx = TUIGraphicsGetCurrentContext();
+			CGContextTranslateCTM(ctx, radius, radius);
+			CGContextScaleCTM(ctx, 1, -1);
+			
+			for(int toothNumber = 0; toothNumber < TUIActivityIndicatorDefaultToothCount; toothNumber++) {
+				CGFloat alpha = 0.3 + ((toothNumber / TUIActivityIndicatorDefaultToothCount) * 0.7);
+				[[toothColor colorWithAlphaComponent:alpha] setFill];
+				
+				CGContextRotateCTM(ctx, 1 / TUIActivityIndicatorDefaultToothCount * (M_PI * 2.0f));
+				CGRect toothRect = CGRectMake(-TUIActivityIndicatorDefaultToothWidth / 2.0f, -radius,
+											  TUIActivityIndicatorDefaultToothWidth, ceilf(radius * 0.54f));
+				CGContextFillRoundRect(ctx, toothRect, TUIActivityIndicatorDefaultToothWidth / 2.0f);
+			}
+		};
 	}
 	return self;
 }
 
-- (TUIActivityIndicatorViewStyle)activityIndicatorViewStyle
-{
-	return _activityIndicatorViewStyle;
+- (id)initWithFrame:(CGRect)frame {
+	return [self initWithFrame:frame activityIndicatorStyle:TUIActivityIndicatorDefaultStyle];
 }
 
-- (void)startAnimating
-{
-	if(!_animating) {
-		CGFloat duration = 1.0;
+- (id)initWithActivityIndicatorStyle:(TUIActivityIndicatorViewStyle)style {
+	return [self initWithFrame:TUIActivityIndicatorDefaultFrame activityIndicatorStyle:style];
+}
+
+- (void)setHidesWhenStopped:(BOOL)hide {
+	_hidesWhenStopped = hide;
+	if(!self.animating && !hide)
+		self.proxyIndicator.hidden = NO;
+	else
+		self.proxyIndicator.hidden = YES;
+}
+
+- (void)setActivityIndicatorStyle:(TUIActivityIndicatorViewStyle)style {
+	_activityIndicatorStyle = style;
+	[self refreshAnimations];
+}
+
+- (void)startAnimating {
+	if(!self.animating) {
+		self.proxyIndicator.hidden = NO;
+		self.animating = YES;
 		
-		{
-			CABasicAnimation *animation = [CABasicAnimation animation];
-			animation.repeatCount = INT_MAX;
-			animation.duration = duration;
-			animation.fromValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(0.1, 0.1, 0.1)];
-			animation.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(1.0, 1.0, 1.0)];
-			[spinner.layer addAnimation:animation forKey:@"transform"];
-		}
-		
-		{
-			CAKeyframeAnimation *animation = [CAKeyframeAnimation animation];
-			animation.values = [NSArray arrayWithObjects:
-								[NSNumber numberWithFloat:0.0],
-								[NSNumber numberWithFloat:0.3],
-								[NSNumber numberWithFloat:0.0],
-								nil];
-			animation.repeatCount = INT_MAX;
-			animation.duration = duration;
-			[spinner.layer addAnimation:animation forKey:@"opacity"];
-		}
-		
-		_animating = YES;
+		[self refreshAnimations];
 	}
 }
 
-- (void)stopAnimating
-{
-	if(_animating) {
-		[spinner.layer removeAllAnimations];
-		_animating = NO;
+- (void)refreshAnimations {
+	if(self.animating) {
+		[self.proxyIndicator.layer removeAllAnimations];
+		
+		NSMutableArray *values = [NSMutableArray array];
+		NSMutableArray *times = [NSMutableArray array];
+		
+		for(int i = 0; i < TUIActivityIndicatorDefaultToothCount + 1; i++)
+			[values addObject:@(2.0 * (-i / TUIActivityIndicatorDefaultToothCount) * M_PI)];
+		
+		for(int i = 0; i < TUIActivityIndicatorDefaultToothCount + 1; i++)
+			[times addObject:@(1.0 * (i / TUIActivityIndicatorDefaultToothCount))];
+		
+		CAKeyframeAnimation *rotate = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation.z"];
+		rotate.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
+		rotate.calculationMode = kCAAnimationDiscrete;
+		rotate.repeatCount = HUGE_VALF;
+		rotate.duration = 1.0f;
+		rotate.values = values;
+		rotate.keyTimes = times;
+		rotate.cumulative = YES;
+		
+		[self.proxyIndicator.layer addAnimation:rotate forKey:nil];
 	}
 }
 
-- (BOOL)isAnimating
-{
-	return _animating;
+- (void)stopAnimating {
+	if(self.animating) {
+		if(self.hidesWhenStopped)
+			self.proxyIndicator.hidden = YES;
+		
+		[self.proxyIndicator.layer removeAllAnimations];
+		self.animating = NO;
+	}
 }
 
-- (CGSize)sizeThatFits:(CGSize)size
-{
-	return CGSizeMake(20, 20);
+// Animation glitch fixes-- don't let the view lose its animations
+// because we take charge of that. When the view is moved on or
+// off a window or superview, refresh the animation, so it doesn't freeze.
+- (void)removeAllAnimations {
+	// Don't remove any animations.
 }
 
-- (void)removeAllAnimations
-{
-	// do nothing
+- (void)willMoveToSuperview:(TUIView *)newSuperview {
+	[self refreshAnimations];
+}
+
+- (void)willMoveToWindow:(TUINSWindow *)newWindow {
+	[self refreshAnimations];
 }
 
 @end
