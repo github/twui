@@ -715,6 +715,9 @@ static CAAnimation *ThrobAnimation()
 	return CGSizeMake(CGRectGetWidth(self.bounds), textSize.height + contentInset.top + contentInset.bottom);
 }
 
+- (BOOL)becomeFirstResponder {
+    return renderer.becomeFirstResponder;
+}
 
 #pragma mark TUITextRendererDelegate
 
