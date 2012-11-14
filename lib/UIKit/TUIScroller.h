@@ -15,29 +15,17 @@
  */
 
 #import "TUIView.h"
+#import "TUIScrollView.h"
 
-@class TUIScrollView;
-
-@interface TUIScrollKnob : TUIView
-{
-	TUIScrollView *__unsafe_unretained scrollView;
-	TUIView *knob;
-	CGPoint _mouseDown;
-	CGRect _knobStartFrame;
-	
-	struct {
-		unsigned int hover:1;
-		unsigned int active:1;
-		unsigned int trackingInsideKnob:1;
-		unsigned int scrollIndicatorStyle:2;
-		unsigned int flashing:1;
-	} _scrollKnobFlags;
-}
+@interface TUIScroller : TUIView
 
 @property (nonatomic, unsafe_unretained) TUIScrollView *scrollView;
-@property (nonatomic, assign) unsigned int scrollIndicatorStyle;
 @property (nonatomic, readonly) TUIView *knob;
-@property (nonatomic, readonly) BOOL flashing;
+
+@property (nonatomic, assign) TUIScrollViewIndicatorStyle scrollIndicatorStyle;
+
+@property (nonatomic, readonly, getter = isFlashing) BOOL flashing;
+@property (nonatomic, readonly, getter = isExpanded) BOOL expanded;
 
 - (void)flash;
 

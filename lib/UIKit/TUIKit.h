@@ -33,6 +33,7 @@
 #import "TUIImageView.h"
 #import "TUILabel.h"
 #import "TUILayoutConstraint.h"
+#import "TUINavigationController.h"
 #import "TUINSView.h"
 #import "TUINSView+Hyperfocus.h"
 #import "TUINSView+NSTextInputClient.h"

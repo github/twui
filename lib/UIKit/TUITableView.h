@@ -70,7 +70,6 @@ typedef enum {
 	NSArray                     * _sectionInfo;
 	
 	TUIView                     * _pullDownView;
-	TUIView							        * _headerView;
 	
 	CGSize                        _lastSize;
 	CGFloat                       _contentHeight;
@@ -168,6 +167,7 @@ typedef enum {
 - (BOOL)pullDownViewIsVisible;
 
 @property (nonatomic, strong) TUIView *headerView;
+@property (nonatomic, strong) TUIView *footerView;
 
 /**
  Used by the delegate to acquire an already allocated cell, in lieu of allocating a new one.

@@ -46,6 +46,14 @@
 		_tableView.dataSource = self;
 		_tableView.delegate = self;
 		_tableView.maintainContentOffsetAfterReload = YES;
+		
+		TUILabel *footerLabel = [[TUILabel alloc] initWithFrame:CGRectMake(0, 0, _tableView.frame.size.width, 44)];
+		footerLabel.alignment = TUITextAlignmentCenter;
+		footerLabel.backgroundColor = [NSColor clearColor];
+		footerLabel.font = exampleFont2;
+		footerLabel.text = @"Example Footer View";
+		_tableView.footerView = footerLabel;
+		
 		[self addSubview:_tableView];
 		
 		_tabBar = [[ExampleTabBar alloc] initWithNumberOfTabs:5];
