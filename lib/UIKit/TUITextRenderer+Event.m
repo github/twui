@@ -299,7 +299,7 @@ normal:
 }
 
 - (BOOL)becomeFirstResponder
-{
+{    
 	// TODO: obviously these shouldn't be called at exactly the same time...
 	if(_flags.delegateWillBecomeFirstResponder) [delegate textRendererWillBecomeFirstResponder:self];
 	if(_flags.delegateDidBecomeFirstResponder) [delegate textRendererDidBecomeFirstResponder:self];
@@ -307,6 +307,8 @@ normal:
 	[[NSNotificationCenter defaultCenter] postNotificationName:TUITextRendererDidBecomeFirstResponder
 								object:self];
 	
+    if([self acceptsFirstResponder])
+		[[view nsWindow] tui_makeFirstResponder:self];
 	return YES;
 }
 

@@ -772,8 +772,10 @@ static NSInteger SortCells(TUITableViewCell *a, TUITableViewCell *b, void *ctx)
 					}
 				}
 				
-				section.headerView.frame = headerFrame;
-				[section.headerView setNeedsLayout];
+				if (![self __isDraggingCell]) {
+					section.headerView.frame = headerFrame;
+					[section.headerView setNeedsLayout];
+				}
 				
 				if(section.headerView.superview == nil){
 					[self addSubview:section.headerView];
