@@ -20,6 +20,7 @@
 		484C209615F445EB00B3104E /* ExampleView.m in Sources */ = {isa = PBXBuildFile; fileRef = 484C208815F445EB00B3104E /* ExampleView.m */; };
 		484C209715F445EB00B3104E /* large-image.jpeg in Resources */ = {isa = PBXBuildFile; fileRef = 484C208915F445EB00B3104E /* large-image.jpeg */; };
 		484C209815F445EB00B3104E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 484C208A15F445EB00B3104E /* main.m */; };
+		500088B2165362E60067ED42 /* ExampleTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 500088B1165362E60067ED42 /* ExampleTableViewController.m */; };
 		5C782FD013A54FFF00CF69EF /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C782FCF13A54FFD00CF69EF /* ApplicationServices.framework */; };
 		5C782FD713A556A900CF69EF /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C782FD613A556A800CF69EF /* QuartzCore.framework */; };
 		5ED56678139DC30300031CDF /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5ED56677139DC30300031CDF /* Cocoa.framework */; };
@@ -86,6 +87,8 @@
 		484C208815F445EB00B3104E /* ExampleView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExampleView.m; sourceTree = "<group>"; };
 		484C208915F445EB00B3104E /* large-image.jpeg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "large-image.jpeg"; sourceTree = "<group>"; };
 		484C208A15F445EB00B3104E /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		500088B0165362E60067ED42 /* ExampleTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExampleTableViewController.h; sourceTree = "<group>"; };
+		500088B1165362E60067ED42 /* ExampleTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExampleTableViewController.m; sourceTree = "<group>"; };
 		5C782FCF13A54FFD00CF69EF /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
 		5C782FD613A556A800CF69EF /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		5ED56673139DC30300031CDF /* Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -124,6 +127,8 @@
 				484C208415F445EB00B3104E /* ExampleTabBar.m */,
 				484C208515F445EB00B3104E /* ExampleTableViewCell.h */,
 				484C208615F445EB00B3104E /* ExampleTableViewCell.m */,
+				500088B0165362E60067ED42 /* ExampleTableViewController.h */,
+				500088B1165362E60067ED42 /* ExampleTableViewController.m */,
 				484C208715F445EB00B3104E /* ExampleView.h */,
 				484C208815F445EB00B3104E /* ExampleView.m */,
 				484C207915F445EB00B3104E /* MainMenu.xib */,
@@ -308,6 +313,7 @@
 				484C209515F445EB00B3104E /* ExampleTableViewCell.m in Sources */,
 				484C209615F445EB00B3104E /* ExampleView.m in Sources */,
 				484C209815F445EB00B3104E /* main.m in Sources */,
+				500088B2165362E60067ED42 /* ExampleTableViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

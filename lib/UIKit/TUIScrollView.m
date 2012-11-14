@@ -137,6 +137,9 @@ static BOOL isAtleastMountainLion = NO;
 
 - (void)dealloc
 {
+	self.verticalScroller.scrollView = nil;
+	self.horizontalScroller.scrollView = nil;
+	
 	if (displayLink) {
 		CVDisplayLinkRelease(displayLink);
 	}

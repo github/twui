@@ -15,7 +15,7 @@
 
 @end
 
-static CGFloat const TUINavigationControllerAnimationDuration = 0.5f;
+static CGFloat const TUINavigationControllerAnimationDuration = 0.25f;
 
 @implementation TUINavigationController
 
@@ -24,6 +24,7 @@ static CGFloat const TUINavigationControllerAnimationDuration = 0.5f;
 	if (self) {
 		_stack = [@[] mutableCopy];
 		[_stack addObject:viewController];
+		viewController.navigationController = self;
 		self.view.clipsToBounds = YES;
 	}
 	return self;
@@ -34,11 +35,20 @@ static CGFloat const TUINavigationControllerAnimationDuration = 0.5f;
 	self.view.backgroundColor = [NSColor lightGrayColor];
 	
 	TUIViewController *visible = [self topViewController];
+	
 	[visible viewWillAppear:NO];
+	if ([self.delegate respondsToSelector:@selector(navigationController:willShowViewController:animated:)]) {
+		[self.delegate navigationController:self willShowViewController:visible animated:NO];
+	}
+	
 	[self.view addSubview:visible.view];
 	visible.view.frame = self.view.bounds;
 	visible.view.autoresizingMask = TUIViewAutoresizingFlexibleSize;
+	
 	[visible viewDidAppear:YES];
+	if ([self.delegate respondsToSelector:@selector(navigationController:didShowViewController:animated:)]) {
+		[self.delegate navigationController:self didShowViewController:visible animated:NO];
+	}
 
 }
 
@@ -53,9 +63,12 @@ static CGFloat const TUINavigationControllerAnimationDuration = 0.5f;
 }
 
 #pragma mark - Methods
+- (void)setViewControllers:(NSArray *)viewControllers animated:(BOOL)animated {
+	[self setViewControllers:viewControllers animated:animated completion:nil];
+}
 
-- (void)setViewControllers:(NSArray *)viewControllers animated:(BOOL)animated {	
-	CGFloat duration = animated ? TUINavigationControllerAnimationDuration : 0;
+- (void)setViewControllers:(NSArray *)viewControllers animated:(BOOL)animated completion:(void (^)(BOOL finished))completion {	
+	CGFloat duration = (animated ? TUINavigationControllerAnimationDuration : 0);
 
 	TUIViewController *viewController = [viewControllers lastObject];
 	BOOL containedAlready = ([_stack containsObject:viewController]);
@@ -63,34 +76,61 @@ static CGFloat const TUINavigationControllerAnimationDuration = 0.5f;
 	[CATransaction begin];
 	//Push if it's not in the stack, pop back if it is
 	[self.view addSubview:viewController.view];
-	viewController.view.frame = containedAlready ? TUINavigationOffscreenLeftFrame(self.view.bounds) : TUINavigationOffscreenRightFrame(self.view.bounds);
+	viewController.view.frame = (containedAlready ? TUINavigationOffscreenLeftFrame(self.view.bounds) : TUINavigationOffscreenRightFrame(self.view.bounds));
 	[CATransaction flush];
 	[CATransaction commit];
 
 	TUIViewController *last = [self topViewController];
 
+	for (TUIViewController *controller in _stack) {
+		controller.navigationController = nil;
+	}
 	[_stack removeAllObjects];
 	[_stack addObjectsFromArray:viewControllers];
+	for (TUIViewController *controller in viewControllers) {
+		controller.navigationController = self;
+	}
 	
 	[TUIView animateWithDuration:duration animations:^{
-		last.view.frame = containedAlready ? TUINavigationOffscreenRightFrame(self.view.bounds) : TUINavigationOffscreenLeftFrame(self.view.bounds);
+		last.view.frame = (containedAlready ? TUINavigationOffscreenRightFrame(self.view.bounds) : TUINavigationOffscreenLeftFrame(self.view.bounds));
 		viewController.view.frame = self.view.bounds;
 	} completion:^(BOOL finished) {
 		[last.view removeFromSuperview];
+		
 		[viewController viewDidAppear:animated];
+		if ([self.delegate respondsToSelector:@selector(navigationController:didShowViewController:animated:)]) {
+			[self.delegate navigationController:self didShowViewController:viewController animated:animated];
+		}
+		
 		[last viewDidDisappear:animated];
+		
+		if (completion) {
+			completion(finished);
+		}
+		
 	}];
 }
 
 - (void)pushViewController:(TUIViewController *)viewController animated:(BOOL)animated {
+	[self pushViewController:viewController animated:animated completion:nil];
+}
+
+- (void)pushViewController:(TUIViewController *)viewController animated:(BOOL)animated completion:(void (^)(BOOL finished))completion {
 
 	TUIViewController *last = [self topViewController];
 	[_stack addObject:viewController];
-	CGFloat duration = animated ? TUINavigationControllerAnimationDuration : 0;
+	viewController.navigationController = self;
+
+	CGFloat duration = (animated ? TUINavigationControllerAnimationDuration : 0);
 		
 	[last viewWillDisappear:animated];
+	
+	
 	[viewController viewWillAppear:animated];
-
+	if ([self.delegate respondsToSelector:@selector(navigationController:willShowViewController:animated:)]) {
+		[self.delegate navigationController:self willShowViewController:viewController animated:animated];
+	}
+	
 	[self.view addSubview:viewController.view];
 	
 	//Make sure the app draws the frame offscreen instead of just 'popping' it in
@@ -104,29 +144,51 @@ static CGFloat const TUINavigationControllerAnimationDuration = 0.5f;
 		viewController.view.frame = self.view.bounds;
 	} completion:^(BOOL finished) {
 		[last.view removeFromSuperview];
+		
 		[viewController viewDidAppear:animated];
+		if ([self.delegate respondsToSelector:@selector(navigationController:didShowViewController:animated:)]) {
+			[self.delegate navigationController:self didShowViewController:viewController animated:animated];
+		}
+
 		[last viewDidDisappear:animated];
+		
+		if (completion) {
+			completion(finished);
+		}
+		
 	}];
 }
 
-- (TUIViewController *)popViewControlerAnimated:(BOOL)animated {
+- (TUIViewController *)popViewControllerAnimated:(BOOL)animated {
+	return [self popViewControllerAnimated:animated completion:nil];
+}
+
+- (TUIViewController *)popViewControllerAnimated:(BOOL)animated completion:(void (^)(BOOL finished))completion {
 	if ([_stack count] <= 1) {
 		NSLog(@"Not enough view controllers on stack to pop");
 		return nil;
 	}
 	TUIViewController *popped = [_stack lastObject];
-	[self popToViewController:[_stack objectAtIndex:([_stack count] - 2)] animated:animated];
+	[self popToViewController:_stack[([_stack count] - 2)] animated:animated completion:completion];
 	return popped;
 }
 
 - (NSArray *)popToRootViewControllerAnimated:(BOOL)animated {
-	if ([[self topViewController] isEqual:[_stack objectAtIndex:0]] == YES) {
+	return [self popToRootViewControllerAnimated:animated completion:nil];
+}
+
+- (NSArray *)popToRootViewControllerAnimated:(BOOL)animated completion:(void (^)(BOOL finished))completion {
+	if ([[self topViewController] isEqual:_stack[0]] == YES) {
 		return @[];
 	}
-	return [self popToViewController:[_stack objectAtIndex:0] animated:animated];
+	return [self popToViewController:_stack[0] animated:animated completion:completion];
 }
 
 - (NSArray *)popToViewController:(TUIViewController *)viewController animated:(BOOL)animated {
+	return [self popToViewController:viewController animated:animated completion:nil];
+}
+
+- (NSArray *)popToViewController:(TUIViewController *)viewController animated:(BOOL)animated completion:(void (^)(BOOL finished))completion {
 	if ([_stack containsObject:viewController] == NO) {
 		NSLog(@"View controller %@ is not in stack", viewController);
 		return @[];
@@ -137,6 +199,7 @@ static CGFloat const TUINavigationControllerAnimationDuration = 0.5f;
 	NSMutableArray *popped = [@[] mutableCopy];
 	while ([viewController isEqual:[_stack lastObject]] == NO) {
 		[popped addObject:[_stack lastObject]];
+		[(TUIViewController *)[_stack lastObject] setNavigationController:nil];
 		[_stack removeLastObject];
 	}
 	
@@ -144,18 +207,32 @@ static CGFloat const TUINavigationControllerAnimationDuration = 0.5f;
 	[self.view addSubview:viewController.view];
 	viewController.view.frame = TUINavigationOffscreenLeftFrame(self.view.bounds);
 	
-	CGFloat duration = animated ? TUINavigationControllerAnimationDuration : 0;
+	CGFloat duration = (animated ? TUINavigationControllerAnimationDuration : 0);
 
 	[last viewWillDisappear:animated];
+	
 	[viewController viewWillAppear:animated];
+	if ([self.delegate respondsToSelector:@selector(navigationController:willShowViewController:animated:)]) {
+		[self.delegate navigationController:self willShowViewController:viewController animated:animated];
+	}
 	
 	[TUIView animateWithDuration:duration animations:^{
 		last.view.frame = TUINavigationOffscreenRightFrame(self.view.bounds);
 		viewController.view.frame = self.view.bounds;
 	} completion:^(BOOL finished) {
 		[last.view removeFromSuperview];
+		
 		[viewController viewDidAppear:animated];
+		if ([self.delegate respondsToSelector:@selector(navigationController:didShowViewController:animated:)]) {
+			[self.delegate navigationController:self didShowViewController:viewController animated:animated];
+		}
+
 		[last viewDidDisappear:animated];
+		
+		if (completion) {
+			completion(finished);
+		}
+		
 	}];
 
 	
