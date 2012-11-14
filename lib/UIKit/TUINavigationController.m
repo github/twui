@@ -39,7 +39,7 @@ static CGFloat const TUINavigationControllerAnimationDuration = 0.5f;
 	visible.view.frame = self.view.bounds;
 	visible.view.autoresizingMask = TUIViewAutoresizingFlexibleSize;
 	[visible viewDidAppear:YES];
-
+	
 }
 
 #pragma mark - Properties
@@ -54,26 +54,26 @@ static CGFloat const TUINavigationControllerAnimationDuration = 0.5f;
 
 #pragma mark - Methods
 
-- (void)setViewControllers:(NSArray *)viewControllers animated:(BOOL)animated {	
-	CGFloat duration = animated ? TUINavigationControllerAnimationDuration : 0;
-
+- (void)setViewControllers:(NSArray *)viewControllers animated:(BOOL)animated {
+	CGFloat duration = (animated ? TUINavigationControllerAnimationDuration : 0);
+	
 	TUIViewController *viewController = [viewControllers lastObject];
 	BOOL containedAlready = ([_stack containsObject:viewController]);
 	
 	[CATransaction begin];
 	//Push if it's not in the stack, pop back if it is
 	[self.view addSubview:viewController.view];
-	viewController.view.frame = containedAlready ? TUINavigationOffscreenLeftFrame(self.view.bounds) : TUINavigationOffscreenRightFrame(self.view.bounds);
+	viewController.view.frame = (containedAlready ? TUINavigationOffscreenLeftFrame(self.view.bounds) : TUINavigationOffscreenRightFrame(self.view.bounds));
 	[CATransaction flush];
 	[CATransaction commit];
-
+	
 	TUIViewController *last = [self topViewController];
-
+	
 	[_stack removeAllObjects];
 	[_stack addObjectsFromArray:viewControllers];
 	
 	[TUIView animateWithDuration:duration animations:^{
-		last.view.frame = containedAlready ? TUINavigationOffscreenRightFrame(self.view.bounds) : TUINavigationOffscreenLeftFrame(self.view.bounds);
+		last.view.frame = (containedAlready ? TUINavigationOffscreenRightFrame(self.view.bounds) : TUINavigationOffscreenLeftFrame(self.view.bounds));
 		viewController.view.frame = self.view.bounds;
 	} completion:^(BOOL finished) {
 		[last.view removeFromSuperview];
@@ -83,14 +83,13 @@ static CGFloat const TUINavigationControllerAnimationDuration = 0.5f;
 }
 
 - (void)pushViewController:(TUIViewController *)viewController animated:(BOOL)animated {
-
 	TUIViewController *last = [self topViewController];
 	[_stack addObject:viewController];
-	CGFloat duration = animated ? TUINavigationControllerAnimationDuration : 0;
-		
+	CGFloat duration = (animated ? TUINavigationControllerAnimationDuration : 0);
+	
 	[last viewWillDisappear:animated];
 	[viewController viewWillAppear:animated];
-
+	
 	[self.view addSubview:viewController.view];
 	
 	//Make sure the app draws the frame offscreen instead of just 'popping' it in
@@ -98,7 +97,7 @@ static CGFloat const TUINavigationControllerAnimationDuration = 0.5f;
 	viewController.view.frame = TUINavigationOffscreenRightFrame(self.view.bounds);
 	[CATransaction flush];
 	[CATransaction commit];
-
+	
 	[TUIView animateWithDuration:duration animations:^{
 		last.view.frame = TUINavigationOffscreenLeftFrame(self.view.bounds);
 		viewController.view.frame = self.view.bounds;
@@ -144,8 +143,8 @@ static CGFloat const TUINavigationControllerAnimationDuration = 0.5f;
 	[self.view addSubview:viewController.view];
 	viewController.view.frame = TUINavigationOffscreenLeftFrame(self.view.bounds);
 	
-	CGFloat duration = animated ? TUINavigationControllerAnimationDuration : 0;
-
+	CGFloat duration = (animated ? TUINavigationControllerAnimationDuration : 0);
+	
 	[last viewWillDisappear:animated];
 	[viewController viewWillAppear:animated];
 	
@@ -157,7 +156,7 @@ static CGFloat const TUINavigationControllerAnimationDuration = 0.5f;
 		[viewController viewDidAppear:animated];
 		[last viewDidDisappear:animated];
 	}];
-
+	
 	
 	return popped;
 }
