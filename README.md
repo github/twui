@@ -34,16 +34,6 @@ This project follows the [SemVer](http://semver.org/) standard. The API may chan
 
 The goal of TwUI is to build a high-quality UI framework designed specifically for the Mac.  Much inspiration comes from UIKit, but diverging to try new things (i.e. block-based layout and drawRect), and optimizing for Mac-specific interactions is encouraged.
 
-# Contributing
-
-We will happily accept pull requests that meet one of the following criteria:
-
- 1. It fixes some functionality that is already in TwUI. This might be a bug, or something not working as expected.
- 2. It's something so basic or important that TwUI really should have it.
- 3. It has to integrate with TwUI internals, and so can't easily be done outside of the framework. This one is the most ambiguous, because interesting things may match this criterion, but still be way out of scope. In some cases, a fork might be more appropriate. Use your best judgment.
-
-All contributions should match our [coding conventions](https://github.com/github/objective-c-conventions).
-
 # Community
 
 TwUI has a mailing list, subscribe by sending an email to <twui@librelist.com>.
