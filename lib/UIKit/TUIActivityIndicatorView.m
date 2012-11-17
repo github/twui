@@ -60,6 +60,7 @@ static CGFloat const TUIActivityIndicatorDefaultToothWidth = 2.0f;
 				toothColor = [NSColor blackColor];
 			
 			CGContextRef ctx = TUIGraphicsGetCurrentContext();
+			CGContextSaveGState(ctx);
 			CGContextTranslateCTM(ctx, radius, radius);
 			CGContextScaleCTM(ctx, 1, -1);
 			
@@ -72,6 +73,8 @@ static CGFloat const TUIActivityIndicatorDefaultToothWidth = 2.0f;
 											  TUIActivityIndicatorDefaultToothWidth, ceilf(radius * 0.54f));
 				CGContextFillRoundRect(ctx, toothRect, TUIActivityIndicatorDefaultToothWidth / 2.0f);
 			}
+			
+			CGContextRestoreGState(ctx);
 		};
 	}
 	return self;

@@ -17,15 +17,10 @@
 #import "TUIKit.h"
 #import "ExampleTabBar.h"
 
-@interface ExampleView : TUIView <TUITableViewDelegate, TUITableViewDataSource, ExampleTabBarDelegate>
-{
-	TUITableView *_tableView;
-	ExampleTabBar *_tabBar;
-	
-	NSFont *exampleFont1;
-	NSFont *exampleFont2;
-	
-	TUIPopover *tabInformation;
-}
+@interface ExampleView : TUIView <ExampleTabBarDelegate>
+
+@property (nonatomic, strong) ExampleTabBar *tabBar;
+@property (nonatomic, strong) TUIPopover *tabInformation;
+@property (nonatomic, strong) TUINavigationController *navigationController;
 
 @end
