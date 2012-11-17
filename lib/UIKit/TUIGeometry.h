@@ -39,6 +39,15 @@ static inline BOOL TUIEdgeInsetsEqualToEdgeInsets(TUIEdgeInsets insets1, TUIEdge
 
 extern const TUIEdgeInsets TUIEdgeInsetsZero;
 
+enum {
+    TUIRectCornerTopLeft     = 1 << 0,
+    TUIRectCornerTopRight    = 1 << 1,
+    TUIRectCornerBottomLeft  = 1 << 2,
+    TUIRectCornerBottomRight = 1 << 3,
+    TUIRectCornerAllCorners  = ~0
+};
+typedef NSUInteger TUIRectCorner;
+
 /**
  * @brief Constrain a point to a rectangular region
  * 

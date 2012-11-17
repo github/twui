@@ -1,6 +1,7 @@
 #import "NSBezierPath+TUIExtensions.h"
 #import "TUICGAdditions.h"
 
+// Sourced from Apple Documentation.
 static void CGPathCallback(void *info, const CGPathElement *element) {
 	NSBezierPath *path = (__bridge NSBezierPath *)(info);
 	CGPoint *points = element->points;
@@ -34,6 +35,7 @@ static void CGPathCallback(void *info, const CGPathElement *element) {
 
 @implementation NSBezierPath (TUIExtensions)
 
+// Sourced from Apple Documentation.
 + (NSBezierPath *)bezierPathWithCGPath:(CGPathRef)pathRef {
 	NSBezierPath *path = [NSBezierPath bezierPath];
 	CGPathApply(pathRef, (__bridge void *)(path), CGPathCallback);
@@ -82,8 +84,13 @@ static void CGPathCallback(void *info, const CGPathElement *element) {
     return immutablePath;
 }
 
++ (NSBezierPath *)bezierPathWithRoundedRect:(NSRect)rect radius:(CGFloat)radius {
+	return [self bezierPathWithRoundedRect:rect xRadius:radius yRadius:radius];
+}
+
+// Sourced from Google Source Toolbox for Mac.
 + (NSBezierPath *)bezierPathWithRoundedRect:(CGRect)rect
-                           byRoundingCorners:(NSRectCorner)corners
+                           byRoundingCorners:(TUIRectCorner)corners
                                  cornerRadii:(CGSize)cornerRadii {
     CGMutablePathRef path = CGPathCreateMutable();
     
@@ -92,26 +99,26 @@ static void CGPathCallback(void *info, const CGPathElement *element) {
     const CGPoint bottomRight = CGPointMake(CGRectGetMaxX(rect), CGRectGetMaxY(rect));
     const CGPoint bottomLeft = CGPointMake(CGRectGetMinX(rect), CGRectGetMaxY(rect));
     
-    if (corners & NSRectCornerTopLeft)
+    if (corners & TUIRectCornerTopLeft)
         CGPathMoveToPoint(path, NULL, topLeft.x+cornerRadii.width, topLeft.y);
     else CGPathMoveToPoint(path, NULL, topLeft.x, topLeft.y);
     
-    if (corners & NSRectCornerTopRight) {
+    if (corners & TUIRectCornerTopRight) {
         CGPathAddLineToPoint(path, NULL, topRight.x-cornerRadii.width, topRight.y);
         CGPathAddCurveToPoint(path, NULL, topRight.x, topRight.y, topRight.x, topRight.y+cornerRadii.height, topRight.x, topRight.y+cornerRadii.height);
     } else CGPathAddLineToPoint(path, NULL, topRight.x, topRight.y);
     
-    if (corners & NSRectCornerBottomRight) {
+    if (corners & TUIRectCornerBottomRight) {
         CGPathAddLineToPoint(path, NULL, bottomRight.x, bottomRight.y-cornerRadii.height);
         CGPathAddCurveToPoint(path, NULL, bottomRight.x, bottomRight.y, bottomRight.x-cornerRadii.width, bottomRight.y, bottomRight.x-cornerRadii.width, bottomRight.y);
     } else CGPathAddLineToPoint(path, NULL, bottomRight.x, bottomRight.y);
     
-    if (corners & NSRectCornerBottomLeft) {
+    if (corners & TUIRectCornerBottomLeft) {
         CGPathAddLineToPoint(path, NULL, bottomLeft.x+cornerRadii.width, bottomLeft.y);
         CGPathAddCurveToPoint(path, NULL, bottomLeft.x, bottomLeft.y, bottomLeft.x, bottomLeft.y-cornerRadii.height, bottomLeft.x, bottomLeft.y-cornerRadii.height);
     } else CGPathAddLineToPoint(path, NULL, bottomLeft.x, bottomLeft.y);
     
-    if (corners & NSRectCornerTopLeft) {
+    if (corners & TUIRectCornerTopLeft) {
         CGPathAddLineToPoint(path, NULL, topLeft.x, topLeft.y+cornerRadii.height);
         CGPathAddCurveToPoint(path, NULL, topLeft.x, topLeft.y, topLeft.x+cornerRadii.width, topLeft.y, topLeft.x+cornerRadii.width, topLeft.y);
     } else CGPathAddLineToPoint(path, NULL, topLeft.x, topLeft.y);
@@ -123,6 +130,7 @@ static void CGPathCallback(void *info, const CGPathElement *element) {
 	return bezier;
 }
 
+// Sourced from Matt Gemmell's NSBezierPath+StrokeExtensions
 - (void)strokeInside {
     [self strokeInsideWithinRect:NSZeroRect];
 }
