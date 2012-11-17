@@ -84,7 +84,7 @@ static void CGPathCallback(void *info, const CGPathElement *element) {
     return immutablePath;
 }
 
-+ (NSBezierPath *)bezierPathWithRoundedRect:(NSRect)rect radius:(CGFloat)radius {
++ (NSBezierPath *)bezierPathWithRoundedRect:(NSRect)rect cornerRadius:(CGFloat)radius {
 	return [self bezierPathWithRoundedRect:rect xRadius:radius yRadius:radius];
 }
 

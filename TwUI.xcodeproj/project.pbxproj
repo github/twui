@@ -447,9 +447,9 @@
 		48A10E8A15B77A46007F9EE3 /* TUIView+Layout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TUIView+Layout.h"; sourceTree = "<group>"; };
 		48A62337162BB24B00DFA443 /* NSBezierPath+TUIExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSBezierPath+TUIExtensions.h"; sourceTree = "<group>"; };
 		48A62338162BB24B00DFA443 /* NSBezierPath+TUIExtensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSBezierPath+TUIExtensions.m"; sourceTree = "<group>"; };
+		48A6234F162C63E900DFA443 /* TUIScrollView+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TUIScrollView+Private.h"; sourceTree = "<group>"; };
 		5000873F16524B1C0067ED42 /* TUINavigationController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TUINavigationController.h; sourceTree = "<group>"; };
 		5000874816524B1F0067ED42 /* TUINavigationController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TUINavigationController.m; sourceTree = "<group>"; };
-		48A6234F162C63E900DFA443 /* TUIScrollView+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TUIScrollView+Private.h"; sourceTree = "<group>"; };
 		5EE9839C13BE7650005F430D /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
 		5EE983B713BE7809005F430D /* libtwui.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtwui.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8819794213E26E0200AA39EB /* TUIView+Accessibility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TUIView+Accessibility.h"; sourceTree = "<group>"; };
