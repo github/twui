@@ -35,7 +35,7 @@ CGFloat const TUIPopoverBackgroundViewBorderRadius = 4.5;
 CGFloat const TUIPopoverBackgroundViewArrowHeight = 12.0;
 CGFloat const TUIPopoverBackgroundViewArrowWidth = 24.0;
 
-NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
+NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 #define TUIPopoverCurrentAnimationDuration \
 ((self.animationDuration > 0.0) ? self.animationDuration : TUIPopoverDefaultAnimationDuration)
 
@@ -94,22 +94,23 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
         self.contentViewController = nil;
         self.backgroundViewClass = TUIPopoverBackgroundView.class;
 		
+		CAMediaTimingFunction *easeInOut = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+		CAKeyframeAnimation *bounce = [CAKeyframeAnimation animationWithKeyPath:@"transform.scale"];
+		bounce.values = @[@0.05f, @1.11245f, @1.00f];
+		bounce.timingFunctions = @[easeInOut, easeInOut, easeInOut];
+		
 		CABasicAnimation *fadeIn = [CABasicAnimation animationWithKeyPath:@"opacity"];
 		fadeIn.fromValue = @0.0f;
 		fadeIn.toValue = @1.0f;
+		CAAnimationGroup *popIn = [CAAnimationGroup animation];
+		popIn.animations = @[fadeIn, bounce];
 		
 		CABasicAnimation *fadeOut = [CABasicAnimation animationWithKeyPath:@"opacity"];
 		fadeOut.fromValue = @1.0f;
 		fadeOut.toValue = @0.0f;
 		
-		CAMediaTimingFunction *easeInOut = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-		CAKeyframeAnimation *bounce = [CAKeyframeAnimation animationWithKeyPath:@"transform.scale"];
-		bounce.values = @[@0.05, @1.11245, @1.0];
-		bounce.keyTimes = @[@0, @(4.0/9.0+5.0/18.0), @1.0];
-		bounce.timingFunctions = @[easeInOut, easeInOut, easeInOut];
-		
-		self.showAnimations = @[fadeIn, bounce];
-		self.hideAnimations = @[fadeOut];
+		self.showAnimation = popIn;
+		self.hideAnimation = fadeOut;
 		
 		[[NSNotificationCenter defaultCenter] addObserver:self
 												 selector:@selector(parentWindowClosed:)
@@ -388,14 +389,8 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 	};
 	
 	if(self.animates) {
-		for(CAAnimation *animation in self.showAnimations) {
-			animation.fillMode = kCAFillModeForwards;
-			animation.removedOnCompletion = YES;
-			animation.duration = TUIPopoverCurrentAnimationDuration;
-		}
-		
 		CAAnimationGroup *group = [[CAAnimationGroup alloc] init];
-		group.animations = self.showAnimations;
+		group.animations = @[self.showAnimation];
 		group.fillMode = kCAFillModeForwards;
 		group.removedOnCompletion = YES;
 		group.duration = TUIPopoverCurrentAnimationDuration;
@@ -450,14 +445,8 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
     };
 	
 	if(self.animates) {
-		for(CAAnimation *animation in self.hideAnimations) {
-			animation.fillMode = kCAFillModeForwards;
-			animation.removedOnCompletion = NO;
-			animation.duration = TUIPopoverCurrentAnimationDuration;
-		}
-		
 		CAAnimationGroup *group = [[CAAnimationGroup alloc] init];
-		group.animations = self.hideAnimations;
+		group.animations = @[self.hideAnimation];
 		group.fillMode = kCAFillModeForwards;
 		group.removedOnCompletion = NO;
 		group.duration = TUIPopoverCurrentAnimationDuration;
@@ -617,7 +606,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 							originScreenRect:originScreenRect];
 }
 
-- (CGPathRef)popoverPathForEdge:(CGRectEdge)popoverEdge inFrame:(CGRect)rect {
+- (CGPathRef)newPopoverPathForEdge:(CGRectEdge)popoverEdge inFrame:(CGRect)rect {
 	NSBezierPath *path = [NSBezierPath bezierPath];
     
     CGFloat radius = TUIPopoverBackgroundViewBorderRadius;
@@ -688,7 +677,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 }
 
 - (void)drawRect:(CGRect)rect {
-	CGPathRef cgPath = [self popoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, 0.5, 0.5)];
+	CGPathRef cgPath = [self newPopoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, 0.5, 0.5)];
 	NSBezierPath *path = [NSBezierPath bezierPathWithCGPath:cgPath];
 	CGPathRelease(cgPath);
 	
@@ -704,7 +693,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 4.0f);
 
 - (void)updateMaskLayer {
 	CAShapeLayer *maskLayer = [CAShapeLayer layer];
-    CGPathRef path = [self popoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, -1.0, -1.0)];
+    CGPathRef path = [self newPopoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, -1.0, -1.0)];
     maskLayer.path = path;
     maskLayer.fillColor = CGColorGetConstantColor(kCGColorBlack);
     CGPathRelease(path);

@@ -135,8 +135,9 @@ typedef enum {
 
 // Set the custom popover animations to use when animating in or out. These
 // properties are only read when the popover needs to either show or hide.
-@property (nonatomic, strong) NSArray *showAnimations;
-@property (nonatomic, strong) NSArray *hideAnimations;
+// Note that you may set CAAnimationGroups as well to chain animations.
+@property (nonatomic, strong) CAAnimation *showAnimation;
+@property (nonatomic, strong) CAAnimation *hideAnimation;
 
 // Set the popover animation duration. If the popover animates, this duration
 // will be used for its animations. If it is set to a negative value,
@@ -234,6 +235,6 @@ typedef enum {
 // the popover, but still use the default drawing. To change the drawing
 // of the popover, override the standard drawRect: and add an invocation
 // to this method to retrieve the popover path and draw with it.
-- (CGPathRef)popoverPathForEdge:(CGRectEdge)popoverEdge inFrame:(CGRect)frame;
+- (CGPathRef)newPopoverPathForEdge:(CGRectEdge)popoverEdge inFrame:(CGRect)frame;
 
 @end
