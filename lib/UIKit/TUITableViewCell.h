@@ -16,13 +16,13 @@
 
 #import "TUIView.h"
 
-typedef enum {
+typedef enum TUITableViewCellStyle : NSUInteger {
 	
 	// A basic table view cell with no additional styles or formats.
 	TUITableViewCellStyleDefault,
 } TUITableViewCellStyle;
 
-typedef enum {
+typedef enum TUITableViewCellSeparatorStyle : NSUInteger {
 	
 	// The cell has no distinct separator style.
 	TUITableViewCellSeparatorStyleNone,
@@ -40,7 +40,7 @@ typedef enum {
 	TUITableViewCellSeparatorStyleEtchedReversed
 } TUITableViewCellSeparatorStyle;
 
-typedef enum {
+typedef enum TUITableViewCellColorStyle : NSUInteger {
 	
 	// The cell has no distinct color style for this state. Instead,
 	// if custom colors are provided, they will be used.

@@ -229,7 +229,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 														object:self
 													  userInfo:nil];
     
-    if(self.behavior != TUIPopoverBehaviorApplicationDefined) {
+	if(self.behavior != TUIPopoverBehaviorApplicationDefined) {
 		if(self.transientEventMonitor)
             [self removeEventMonitor];
         [self addEventMonitor];
@@ -310,7 +310,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 				return fitRectToScreen(popoverRectForEdge(popoverEdge));
 				break;
 			}
-            
+			
             popoverEdge = nextEdgeForEdge(popoverEdge);
             attemptCount++;
         } return (CGRect)popoverRectForEdge(popoverEdge);
@@ -323,7 +323,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 																						  popoverEdge:popoverEdge
 																					 originScreenRect:screenPositioningRect];
 	CGPoint popoverOffset = [self.backgroundViewClass popoverOffsetForBackgroundFrame:backgroundView.bounds
-																		 popoverEdge:popoverEdge];
+																		  popoverEdge:popoverEdge];
 	
 	// Adjust the window rect again with the offset for the shadow.
 	CGRect windowRect = popoverScreenRect;
@@ -664,10 +664,10 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
     }
     
     [path closePath];
-    return [path CGPath];
+    return [path tui_CGPath];
 }
 
-- (id)initWithFrame:(CGRect)frame popoverEdge:(CGRectEdge)popoverEdge originScreenRect:(CGRect)originScreenRect {	
+- (id)initWithFrame:(CGRect)frame popoverEdge:(CGRectEdge)popoverEdge originScreenRect:(CGRect)originScreenRect {
 	if((self = [super initWithFrame:frame])) {
 		_popoverEdge = popoverEdge;
 		_screenOriginRect = originScreenRect;
@@ -678,14 +678,14 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 
 - (void)drawRect:(CGRect)rect {
 	CGPathRef cgPath = [self newPopoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, 0.5, 0.5)];
-	NSBezierPath *path = [NSBezierPath bezierPathWithCGPath:cgPath];
+	NSBezierPath *path = [NSBezierPath tui_bezierPathWithCGPath:cgPath];
 	CGPathRelease(cgPath);
 	
 	NSGradient *gradient = [[NSGradient alloc] initWithColors:@[[NSColor colorWithCalibratedWhite:0.95 alpha:0.95],
-																[NSColor colorWithCalibratedWhite:0.90 alpha:0.95]]];
+							[NSColor colorWithCalibratedWhite:0.90 alpha:0.95]]];
 	[gradient drawInBezierPath:path angle:-90];
 	[[NSColor whiteColor] set];
-	[path strokeInside];
+	[path tui_strokeInside];
 	
 	[[NSColor colorWithCalibratedWhite:0.0 alpha:0.3] set];
 	[path stroke];

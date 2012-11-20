@@ -1,5 +1,5 @@
 /*
- Copyright 2012 Twitter, Inc.
+ Copyright 2011 Twitter, Inc.
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this work except in compliance with the License.
@@ -14,22 +14,14 @@
  limitations under the License.
  */
 
-#import "TUIView.h"
+#import <Foundation/Foundation.h>
 
-typedef enum TUIProgressBarStyle : NSUInteger {
-	TUIProgressBarStyleBlue, //default
-	TUIProgressBarStyleGray
-} TUIProgressBarStyle;
+@interface NSAffineTransform (TUIExtensions)
 
-@interface TUIProgressBar : TUIView
+// Creates an NSAffineTransform object with the passed CGAffineTransform.
++ (NSAffineTransform *)tui_transformWithCGAffineTransform:(CGAffineTransform)transform;
 
-@property (nonatomic, assign) CGFloat progress;
-@property (nonatomic, assign, getter = isIndeterminate) BOOL indeterminate;
-
-//Drawing
-@property (nonatomic, strong) TUIViewDrawRect drawTrack;
-@property (nonatomic, strong) TUIViewDrawRect drawFill;
-
-- (id)initWithFrame:(CGRect)frame style:(TUIProgressBarStyle)style;
+// Creates an CGAffineTransform struct with the transform of the reciever.
+- (CGAffineTransform)tui_CGAffineTransform;
 
 @end

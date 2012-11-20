@@ -512,7 +512,7 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 	} else if(contentMode == TUIViewContentModeScaleAspectFill) {
 		_layer.contentsGravity = kCAGravityResizeAspectFill;
 	} else {
-		NSAssert1(NO, @"%u is not a valid contentMode.", contentMode);
+		NSAssert1(NO, @"%lu is not a valid contentMode.", (unsigned long)contentMode);
 	}
 }
 

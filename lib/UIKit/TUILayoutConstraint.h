@@ -1,6 +1,6 @@
 @class TUIView;
 
-typedef enum : NSUInteger {
+typedef enum TUILayoutConstraintAttribute : NSUInteger {
     
     /*
                  MaxY

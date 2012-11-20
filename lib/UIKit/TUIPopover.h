@@ -51,7 +51,7 @@ extern NSString *const TUIPopoverWillCloseNotification;
 // has the same user info keys as TUIPopoverWillCloseNotification.
 extern NSString *const TUIPopoverDidCloseNotification;
 
-typedef enum {
+typedef enum TUIPopoverBehavior : NSUInteger {
 	
 	// The application assumes responsibility for closing the popover.
 	// The popover will still close itself in a limited number of

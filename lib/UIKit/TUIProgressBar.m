@@ -316,7 +316,7 @@ void GHUIProgressPatternDrawCallback(void *info, CGContextRef context);
 		
 		const struct TUIProgressBarPatternInfoStruct info = {.bounds = patternBounds, .contentsScale = view.layer.contentsScale};
 		const struct CGPatternCallbacks callbacks = {0, &GHUIProgressPatternDrawCallback, NULL};
-		CGPatternRef pattern = CGPatternCreate((void *)&info, patternBounds, CGAffineTransformIdentity, (GHUIProgressBarBarberPolePatternWidth * self.layer.contentsScale), (NSHeight(view.bounds) * self.layer.contentsScale), kCGPatternTilingConstantSpacing, true, &callbacks);
+		CGPatternRef pattern = CGPatternCreate((void *)&info, patternBounds, CGAffineTransformIdentity, (GHUIProgressBarBarberPolePatternWidth * view.layer.contentsScale), (NSHeight(view.bounds) * view.layer.contentsScale), kCGPatternTilingConstantSpacing, true, &callbacks);
 		CGFloat components = 1.0; //It's a coloured pattern so just alpha is fine
 		CGContextSetFillPattern(currentContext, pattern, &components);
 		CGContextFillRect(currentContext, view.bounds);

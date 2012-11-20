@@ -16,12 +16,12 @@
 
 #import "TUIScrollView.h"
 
-typedef enum {
+typedef enum TUITableViewStyle : NSUInteger {
 	TUITableViewStylePlain,              // regular table view
 	TUITableViewStyleGrouped, // grouped table view—headers stick to the top of the table view and scroll with it
 } TUITableViewStyle;
 
-typedef enum {
+typedef enum TUITableViewScrollPosition : NSUInteger {
 	TUITableViewScrollPositionNone,        
 	TUITableViewScrollPositionTop,    
 	TUITableViewScrollPositionMiddle,   
@@ -29,7 +29,7 @@ typedef enum {
 	TUITableViewScrollPositionToVisible, // currently the only supported arg
 } TUITableViewScrollPosition;
 
-typedef enum {
+typedef enum TUITableViewInsertionMethod : NSUInteger {
   TUITableViewInsertionMethodBeforeIndex  = NSOrderedAscending,
   TUITableViewInsertionMethodAtIndex      = NSOrderedSame,
   TUITableViewInsertionMethodAfterIndex   = NSOrderedDescending

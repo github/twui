@@ -15,6 +15,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "NSShadow+TUIExtensions.h"
 
 extern NSString * const TUIAttributedStringBackgroundColorAttributeName;
 extern NSString * const TUIAttributedStringBackgroundFillStyleName;
@@ -22,8 +23,8 @@ extern NSString * const TUIAttributedStringPreDrawBlockName;
 
 typedef void (^TUIAttributedStringPreDrawBlock)(NSAttributedString *attributedString, NSRange substringRange, CGRect rects[], CFIndex rectCount);
 
-typedef enum {		
-	TUILineBreakModeWordWrap = 0,
+typedef enum TUILineBreakMode : NSUInteger {
+	TUILineBreakModeWordWrap,
 	TUILineBreakModeCharacterWrap,
 	TUILineBreakModeClip,
 	TUILineBreakModeHeadTruncation,
@@ -31,21 +32,21 @@ typedef enum {
 	TUILineBreakModeMiddleTruncation,
 } TUILineBreakMode;
 
-typedef enum {
-	TUIBaselineAdjustmentAlignBaselines = 0,
+typedef enum TUIBaselineAdjustment : NSUInteger {
+	TUIBaselineAdjustmentAlignBaselines,
 	TUIBaselineAdjustmentAlignCenters,
 	TUIBaselineAdjustmentNone,
 } TUIBaselineAdjustment;
 
-typedef enum {
-	TUITextAlignmentLeft = 0,
+typedef enum TUITextAlignment : NSUInteger {
+	TUITextAlignmentLeft,
 	TUITextAlignmentCenter,
 	TUITextAlignmentRight,
 	TUITextAlignmentJustified,
 } TUITextAlignment;
 
-typedef enum {
-	TUIBackgroundFillStyleInline = 0,
+typedef enum TUIBackgroundFillStyle : NSUInteger {
+	TUIBackgroundFillStyleInline,
 	TUIBackgroundFillStyleBlock,
 } TUIBackgroundFillStyle;
 
@@ -79,12 +80,6 @@ typedef enum {
 - (void)setShadow:(NSShadow *)shadow inRange:(NSRange)range;
 - (void)setKerning:(CGFloat)f inRange:(NSRange)range;
 - (void)setLineHeight:(CGFloat)f inRange:(NSRange)range;
-
-@end
-
-@interface NSShadow (TUIAdditions)
-
-+ (NSShadow *)shadowWithRadius:(CGFloat)radius offset:(CGSize)offset color:(NSColor *)color;
 
 @end
 
