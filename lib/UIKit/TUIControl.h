@@ -16,7 +16,7 @@
 
 #import "TUIView.h"
 
-enum {
+typedef enum TUIControlEvents : NSUInteger {
 	TUIControlEventMouseDown			= 1 <<  0,
 	TUIControlEventMouseDownRepeat		= 1 <<  1,
 	TUIControlEventMouseDragInside		= 1 <<  2,
@@ -46,19 +46,17 @@ enum {
 	TUIControlEventApplicationReserved	= 0x0F000000,
 	TUIControlEventSystemReserved		= 0xF0000000,
 	TUIControlEventAllEvents			= 0xFFFFFFFF
-};
-typedef NSUInteger TUIControlEvents;
+} TUIControlEvents;
 
-enum {
-  TUIControlStateNormal	   = 0,					   
-  TUIControlStateHighlighted  = 1 << 0,
-  TUIControlStateDisabled	 = 1 << 1,
-  TUIControlStateSelected	 = 1 << 2,
-  TUIControlStateNotKey	   = 1 << 11,
-  TUIControlStateApplication  = 0x00FF0000,
-  TUIControlStateReserved	 = 0xFF000000
-};
-typedef NSUInteger TUIControlState;
+typedef enum TUIControlState : NSUInteger {
+	TUIControlStateNormal		= 0,
+	TUIControlStateHighlighted	= 1 << 0,
+	TUIControlStateDisabled		= 1 << 1,
+	TUIControlStateSelected		= 1 << 2,
+	TUIControlStateNotKey		= 1 << 11,
+	TUIControlStateApplication	= 0x00FF0000,
+	TUIControlStateReserved		= 0xFF000000
+} TUIControlState;
 
 @interface TUIControl : TUIView
 {

@@ -19,14 +19,11 @@
 @class TUIPopover;
 @class TUIViewController;
 
-enum _TUIPopoverViewControllerBehaviour
-{
-    TUIPopoverViewControllerBehaviourApplicationDefined = 0,
-    TUIPopoverViewControllerBehaviourTransient = 1,
-    TUIPopoverViewControllerBehaviourSemiTransient = 2 //Currently not supported, here for forwards compatibility purposes
-};
-
-typedef NSUInteger TUIPopoverViewControllerBehaviour;
+typedef enum TUIPopoverViewControllerBehaviour : NSUInteger {
+    TUIPopoverViewControllerBehaviourApplicationDefined,
+    TUIPopoverViewControllerBehaviourTransient,
+    TUIPopoverViewControllerBehaviourSemiTransient //Currently not supported, here for forwards compatibility purposes
+} TUIPopoverViewControllerBehaviour;
 
 typedef void (^TUIPopoverDelegateBlock)(TUIPopover *popover);
 

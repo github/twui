@@ -14,14 +14,10 @@
  limitations under the License.
  */
 
-#if TARGET_OS_MAC
 #import <ApplicationServices/ApplicationServices.h>
-#elif TARGET_OS_IPHONE
-#import <CoreText/CoreText.h>
-#endif
 
-typedef enum {
-	AB_CTLineRectAggregationTypeInline = 0,
+typedef enum AB_CTLineRectAggregationType : NSUInteger {
+	AB_CTLineRectAggregationTypeInline,
 	AB_CTLineRectAggregationTypeBlock,
 } AB_CTLineRectAggregationType;
 

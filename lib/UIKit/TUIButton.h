@@ -25,8 +25,8 @@
 @class TUILabel;
 @class TUIImageView;
 
-typedef enum {
-    TUIButtonTypeCustom = 0,
+typedef enum TUIButtonType : NSUInteger {
+    TUIButtonTypeCustom
 } TUIButtonType;
 
 @interface TUIButton : TUIControl

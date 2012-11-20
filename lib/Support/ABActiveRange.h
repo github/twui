@@ -16,8 +16,8 @@
 
 #import <Foundation/Foundation.h>
 
-typedef enum {
-	ABActiveTextRangeFlavorUnknown = 0,
+typedef enum ABActiveTextRangeFlavor : NSUInteger {
+	ABActiveTextRangeFlavorUnknown,
 	ABActiveTextRangeFlavorURL,
 	ABActiveTextRangeFlavorEmail,
 	ABActiveTextRangeFlavorTwitterUsername,

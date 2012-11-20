@@ -17,7 +17,7 @@
 #import "TUIView.h"
 #import "TUIGeometry.h"
 
-typedef enum {
+typedef enum TUIScrollViewIndicatorStyle : NSUInteger {
   /** Dark scroll indicator style suitable for light background */
   TUIScrollViewIndicatorStyleDark,
   /** Light scroll indicator style suitable for dark backgrounds */
@@ -26,7 +26,7 @@ typedef enum {
   TUIScrollViewIndicatorStyleDefault
 } TUIScrollViewIndicatorStyle;
 
-typedef enum {
+typedef enum TUIScrollViewIndicatorVisibility : NSUInteger {
   /** Never show scrollers */
   TUIScrollViewIndicatorVisibleNever,
   /** Show scrollers only during an animated scroll (not particularly useful yet) */
@@ -39,7 +39,7 @@ typedef enum {
   TUIScrollViewIndicatorVisibleDefault = TUIScrollViewIndicatorVisibleAlways
 } TUIScrollViewIndicatorVisibility;
 
-typedef enum {
+typedef enum TUIScrollViewIndicator : NSUInteger {
   TUIScrollViewIndicatorVertical,
   TUIScrollViewIndicatorHorizontal,
 } TUIScrollViewIndicator;

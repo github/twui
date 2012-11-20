@@ -24,15 +24,15 @@
 extern NSString *const TUITextRendererDidBecomeFirstResponder;
 extern NSString *const TUITextRendererDidResignFirstResponder;
 
-typedef enum {
+typedef enum TUITextSelectionAffinity : NSUInteger {
 	TUITextSelectionAffinityCharacter = 0,
 	TUITextSelectionAffinityWord = 1,
 	TUITextSelectionAffinityLine = 2,
 	TUITextSelectionAffinityParagraph = 3,
 } TUITextSelectionAffinity;
 
-typedef enum {
-	TUITextVerticalAlignmentTop = 0,
+typedef enum TUITextVerticalAlignment : NSUInteger {
+	TUITextVerticalAlignmentTop,
 	// Note that TUITextVerticalAlignmentMiddle and TUITextVerticalAlignmentBottom both have a performance hit because they have to create the CTFrame twice: once to find its height and then again to shift it to match the alignment and height.
 	// Also note that text selection doesn't work properly with anything but TUITextVerticalAlignmentTop.
 	TUITextVerticalAlignmentMiddle,

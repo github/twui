@@ -16,7 +16,7 @@
 
 #import "TUIView.h"
 
-typedef enum {
+typedef enum TUIActivityIndicatorViewStyle : NSUInteger {
 	
 	// The standard white style of indicator.
 	TUIActivityIndicatorViewStyleWhite,

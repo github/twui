@@ -254,16 +254,3 @@ NSParagraphStyle *ABNSParagraphStyleForTextAlignment(TUITextAlignment alignment)
 }
 
 @end
-
-@implementation NSShadow (TUIAdditions)
-
-+ (NSShadow *)shadowWithRadius:(CGFloat)radius offset:(CGSize)offset color:(NSColor *)color
-{
-	NSShadow *shadow = [[NSShadow alloc] init];
-	[shadow setShadowBlurRadius:radius];
-	[shadow setShadowOffset:offset];
-	[shadow setShadowColor:color];
-	return shadow;
-}
-
-@end

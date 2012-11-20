@@ -1,5 +1,5 @@
 /*
- Copyright 2012 Twitter, Inc.
+ Copyright 2011 Twitter, Inc.
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this work except in compliance with the License.
@@ -14,22 +14,11 @@
  limitations under the License.
  */
 
-#import "TUIView.h"
+#import <Cocoa/Cocoa.h>
 
-typedef enum TUIProgressBarStyle : NSUInteger {
-	TUIProgressBarStyleBlue, //default
-	TUIProgressBarStyleGray
-} TUIProgressBarStyle;
+@interface NSShadow (TUIExtensions)
 
-@interface TUIProgressBar : TUIView
-
-@property (nonatomic, assign) CGFloat progress;
-@property (nonatomic, assign, getter = isIndeterminate) BOOL indeterminate;
-
-//Drawing
-@property (nonatomic, strong) TUIViewDrawRect drawTrack;
-@property (nonatomic, strong) TUIViewDrawRect drawFill;
-
-- (id)initWithFrame:(CGRect)frame style:(TUIProgressBarStyle)style;
+// Returns a shadow with the given shadow radius, offset, and color properties.
++ (NSShadow *)tui_shadowWithRadius:(CGFloat)radius offset:(CGSize)offset color:(NSColor *)color;
 
 @end
