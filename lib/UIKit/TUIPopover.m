@@ -533,11 +533,11 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 	switch(popoverEdge) {
 		case CGRectMinXEdge:
 		case CGRectMaxXEdge:
-			contentSize.width += TUIPopoverBackgroundViewArrowHeight;
+			contentSize.width += TUIPopoverBackgroundViewArrowHeight * 2;
 			break;
 		case CGRectMinYEdge:
 		case CGRectMaxYEdge:
-			contentSize.height += TUIPopoverBackgroundViewArrowHeight;
+			contentSize.height += TUIPopoverBackgroundViewArrowHeight * 2;
 			break;
 		default:
 			break;
@@ -552,18 +552,14 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 	// Adjust the drawing board so the shadow isn't clipped.
 	switch(popoverEdge) {
 		case CGRectMinXEdge:
-			backgroundFrame.size.width -= TUIPopoverBackgroundViewArrowHeight;
-			break;
 		case CGRectMaxXEdge:
 			backgroundFrame.origin.x += TUIPopoverBackgroundViewArrowHeight;
-			backgroundFrame.size.width -= TUIPopoverBackgroundViewArrowHeight;
+			backgroundFrame.size.width -= TUIPopoverBackgroundViewArrowHeight * 2;
 			break;
 		case CGRectMinYEdge:
-			backgroundFrame.size.height -= TUIPopoverBackgroundViewArrowHeight;
-			break;
 		case CGRectMaxYEdge:
 			backgroundFrame.origin.y += TUIPopoverBackgroundViewArrowHeight;
-			backgroundFrame.size.height -= TUIPopoverBackgroundViewArrowHeight;
+			backgroundFrame.size.height -= TUIPopoverBackgroundViewArrowHeight * 2;
 			break;
 		default:
 			break;
@@ -613,7 +609,22 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 	CGFloat radius = TUIPopoverBackgroundViewBorderRadius;
 	CGFloat inset = radius + TUIPopoverBackgroundViewArrowHeight;
 	CGFloat insetArrowHeight = TUIPopoverBackgroundViewArrowHeight;
-	CGRect drawingRect = NSInsetRect(rect, inset, inset);
+	CGRect drawingRect = CGRectInset(rect, inset, inset);
+	
+	switch(popoverEdge) {
+		case CGRectMinXEdge:
+			drawingRect.origin.x += TUIPopoverBackgroundViewArrowHeight;
+		case CGRectMaxXEdge:
+			drawingRect.size.width -= TUIPopoverBackgroundViewArrowHeight;
+			break;
+		case CGRectMinYEdge:
+			drawingRect.origin.y += TUIPopoverBackgroundViewArrowHeight;
+		case CGRectMaxYEdge:
+			drawingRect.size.height -= TUIPopoverBackgroundViewArrowHeight;
+			break;
+		default:
+			break;
+	}
 	
 	CGFloat minX = CGRectGetMinX(drawingRect);
 	CGFloat maxX = CGRectGetMaxX(drawingRect);
@@ -684,7 +695,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 	
 	NSGradient *gradient = [[NSGradient alloc] initWithColors:@[[NSColor colorWithCalibratedWhite:0.95f alpha:0.95f],
 																[NSColor colorWithCalibratedWhite:0.90f alpha:0.95f]]];
-	[gradient drawInBezierPath:path angle:-90.0f];
+	[gradient drawInBezierPath:path angle:270.0f];
 	[[NSColor highlightColor] set];
 	[path tui_strokeInside];
 	
