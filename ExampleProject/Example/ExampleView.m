@@ -106,8 +106,22 @@
 		// Making it transient means it will automatically disappear
 		// when focus is shifted to another element within the window.
         self.tabInformation = [[TUIPopover alloc] initWithContentViewController:[[ExampleTableViewController alloc] init]];
-		self.tabInformation.contentSize = CGSizeMake(500, 450);
-		self.tabInformation.behavior = TUIPopoverBehaviorTransient;
+		self.tabInformation.contentSize = CGSizeMake(120, 120);
+		self.tabInformation.behavior = TUIPopoverBehaviorApplicationDefined;
+		
+        self.tabTest = [[NSPopover alloc] init];
+		self.tabTest.contentViewController = [[NSViewController alloc] init];
+		self.tabTest.contentSize = self.tabInformation.contentSize;
+		self.tabTest.behavior = NSPopoverBehaviorTransient;
+		
+		TUINSView *tuiTableViewContainer = [[TUINSView alloc] initWithFrame:(CGRect) {
+			.size = self.tabTest.contentSize
+		}];
+		TUIView *example = [[TUIView alloc] initWithFrame:(CGRect) {
+			.size = self.tabTest.contentSize
+		}];
+		tuiTableViewContainer.rootView = example;
+		self.tabTest.contentViewController.view = tuiTableViewContainer;
 	}
 	return self;
 }
@@ -115,8 +129,11 @@
 // Trigger a table view reload if we press the last tab. Otherwise,
 // show the popover relative to the top of the tab bar.
 - (void)tabBar:(ExampleTabBar *)tabBar didSelectTab:(NSInteger)index {
-	if(index == tabBar.tabViews.count - 1)
+	if(index == tabBar.tabViews.count - 1) {
+		[self.tabInformation performClose:nil];
 		[self.navigationController popViewControllerAnimated:YES];
+	} else if(index % 2)
+		[self.tabTest showRelativeToRect:tabBar.bounds ofView:tabBar.nsView preferredEdge:CGRectMaxYEdge];
 	else
 		[self.tabInformation showRelativeToRect:tabBar.bounds ofView:tabBar preferredEdge:CGRectMaxYEdge];
 }

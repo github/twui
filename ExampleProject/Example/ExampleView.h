@@ -20,7 +20,9 @@
 @interface ExampleView : TUIView <ExampleTabBarDelegate>
 
 @property (nonatomic, strong) ExampleTabBar *tabBar;
-@property (nonatomic, strong) TUIPopover *tabInformation;
 @property (nonatomic, strong) TUINavigationController *navigationController;
+
+@property (nonatomic, strong) TUIPopover *tabInformation;
+@property (nonatomic, strong) NSPopover *tabTest;
 
 @end

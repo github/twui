@@ -94,10 +94,8 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 		self.contentViewController = nil;
 		self.backgroundViewClass = TUIPopoverBackgroundView.class;
 		
-		CAMediaTimingFunction *easeInOut = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
 		CAKeyframeAnimation *bounce = [CAKeyframeAnimation animationWithKeyPath:@"transform.scale"];
-		bounce.values = @[@0.05f, @1.11245f, @1.00f];
-		bounce.timingFunctions = @[easeInOut, easeInOut, easeInOut];
+		bounce.values = @[@0.05f, @1.25f, @1.00f];
 		
 		CABasicAnimation *fadeIn = [CABasicAnimation animationWithKeyPath:@"opacity"];
 		fadeIn.fromValue = @0.0f;
@@ -409,7 +407,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 }
 
 - (void)close {
-	if(self.animating || !self.shown)
+	if(self.animating || !self.shown || ![self.popoverWindow isVisible])
 		return;
 	
 	if(self.transientEventMonitor)
