@@ -30,7 +30,7 @@
 		b.origin.y += TAB_HEIGHT;
 		b.size.height -= TAB_HEIGHT;
 		
-		ExampleTableViewController *tableViewController = [[ExampleTableViewController alloc] initWithNibName:nil bundle:nil];
+		ExampleTableViewController *tableViewController = [[ExampleTableViewController alloc] init];
 		_navigationController = [[TUINavigationController alloc] initWithRootViewController:tableViewController];
 		[self addSubview:_navigationController.view];
 		[_navigationController.view addLayoutConstraint:[TUILayoutConstraint constraintWithAttribute:TUILayoutConstraintAttributeWidth relativeTo:@"superview" attribute:TUILayoutConstraintAttributeWidth]];
@@ -102,51 +102,23 @@
 			};
 		}
 		
-		// Create a popover with a dirty little trick: create a
-		// view controller with nothing in it. We'll use this
-		// to add a view to the popover each time. Set the behavior
-		// to transient, so it closes automatically when not key.
-        self.tabInformation = [[TUIPopover alloc] initWithContentViewController:[[TUIViewController alloc] init]];
+		// Create a popover with the example table view controller.
+		// Making it transient means it will automatically disappear
+		// when focus is shifted to another element within the window.
+        self.tabInformation = [[TUIPopover alloc] initWithContentViewController:[[ExampleTableViewController alloc] init]];
+		self.tabInformation.contentSize = CGSizeMake(500, 450);
 		self.tabInformation.behavior = TUIPopoverBehaviorTransient;
 	}
 	return self;
 }
 
+// Trigger a table view reload if we press the last tab. Otherwise,
+// show the popover relative to the top of the tab bar.
 - (void)tabBar:(ExampleTabBar *)tabBar didSelectTab:(NSInteger)index {
-	// Trigger a table view reload if we press the last tab.
 	if(index == tabBar.tabViews.count - 1)
 		[self.navigationController popViewControllerAnimated:YES];
-	
-	// Use -renderInContext: to draw the tab view to an image, and
-	// put this into an image view, which will then become our
-	// popover's content view controller's view.
-	TUIView *tab = [tabBar.tabViews objectAtIndex:index];
-	TUIImageView *image = [[TUIImageView alloc] initWithImage:[NSImage tui_imageWithSize:tab.bounds.size
-																				 drawing:^(CGContextRef ctx)
-															   {
-															   [tab.layer renderInContext:ctx];
-															   }]];
-	
-	// Set a different edge for each button. Note that this is only
-	// the preferred edge- if it cannot be placed, it will be auto-
-	// shifted to a different edge.
-	CGRectEdge popoverEdge = CGRectMinYEdge;
-	if(index == 0)
-		popoverEdge = CGRectMinXEdge;
-	else if(index == 1)
-		popoverEdge = CGRectMaxXEdge;
-	else if(index == 2)
-		popoverEdge = CGRectMinYEdge;
-	else if(index == 3)
-		popoverEdge = CGRectMaxYEdge;
-	
-	// Set the background color and size of the popover's content view.
-	image.backgroundColor = [NSColor clearColor];
-	self.tabInformation.contentViewController.view = image;
-	self.tabInformation.contentSize = tab.bounds.size;
-	
-	// Display the popover with the re-rendered tab image.
-	[self.tabInformation showRelativeToRect:tab.bounds ofView:tab preferredEdge:popoverEdge];
+	else
+		[self.tabInformation showRelativeToRect:tabBar.bounds ofView:tabBar preferredEdge:CGRectMaxYEdge];
 }
 
 @end

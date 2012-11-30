@@ -8,8 +8,6 @@
 
 #import "TUIKit.h"
 
-@interface ExampleTableViewController : TUIViewController <TUITableViewDelegate, TUITableViewDataSource>
-
-@property (nonatomic, strong) TUITableView *tableView;
+@interface ExampleTableViewController : TUITableViewController
 
 @end

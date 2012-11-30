@@ -424,11 +424,9 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 	
 	void (^completionBlock)(void) = ^{
 		[self.popoverWindow close];
-		self.currentPositioningView = nil;
-		self.popoverWindow.contentView = nil;
 		[self.popoverWindow.parentWindow removeChildWindow:self.popoverWindow];
-		self.popoverWindow = nil;
 		
+		self.currentPositioningView = nil;
 		self.animating = NO;
 		_shown = NO;
 		
