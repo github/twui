@@ -83,16 +83,16 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 @implementation TUIPopover
 
 - (id)init {
-    if((self = [super init])) {
-        self.animates = YES;
-        _shown = NO;
+	if((self = [super init])) {
+		self.animates = YES;
+		_shown = NO;
 		
-        self.behavior = TUIPopoverBehaviorApplicationDefined;
+		self.behavior = TUIPopoverBehaviorApplicationDefined;
 		self.animates = YES;
 		self.animationDuration = -1.0f;
 		
-        self.contentViewController = nil;
-        self.backgroundViewClass = TUIPopoverBackgroundView.class;
+		self.contentViewController = nil;
+		self.backgroundViewClass = TUIPopoverBackgroundView.class;
 		
 		CAMediaTimingFunction *easeInOut = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
 		CAKeyframeAnimation *bounce = [CAKeyframeAnimation animationWithKeyPath:@"transform.scale"];
@@ -120,14 +120,14 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 												 selector:@selector(parentWindowClosed:)
 													 name:TUIViewWillMoveToWindowNotification
 												   object:self];
-    }
+	}
 	return self;
 }
 
 - (id)initWithContentViewController:(TUIViewController *)viewController {
 	if((self = [self init])) {
-        self.contentViewController = viewController;
-    }
+		self.contentViewController = viewController;
+	}
 	return self;
 }
 
@@ -219,34 +219,34 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 		return;
 	}
 	
-	if(self.shown)
+	if(self.shown || [self.popoverWindow isVisible])
 		return;
-    
-    [self.contentViewController viewWillAppear:YES];
-    if(self.willShowBlock != nil)
-        self.willShowBlock(self);
+	
+	[self.contentViewController viewWillAppear:YES];
+	if(self.willShowBlock != nil)
+		self.willShowBlock(self);
 	[[NSNotificationCenter defaultCenter] postNotificationName:TUIPopoverWillShowNotification
 														object:self
 													  userInfo:nil];
-    
+	
 	if(self.behavior != TUIPopoverBehaviorApplicationDefined) {
 		if(self.transientEventMonitor)
-            [self removeEventMonitor];
-        [self addEventMonitor];
-    }
+			[self removeEventMonitor];
+		[self addEventMonitor];
+	}
 	
 	CGSize contentViewSize = (CGSizeEqualToSize(self.contentSize, CGSizeZero) ?
-                              self.contentViewController.view.frame.size : self.contentSize);
-    _positioningRect = CGRectEqualToRect(newPositioningRect, CGRectZero) ? positioningView.bounds : newPositioningRect;
-    self.originalViewSize = self.contentViewController.view.frame.size;
+							  self.contentViewController.view.frame.size : self.contentSize);
+	_positioningRect = CGRectEqualToRect(newPositioningRect, CGRectZero) ? positioningView.bounds : newPositioningRect;
+	self.originalViewSize = self.contentViewController.view.frame.size;
 	
 	CGRect basePositioningRect = [positioningView convertRect:_positioningRect toView:nil];
 	NSRect windowRelativeRect = [positioningView.nsView convertRect:basePositioningRect toView:nil];
 	CGRect screenPositioningRect = windowRelativeRect;
 	screenPositioningRect.origin = [positioningView.nsWindow convertBaseToScreen:windowRelativeRect.origin];
-    __block CGRectEdge popoverEdge = preferredEdge;
+	__block CGRectEdge popoverEdge = preferredEdge;
 	
-    CGRect (^popoverRect)() = ^{
+	CGRect (^popoverRect)() = ^{
 		CGRect (^popoverRectForEdge)(CGRectEdge) = ^(CGRectEdge popoverEdge) {
 			CGSize popoverSize = [self.backgroundViewClass sizeForBackgroundViewWithContentSize:contentViewSize
 																					popoverEdge:popoverEdge];
@@ -273,17 +273,17 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 			return returnRect;
 		};
 		
-        CGRectEdge (^nextEdgeForEdge)(CGRectEdge) = ^(CGRectEdge currentEdge) {
-            if(currentEdge == CGRectMaxXEdge) {
-                return (CGRectEdge)(preferredEdge == CGRectMinXEdge ? CGRectMaxYEdge : CGRectMinXEdge);
-            } else if(currentEdge == CGRectMinXEdge) {
-                return (CGRectEdge)(preferredEdge == CGRectMaxXEdge ? CGRectMaxYEdge : CGRectMaxXEdge);
-            } else if(currentEdge == CGRectMaxYEdge) {
-                return (CGRectEdge)(preferredEdge == CGRectMinYEdge ? CGRectMaxXEdge : CGRectMinYEdge);
-            } else if(currentEdge == CGRectMinYEdge) {
-                return (CGRectEdge)(preferredEdge == CGRectMaxYEdge ? CGRectMaxXEdge : CGRectMaxYEdge);
-            } return currentEdge;
-        };
+		CGRectEdge (^nextEdgeForEdge)(CGRectEdge) = ^(CGRectEdge currentEdge) {
+			if(currentEdge == CGRectMaxXEdge) {
+				return (CGRectEdge)(preferredEdge == CGRectMinXEdge ? CGRectMaxYEdge : CGRectMinXEdge);
+			} else if(currentEdge == CGRectMinXEdge) {
+				return (CGRectEdge)(preferredEdge == CGRectMaxXEdge ? CGRectMaxYEdge : CGRectMaxXEdge);
+			} else if(currentEdge == CGRectMaxYEdge) {
+				return (CGRectEdge)(preferredEdge == CGRectMinYEdge ? CGRectMaxXEdge : CGRectMinYEdge);
+			} else if(currentEdge == CGRectMinYEdge) {
+				return (CGRectEdge)(preferredEdge == CGRectMaxYEdge ? CGRectMaxXEdge : CGRectMaxYEdge);
+			} return currentEdge;
+		};
 		
 		CGRect (^fitRectToScreen)(CGRect) = ^(CGRect proposedRect) {
 			CGRect screenRect = positioningView.nsWindow.screen.visibleFrame;
@@ -302,24 +302,24 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 			CGRect popoverRect = popoverRectForEdge(popoverEdge);
 			return NSContainsRect(positioningView.nsWindow.screen.visibleFrame, popoverRect);
 		};
-        
-        NSUInteger attemptCount = 0;
-        while(!checkPopoverSizeForScreenWithPopoverEdge(popoverEdge)) {
-            if(attemptCount > 4) {
+		
+		NSUInteger attemptCount = 0;
+		while(!checkPopoverSizeForScreenWithPopoverEdge(popoverEdge)) {
+			if(attemptCount > 4) {
 				popoverEdge = preferredEdge;
 				return fitRectToScreen(popoverRectForEdge(popoverEdge));
 				break;
 			}
 			
-            popoverEdge = nextEdgeForEdge(popoverEdge);
-            attemptCount++;
-        } return (CGRect)popoverRectForEdge(popoverEdge);
-    };
+			popoverEdge = nextEdgeForEdge(popoverEdge);
+			attemptCount++;
+		} return (CGRect)popoverRectForEdge(popoverEdge);
+	};
 	
 	// Get the popover screen rectangle and create a background view
 	// for the popover with the adjusted content size and popover offset.
-    CGRect popoverScreenRect = popoverRect();
-    TUIPopoverBackgroundView *backgroundView = [self.backgroundViewClass backgroundViewForContentSize:contentViewSize
+	CGRect popoverScreenRect = popoverRect();
+	TUIPopoverBackgroundView *backgroundView = [self.backgroundViewClass backgroundViewForContentSize:contentViewSize
 																						  popoverEdge:popoverEdge
 																					 originScreenRect:screenPositioningRect];
 	CGPoint popoverOffset = [self.backgroundViewClass popoverOffsetForBackgroundFrame:backgroundView.bounds
@@ -331,10 +331,10 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 	windowRect.origin.y += popoverOffset.y;
 	
 	// Create the popover window and add the content view and root view.
-    _popoverWindow = [[TUIPopoverWindow alloc] initWithContentRect:windowRect];
-    TUIPopoverWindowContentView *contentView = [[TUIPopoverWindowContentView alloc] initWithFrame:backgroundView.bounds];
-    self.popoverWindow.frameView = contentView;
-    contentView.rootView = backgroundView;
+	_popoverWindow = [[TUIPopoverWindow alloc] initWithContentRect:windowRect];
+	TUIPopoverWindowContentView *contentView = [[TUIPopoverWindowContentView alloc] initWithFrame:backgroundView.bounds];
+	self.popoverWindow.frameView = contentView;
+	contentView.rootView = backgroundView;
 	
 	// Adjust the background view frame so the popover path auto-adjusts.
 	// Cache the previous bounds and offset it so the content sits inside.
@@ -365,10 +365,10 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 	backgroundView.frame = backgroundFrame;
 	
 	// Set the content view frame and add it to the popover background view.
-    CGRect contentViewFrame = [self.backgroundViewClass contentViewFrameForBackgroundFrame:contentFrame
+	CGRect contentViewFrame = [self.backgroundViewClass contentViewFrameForBackgroundFrame:contentFrame
 																			   popoverEdge:popoverEdge];
-    _contentViewController.view.frame = contentViewFrame;
-    [backgroundView addSubview:self.contentViewController.view];
+	_contentViewController.view.frame = contentViewFrame;
+	[backgroundView addSubview:self.contentViewController.view];
 	
 	// Apply the popover edge and update the drawing mask.
 	[contentView popoverWantsShadow:[self.backgroundViewClass requiresBackgroundShadow]];
@@ -409,40 +409,41 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 }
 
 - (void)close {
-    if(self.animating || !self.shown)
+	if(self.animating || !self.shown)
 		return;
-    
-    if(self.transientEventMonitor)
+	
+	if(self.transientEventMonitor)
 		[self removeEventMonitor];
 	
 	[self.contentViewController viewWillDisappear:YES];
-    if(self.willCloseBlock != nil)
-        self.willCloseBlock(self);
+	if(self.willCloseBlock != nil)
+		self.willCloseBlock(self);
 	[[NSNotificationCenter defaultCenter] postNotificationName:TUIPopoverWillCloseNotification
 														object:self
 													  userInfo:@{TUIPopoverCloseReasonKey : TUIPopoverCloseReasonStandard}];
 	
 	void (^completionBlock)(void) = ^{
-        [self.popoverWindow close];
+		[self.popoverWindow close];
 		self.currentPositioningView = nil;
-        self.popoverWindow.contentView = nil;
-        [self.popoverWindow.parentWindow removeChildWindow:self.popoverWindow];
-        
-        self.animating = NO;
-        _shown = NO;
-        
+		self.popoverWindow.contentView = nil;
+		[self.popoverWindow.parentWindow removeChildWindow:self.popoverWindow];
+		self.popoverWindow = nil;
+		
+		self.animating = NO;
+		_shown = NO;
+		
 		[self.contentViewController viewDidDisappear:YES];
-        if(self.didCloseBlock != nil)
-            self.didCloseBlock(self);
+		if(self.didCloseBlock != nil)
+			self.didCloseBlock(self);
 		[[NSNotificationCenter defaultCenter] postNotificationName:TUIPopoverDidCloseNotification
 															object:self
 														  userInfo:@{TUIPopoverCloseReasonKey : TUIPopoverCloseReasonStandard}];
-        
-        self.contentViewController.view.frame = CGRectMake(self.contentViewController.view.frame.origin.x,
-                                                           self.contentViewController.view.frame.origin.y,
-                                                           self.originalViewSize.width,
-                                                           self.originalViewSize.height);
-    };
+		
+		self.contentViewController.view.frame = CGRectMake(self.contentViewController.view.frame.origin.x,
+														   self.contentViewController.view.frame.origin.y,
+														   self.originalViewSize.width,
+														   self.originalViewSize.height);
+	};
 	
 	if(self.animates) {
 		CAAnimationGroup *group = [[CAAnimationGroup alloc] init];
@@ -476,7 +477,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 
 - (void)addEventMonitor {
 	NSEventMask mask = (NSLeftMouseDownMask | NSRightMouseDownMask | NSKeyUpMask);
-    self.transientEventMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:mask handler:^(NSEvent *event) {
+	self.transientEventMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:mask handler:^(NSEvent *event) {
 		if(self.popoverWindow == nil)
 			return event;
 		
@@ -507,13 +508,13 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 }
 
 - (void)setBehavior:(TUIPopoverBehavior)behavior {
-    _behavior = behavior;
-    if(_shown) {
-        if(_behavior == TUIPopoverBehaviorApplicationDefined && self.transientEventMonitor)
-            [self removeEventMonitor];
-        else if(!self.transientEventMonitor)
-            [self addEventMonitor];
-    }
+	_behavior = behavior;
+	if(_shown) {
+		if(_behavior == TUIPopoverBehaviorApplicationDefined && self.transientEventMonitor)
+			[self removeEventMonitor];
+		else if(!self.transientEventMonitor)
+			[self addEventMonitor];
+	}
 }
 
 @end
@@ -526,7 +527,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 	// Add padding on all widths so the shadow shows and
 	// make up for the border radius.
 	contentSize.width += inset * 2;
-    contentSize.height += inset * 2;
+	contentSize.height += inset * 2;
 	
 	// Adjust the drawing board so the shadow isn't clipped.
 	switch(popoverEdge) {
@@ -542,7 +543,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 			break;
 	}
 	
-    return contentSize;
+	return contentSize;
 }
 
 + (CGRect)contentViewFrameForBackgroundFrame:(CGRect)backgroundFrame popoverEdge:(CGRectEdge)popoverEdge {
@@ -569,7 +570,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 	}
 	
 	// Inset the content so it doesn't get masked out.
-    return CGRectIntegral(CGRectInset(backgroundFrame, inset, inset));
+	return CGRectIntegral(CGRectInset(backgroundFrame, inset, inset));
 }
 
 + (CGPoint)popoverOffsetForBackgroundFrame:(CGRect)frame popoverEdge:(CGRectEdge)popoverEdge {
@@ -600,71 +601,71 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 											   popoverEdge:(CGRectEdge)popoverEdge
 										  originScreenRect:(CGRect)originScreenRect {
 	
-    CGSize size = [self sizeForBackgroundViewWithContentSize:contentSize popoverEdge:popoverEdge];
-    return [[self.class alloc] initWithFrame:CGRectMake(0, 0, size.width, size.height)
+	CGSize size = [self sizeForBackgroundViewWithContentSize:contentSize popoverEdge:popoverEdge];
+	return [[self.class alloc] initWithFrame:CGRectMake(0, 0, size.width, size.height)
 								 popoverEdge:popoverEdge
 							originScreenRect:originScreenRect];
 }
 
 - (CGPathRef)newPopoverPathForEdge:(CGRectEdge)popoverEdge inFrame:(CGRect)rect {
 	NSBezierPath *path = [NSBezierPath bezierPath];
-    
-    CGFloat radius = TUIPopoverBackgroundViewBorderRadius;
-    CGFloat inset = radius + TUIPopoverBackgroundViewArrowHeight;
-	CGFloat insetArrowHeight = TUIPopoverBackgroundViewArrowHeight;
-    CGRect drawingRect = NSInsetRect(rect, inset, inset);
-    
-    CGFloat minX = CGRectGetMinX(drawingRect);
-    CGFloat maxX = CGRectGetMaxX(drawingRect);
-    CGFloat minY = CGRectGetMinY(drawingRect);
-    CGFloat maxY = CGRectGetMaxY(drawingRect);
 	
-    // Bottom left corner.
-    [path appendBezierPathWithArcWithCenter:NSMakePoint(minX, minY) radius:radius startAngle:180.0 endAngle:270.0];
-    if(self.popoverEdge == CGRectMaxYEdge) {
-        CGFloat midX = NSMidX(drawingRect);
-        NSPoint points[3];
-        points[0] = NSMakePoint(floor(midX - (TUIPopoverBackgroundViewArrowWidth / 2.0)), minY - radius);
-        points[1] = NSMakePoint(floor(midX), points[0].y - insetArrowHeight + 1);
-        points[2] = NSMakePoint(floor(midX + (TUIPopoverBackgroundViewArrowWidth / 2.0)), points[0].y);
-        [path appendBezierPathWithPoints:points count:3];
-    }
-    
-    // Bottom right corner.
-    [path appendBezierPathWithArcWithCenter:NSMakePoint(maxX, minY) radius:radius startAngle:270.0 endAngle:360.0];
-    if(self.popoverEdge == CGRectMinXEdge) {
-        CGFloat midY = NSMidY(drawingRect);
-        NSPoint points[3];
-        points[0] = NSMakePoint(maxX + radius, floor(midY - (TUIPopoverBackgroundViewArrowWidth / 2.0)));
-        points[1] = NSMakePoint(points[0].x + insetArrowHeight, floor(midY));
-        points[2] = NSMakePoint(points[0].x, floor(midY + (TUIPopoverBackgroundViewArrowWidth / 2.0)));
-        [path appendBezierPathWithPoints:points count:3];
-    }
-    
-    // Top right corner.
-    [path appendBezierPathWithArcWithCenter:NSMakePoint(maxX, maxY) radius:radius startAngle:0.0 endAngle:90.0];
-    if(self.popoverEdge == CGRectMinYEdge) {
-        CGFloat midX = NSMidX(drawingRect);
-        NSPoint points[3];
-        points[0] = NSMakePoint(floor(midX + (TUIPopoverBackgroundViewArrowWidth / 2.0)), maxY + radius);
-        points[1] = NSMakePoint(floor(midX), points[0].y + insetArrowHeight - 1);
-        points[2] = NSMakePoint(floor(midX - (TUIPopoverBackgroundViewArrowWidth / 2.0)), points[0].y);
-        [path appendBezierPathWithPoints:points count:3];
-    }
-    
-    // Top left corner.
-    [path appendBezierPathWithArcWithCenter:NSMakePoint(minX, maxY) radius:radius startAngle:90.0 endAngle:180.0];
-    if(self.popoverEdge == CGRectMaxXEdge) {
-        CGFloat midY = NSMidY(drawingRect);
-        NSPoint points[3];
-        points[0] = NSMakePoint(minX - radius, floor(midY + (TUIPopoverBackgroundViewArrowWidth / 2.0)));
-        points[1] = NSMakePoint(points[0].x - insetArrowHeight, floor(midY));
-        points[2] = NSMakePoint(points[0].x, floor(midY - (TUIPopoverBackgroundViewArrowWidth / 2.0)));
-        [path appendBezierPathWithPoints:points count:3];
-    }
-    
-    [path closePath];
-    return [path tui_CGPath];
+	CGFloat radius = TUIPopoverBackgroundViewBorderRadius;
+	CGFloat inset = radius + TUIPopoverBackgroundViewArrowHeight;
+	CGFloat insetArrowHeight = TUIPopoverBackgroundViewArrowHeight;
+	CGRect drawingRect = NSInsetRect(rect, inset, inset);
+	
+	CGFloat minX = CGRectGetMinX(drawingRect);
+	CGFloat maxX = CGRectGetMaxX(drawingRect);
+	CGFloat minY = CGRectGetMinY(drawingRect);
+	CGFloat maxY = CGRectGetMaxY(drawingRect);
+	
+	// Bottom left corner.
+	[path appendBezierPathWithArcWithCenter:NSMakePoint(minX, minY) radius:radius startAngle:180.0 endAngle:270.0];
+	if(self.popoverEdge == CGRectMaxYEdge) {
+		CGFloat midX = NSMidX(drawingRect);
+		NSPoint points[3];
+		points[0] = NSMakePoint(floor(midX - (TUIPopoverBackgroundViewArrowWidth / 2.0)), minY - radius);
+		points[1] = NSMakePoint(floor(midX), points[0].y - insetArrowHeight + 1);
+		points[2] = NSMakePoint(floor(midX + (TUIPopoverBackgroundViewArrowWidth / 2.0)), points[0].y);
+		[path appendBezierPathWithPoints:points count:3];
+	}
+	
+	// Bottom right corner.
+	[path appendBezierPathWithArcWithCenter:NSMakePoint(maxX, minY) radius:radius startAngle:270.0 endAngle:360.0];
+	if(self.popoverEdge == CGRectMinXEdge) {
+		CGFloat midY = NSMidY(drawingRect);
+		NSPoint points[3];
+		points[0] = NSMakePoint(maxX + radius, floor(midY - (TUIPopoverBackgroundViewArrowWidth / 2.0)));
+		points[1] = NSMakePoint(points[0].x + insetArrowHeight, floor(midY));
+		points[2] = NSMakePoint(points[0].x, floor(midY + (TUIPopoverBackgroundViewArrowWidth / 2.0)));
+		[path appendBezierPathWithPoints:points count:3];
+	}
+	
+	// Top right corner.
+	[path appendBezierPathWithArcWithCenter:NSMakePoint(maxX, maxY) radius:radius startAngle:0.0 endAngle:90.0];
+	if(self.popoverEdge == CGRectMinYEdge) {
+		CGFloat midX = NSMidX(drawingRect);
+		NSPoint points[3];
+		points[0] = NSMakePoint(floor(midX + (TUIPopoverBackgroundViewArrowWidth / 2.0)), maxY + radius);
+		points[1] = NSMakePoint(floor(midX), points[0].y + insetArrowHeight - 1);
+		points[2] = NSMakePoint(floor(midX - (TUIPopoverBackgroundViewArrowWidth / 2.0)), points[0].y);
+		[path appendBezierPathWithPoints:points count:3];
+	}
+	
+	// Top left corner.
+	[path appendBezierPathWithArcWithCenter:NSMakePoint(minX, maxY) radius:radius startAngle:90.0 endAngle:180.0];
+	if(self.popoverEdge == CGRectMaxXEdge) {
+		CGFloat midY = NSMidY(drawingRect);
+		NSPoint points[3];
+		points[0] = NSMakePoint(minX - radius, floor(midY + (TUIPopoverBackgroundViewArrowWidth / 2.0)));
+		points[1] = NSMakePoint(points[0].x - insetArrowHeight, floor(midY));
+		points[2] = NSMakePoint(points[0].x, floor(midY - (TUIPopoverBackgroundViewArrowWidth / 2.0)));
+		[path appendBezierPathWithPoints:points count:3];
+	}
+	
+	[path closePath];
+	return [path tui_CGPath];
 }
 
 - (id)initWithFrame:(CGRect)frame popoverEdge:(CGRectEdge)popoverEdge originScreenRect:(CGRect)originScreenRect {
@@ -677,28 +678,28 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 }
 
 - (void)drawRect:(CGRect)rect {
-	CGPathRef cgPath = [self newPopoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, 0.5, 0.5)];
+	CGPathRef cgPath = [self newPopoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, 0.5f, 0.5f)];
 	NSBezierPath *path = [NSBezierPath tui_bezierPathWithCGPath:cgPath];
 	CGPathRelease(cgPath);
 	
-	NSGradient *gradient = [[NSGradient alloc] initWithColors:@[[NSColor colorWithCalibratedWhite:0.95 alpha:0.95],
-							[NSColor colorWithCalibratedWhite:0.90 alpha:0.95]]];
-	[gradient drawInBezierPath:path angle:-90];
-	[[NSColor whiteColor] set];
+	NSGradient *gradient = [[NSGradient alloc] initWithColors:@[[NSColor colorWithCalibratedWhite:0.95f alpha:0.95f],
+																[NSColor colorWithCalibratedWhite:0.90f alpha:0.95f]]];
+	[gradient drawInBezierPath:path angle:-90.0f];
+	[[NSColor highlightColor] set];
 	[path tui_strokeInside];
 	
-	[[NSColor colorWithCalibratedWhite:0.0 alpha:0.3] set];
+	[[NSColor colorWithCalibratedWhite:0.0f alpha:0.25f] set];
 	[path stroke];
 }
 
 - (void)updateMaskLayer {
 	CAShapeLayer *maskLayer = [CAShapeLayer layer];
-    CGPathRef path = [self newPopoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, -1.0, -1.0)];
-    maskLayer.path = path;
-    maskLayer.fillColor = CGColorGetConstantColor(kCGColorBlack);
-    CGPathRelease(path);
+	CGPathRef path = [self newPopoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, -1, -1)];
+	maskLayer.path = path;
+	maskLayer.fillColor = CGColorGetConstantColor(kCGColorBlack);
+	CGPathRelease(path);
 	
-    self.layer.mask = maskLayer;
+	self.layer.mask = maskLayer;
 }
 
 + (BOOL)requiresBackgroundShadow {
@@ -723,7 +724,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 }
 
 - (void)setPopoverEdge:(CGRectEdge)popoverEdge {
-    _popoverEdge = popoverEdge;
+	_popoverEdge = popoverEdge;
 	
 	// Set the layer anchor point, so animations act accordingly.
 	switch(popoverEdge) {
@@ -755,25 +756,25 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 @implementation TUIPopoverWindow
 
 - (id)initWithContentRect:(CGRect)contentRect {
-    if((self = [super initWithContentRect:contentRect
-                                styleMask:NSBorderlessWindowMask
-                                  backing:NSBackingStoreBuffered
-                                    defer:YES])) {
-        [self setOpaque:NO];
-        [self setBackgroundColor:[NSColor clearColor]];
+	if((self = [super initWithContentRect:contentRect
+								styleMask:NSBorderlessWindowMask
+								  backing:NSBackingStoreBuffered
+									defer:YES])) {
+		[self setOpaque:NO];
+		[self setBackgroundColor:[NSColor clearColor]];
 		
 		[self setReleasedWhenClosed:NO];
-        [self setMovableByWindowBackground:NO];
-        [self setExcludedFromWindowsMenu:YES];
-    } return self;
+		[self setMovableByWindowBackground:NO];
+		[self setExcludedFromWindowsMenu:YES];
+	} return self;
 }
 
 - (BOOL)canBecomeKeyWindow {
-    return YES;
+	return YES;
 }
 
 - (BOOL)canBecomeMainWindow {
-    return NO;
+	return NO;
 }
 
 - (BOOL)isExcludedFromWindowsMenu {

@@ -59,19 +59,19 @@ typedef enum TUIPopoverBehavior : NSUInteger {
 	// itself when the window of its positioningView is closed.
 	// If escape is pressed, the delegate method or block shouldClose is
 	// asked to confirm whether the popover should close or not.
-    TUIPopoverBehaviorApplicationDefined,
+	TUIPopoverBehaviorApplicationDefined,
 	
 	// The popover will close itself the when the user interacts with
 	// interface elements outside the popover or escape is pressed.
 	// If escape is pressed, the delegate method or block shouldClose is
 	// asked to confirm whether the popover should close or not.
-    TUIPopoverBehaviorTransient,
+	TUIPopoverBehaviorTransient,
 	
 	// The popover will close itself when the user interacts with interface
 	// elements in the positioning view's window or escape is pressed.
 	// If escape is pressed, the delegate method or block shouldClose is
 	// asked to confirm whether the popover should close or not.
-    TUIPopoverBehaviorSemitransient
+	TUIPopoverBehaviorSemitransient
 } TUIPopoverBehavior;
 
 // The TUIPopover provides a means to display additional content related
