@@ -30,7 +30,7 @@
 		b.origin.y += TAB_HEIGHT;
 		b.size.height -= TAB_HEIGHT;
 		
-		ExampleTableViewController *tableViewController = [[ExampleTableViewController alloc] initWithNibName:nil bundle:nil];
+		ExampleTableViewController *tableViewController = [[ExampleTableViewController alloc] init];
 		_navigationController = [[TUINavigationController alloc] initWithRootViewController:tableViewController];
 		[self addSubview:_navigationController.view];
 		[_navigationController.view addLayoutConstraint:[TUILayoutConstraint constraintWithAttribute:TUILayoutConstraintAttributeWidth relativeTo:@"superview" attribute:TUILayoutConstraintAttributeWidth]];
@@ -101,18 +101,41 @@
 				[s ab_drawInRect:CGRectOffset(imageRect, imageRect.size.width, -15)];
 			};
 		}
+		
+		// Create a popover with the example table view controller.
+		// Making it transient means it will automatically disappear
+		// when focus is shifted to another element within the window.
+        self.tabInformation = [[TUIPopover alloc] initWithContentViewController:[[ExampleTableViewController alloc] init]];
+		self.tabInformation.contentSize = CGSizeMake(120, 120);
+		self.tabInformation.behavior = TUIPopoverBehaviorApplicationDefined;
+		
+        self.tabTest = [[NSPopover alloc] init];
+		self.tabTest.contentViewController = [[NSViewController alloc] init];
+		self.tabTest.contentSize = self.tabInformation.contentSize;
+		self.tabTest.behavior = NSPopoverBehaviorTransient;
+		
+		TUINSView *tuiTableViewContainer = [[TUINSView alloc] initWithFrame:(CGRect) {
+			.size = self.tabTest.contentSize
+		}];
+		TUIView *example = [[TUIView alloc] initWithFrame:(CGRect) {
+			.size = self.tabTest.contentSize
+		}];
+		tuiTableViewContainer.rootView = example;
+		self.tabTest.contentViewController.view = tuiTableViewContainer;
 	}
 	return self;
 }
 
-
-- (void)tabBar:(ExampleTabBar *)tabBar didSelectTab:(NSInteger)index
-{
-	NSLog(@"selected tab %ld", index);
-	if(index == [[tabBar tabViews] count] - 1){
-	  NSLog(@"popping nav controller...");
-	  [self.navigationController popViewControllerAnimated:YES];
-	}
+// Trigger a table view reload if we press the last tab. Otherwise,
+// show the popover relative to the top of the tab bar.
+- (void)tabBar:(ExampleTabBar *)tabBar didSelectTab:(NSInteger)index {
+	if(index == tabBar.tabViews.count - 1) {
+		[self.tabInformation performClose:nil];
+		[self.navigationController popViewControllerAnimated:YES];
+	} else if(index % 2)
+		[self.tabTest showRelativeToRect:tabBar.bounds ofView:tabBar.nsView preferredEdge:CGRectMaxYEdge];
+	else
+		[self.tabInformation showRelativeToRect:tabBar.bounds ofView:tabBar preferredEdge:CGRectMaxYEdge];
 }
 
 @end

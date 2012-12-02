@@ -22,4 +22,8 @@
   TUIScrollView * _scrollView;
 }
 
+@property (nonatomic, strong) TUILabel *infoLabel;
+@property (nonatomic, strong) TUIPopover *tabInformation;
+@property (nonatomic, strong) NSPopover *tabTest;
+
 @end

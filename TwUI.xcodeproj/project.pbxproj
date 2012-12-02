@@ -46,6 +46,12 @@
 		48A10E8415B7769A007F9EE3 /* TUILayoutManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E8015B7769A007F9EE3 /* TUILayoutManager.m */; };
 		48A10E8915B778E8007F9EE3 /* TUIView+Layout.m in Sources */ = {isa = PBXBuildFile; fileRef = 48A10E8715B778E8007F9EE3 /* TUIView+Layout.m */; };
 		48A10E8B15B77A46007F9EE3 /* TUIView+Layout.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A10E8A15B77A46007F9EE3 /* TUIView+Layout.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		48A62339162BB24B00DFA443 /* (null) in Headers */ = {isa = PBXBuildFile; };
+		48A6233A162BB24B00DFA443 /* (null) in Headers */ = {isa = PBXBuildFile; };
+		48A6233B162BB24B00DFA443 /* (null) in Headers */ = {isa = PBXBuildFile; };
+		48A6233C162BB24B00DFA443 /* (null) in Sources */ = {isa = PBXBuildFile; };
+		48A6233D162BB24B00DFA443 /* (null) in Sources */ = {isa = PBXBuildFile; };
+		48A6233E162BB24B00DFA443 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		5000874016524B1C0067ED42 /* TUINavigationController.h in Headers */ = {isa = PBXBuildFile; fileRef = 5000873F16524B1C0067ED42 /* TUINavigationController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5000874916524B1F0067ED42 /* TUINavigationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5000874816524B1F0067ED42 /* TUINavigationController.m */; };
 		5000874A1652C4380067ED42 /* TUINavigationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5000874816524B1F0067ED42 /* TUINavigationController.m */; };
@@ -977,6 +983,7 @@
 				D05D23A215BF7239000ED14F /* NSImage+TUIExtensions.h in Headers */,
 				D0EA12F315C34FEA00FAA603 /* NSColor+TUIExtensions.h in Headers */,
 				48373DF7160EAE9400322CA7 /* TUITextRenderer+Private.h in Headers */,
+				48A6233B162BB24B00DFA443 /* (null) in Headers */,
 				488A5835162FBE9B006CBF8B /* TUITableViewController.h in Headers */,
 				48694D771658318000BE65BF /* NSAffineTransform+TUIExtensions.h in Headers */,
 				48694D7D1658318000BE65BF /* NSShadow+TUIExtensions.h in Headers */,
@@ -1054,6 +1061,7 @@
 				D05D23A015BF7239000ED14F /* NSImage+TUIExtensions.h in Headers */,
 				D0EA12F115C34FEA00FAA603 /* NSColor+TUIExtensions.h in Headers */,
 				48373DF5160EAE9400322CA7 /* TUITextRenderer+Private.h in Headers */,
+				48A62339162BB24B00DFA443 /* (null) in Headers */,
 				488A5833162FBE9B006CBF8B /* TUITableViewController.h in Headers */,
 				48694D751658318000BE65BF /* NSAffineTransform+TUIExtensions.h in Headers */,
 				48694D7B1658318000BE65BF /* NSShadow+TUIExtensions.h in Headers */,
@@ -1092,6 +1100,7 @@
 				D05D23A115BF7239000ED14F /* NSImage+TUIExtensions.h in Headers */,
 				D0EA12F215C34FEA00FAA603 /* NSColor+TUIExtensions.h in Headers */,
 				48373DF6160EAE9400322CA7 /* TUITextRenderer+Private.h in Headers */,
+				48A6233A162BB24B00DFA443 /* (null) in Headers */,
 				488A5834162FBE9B006CBF8B /* TUITableViewController.h in Headers */,
 				48694D761658318000BE65BF /* NSAffineTransform+TUIExtensions.h in Headers */,
 				48694D7C1658318000BE65BF /* NSShadow+TUIExtensions.h in Headers */,
@@ -1376,6 +1385,7 @@
 				D05DEE9115BF645D005D8769 /* TUIStretchableImage.m in Sources */,
 				D05D23A515BF7239000ED14F /* NSImage+TUIExtensions.m in Sources */,
 				D0EA12F615C34FEA00FAA603 /* NSColor+TUIExtensions.m in Sources */,
+				48A6233E162BB24B00DFA443 /* (null) in Sources */,
 				488A5838162FBE9B006CBF8B /* TUITableViewController.m in Sources */,
 				5000874A1652C4380067ED42 /* TUINavigationController.m in Sources */,
 				48694D7A1658318000BE65BF /* NSAffineTransform+TUIExtensions.m in Sources */,
@@ -1455,6 +1465,7 @@
 				D05D23A315BF7239000ED14F /* NSImage+TUIExtensions.m in Sources */,
 				887C227C15C1C7BB006EC31D /* NSFont+TUIExtensions.m in Sources */,
 				D0EA12F415C34FEA00FAA603 /* NSColor+TUIExtensions.m in Sources */,
+				48A6233C162BB24B00DFA443 /* (null) in Sources */,
 				488A5836162FBE9B006CBF8B /* TUITableViewController.m in Sources */,
 				5000874916524B1F0067ED42 /* TUINavigationController.m in Sources */,
 				48694D781658318000BE65BF /* NSAffineTransform+TUIExtensions.m in Sources */,
@@ -1539,6 +1550,7 @@
 				D05DEE9015BF645D005D8769 /* TUIStretchableImage.m in Sources */,
 				D05D23A415BF7239000ED14F /* NSImage+TUIExtensions.m in Sources */,
 				D0EA12F515C34FEA00FAA603 /* NSColor+TUIExtensions.m in Sources */,
+				48A6233D162BB24B00DFA443 /* (null) in Sources */,
 				488A5837162FBE9B006CBF8B /* TUITableViewController.m in Sources */,
 				48694D791658318000BE65BF /* NSAffineTransform+TUIExtensions.m in Sources */,
 				48694D7F1658318000BE65BF /* NSShadow+TUIExtensions.m in Sources */,

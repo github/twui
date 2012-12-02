@@ -12,27 +12,17 @@
 
 @implementation ExampleTableViewController
 
-- (void)loadView {
-	self.view = [[TUIView alloc] initWithFrame:CGRectMake(0, 0, 300, 300)];
-}
-
 - (void)viewDidLoad {
-	self.tableView = [[TUITableView alloc] initWithFrame:self.view.frame];
-	self.tableView.alwaysBounceVertical = YES;
-	self.tableView.dataSource = self;
-	self.tableView.delegate = self;
-	[self.tableView reloadData];
-	self.tableView.maintainContentOffsetAfterReload = YES;
-	self.tableView.autoresizingMask = TUIViewAutoresizingFlexibleSize;
+	self.view.clipsToBounds = YES;
+	self.view.maintainContentOffsetAfterReload = YES;
+	self.view.autoresizingMask = TUIViewAutoresizingFlexibleSize;
 	
-	TUILabel *footerLabel = [[TUILabel alloc] initWithFrame:CGRectMake(0, 0, _tableView.frame.size.width, 44)];
+	TUILabel *footerLabel = [[TUILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 44)];
 	footerLabel.alignment = TUITextAlignmentCenter;
 	footerLabel.backgroundColor = [NSColor clearColor];
 	footerLabel.font = [NSFont fontWithName:@"HelveticaNeue-Bold" size:15];
 	footerLabel.text = @"Example Footer View";
-	self.tableView.footerView = footerLabel;
-	
-	[self.view addSubview:self.tableView];
+	self.view.footerView = footerLabel;
 }
 
 - (NSInteger)numberOfSectionsInTableView:(TUITableView *)tableView {
@@ -100,7 +90,7 @@
 - (void)tableView:(TUITableView *)tableView didClickRowAtIndexPath:(NSIndexPath *)indexPath withEvent:(NSEvent *)event {
 	if([event clickCount] == 1) {
 		// do something cool
-		ExampleTableViewController *pushed = [[ExampleTableViewController alloc] initWithNibName:nil bundle:nil];
+		ExampleTableViewController *pushed = [[ExampleTableViewController alloc] init];
 		[self.navigationController pushViewController:pushed animated:YES];
 	}
 	
