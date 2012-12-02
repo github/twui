@@ -35,7 +35,7 @@ CGFloat const TUIPopoverBackgroundViewBorderRadius = 4.5;
 CGFloat const TUIPopoverBackgroundViewArrowHeight = 12.0;
 CGFloat const TUIPopoverBackgroundViewArrowWidth = 24.0;
 
-NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
+NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 #define TUIPopoverCurrentAnimationDuration \
 ((self.animationDuration > 0.0) ? self.animationDuration : TUIPopoverDefaultAnimationDuration)
 
@@ -95,7 +95,8 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 		self.backgroundViewClass = TUIPopoverBackgroundView.class;
 		
 		CAKeyframeAnimation *bounce = [CAKeyframeAnimation animationWithKeyPath:@"transform.scale"];
-		bounce.values = @[@0.05f, @1.25f, @1.00f];
+		bounce.values = @[@0.05f, @0.95f, @1.15f, @1.00f];
+		bounce.keyTimes = @[@0.0f, @0.75f, @0.85f, @1.0f];
 		
 		CABasicAnimation *fadeIn = [CABasicAnimation animationWithKeyPath:@"opacity"];
 		fadeIn.fromValue = @0.0f;
@@ -622,6 +623,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 			break;
 	}
 	
+	drawingRect = CGRectIntegral(drawingRect);
 	CGFloat minX = CGRectGetMinX(drawingRect);
 	CGFloat maxX = CGRectGetMaxX(drawingRect);
 	CGFloat minY = CGRectGetMinY(drawingRect);
@@ -685,7 +687,7 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = 0.25f;
 }
 
 - (void)drawRect:(CGRect)rect {
-	CGPathRef cgPath = [self newPopoverPathForEdge:self.popoverEdge inFrame:CGRectInset(self.bounds, 0.5f, 0.5f)];
+	CGPathRef cgPath = [self newPopoverPathForEdge:self.popoverEdge inFrame:self.bounds];
 	NSBezierPath *path = [NSBezierPath tui_bezierPathWithCGPath:cgPath];
 	CGPathRelease(cgPath);
 	
