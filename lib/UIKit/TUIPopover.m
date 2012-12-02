@@ -691,13 +691,13 @@ NSTimeInterval const TUIPopoverDefaultAnimationDuration = (1.0f / 3.0f);
 	NSBezierPath *path = [NSBezierPath tui_bezierPathWithCGPath:cgPath];
 	CGPathRelease(cgPath);
 	
-	NSGradient *gradient = [[NSGradient alloc] initWithColors:@[[NSColor colorWithCalibratedWhite:0.95f alpha:0.95f],
-																[NSColor colorWithCalibratedWhite:0.90f alpha:0.95f]]];
+	NSGradient *gradient = [[NSGradient alloc] initWithColors:@[[NSColor colorWithCalibratedWhite:1.0f alpha:0.95f],
+																[NSColor colorWithCalibratedWhite:0.9f alpha:0.95f]]];
 	[gradient drawInBezierPath:path angle:270.0f];
-	[[NSColor highlightColor] set];
-	[path tui_strokeInside];
 	
-	[[NSColor colorWithCalibratedWhite:0.0f alpha:0.25f] set];
+	[[[NSColor whiteColor] colorWithAlphaComponent:0.9f] set];
+	[path tui_strokeInside];
+	[[[NSColor darkGrayColor] colorWithAlphaComponent:0.5f] set];
 	[path stroke];
 }
 
