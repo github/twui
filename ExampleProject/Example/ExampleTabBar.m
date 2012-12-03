@@ -137,8 +137,8 @@
 	CGContextRef ctx = TUIGraphicsGetCurrentContext();
 	
 	// gray gradient
-	CGFloat colorA[] = { 0.85, 0.85, 0.85, 1.0 };
-	CGFloat colorB[] = { 0.71, 0.71, 0.71, 1.0 };
+	CGFloat colorA[] = { 0.90, 0.90, 0.90, 1.00 };
+	CGFloat colorB[] = { 0.80, 0.80, 0.80, 1.00 };
 	CGContextDrawLinearGradientBetweenPoints(ctx, CGPointMake(0, b.size.height), colorA, CGPointMake(0, 0), colorB);
 	
 	// top emboss

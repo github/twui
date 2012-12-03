@@ -19,9 +19,13 @@
 @implementation NSShadow (TUIExtensions)
 
 + (NSShadow *)tui_shadowWithRadius:(CGFloat)radius offset:(CGSize)offset color:(NSColor *)color {
+	CGFloat scale = 1.0f;
+	if([NSScreen instancesRespondToSelector:@selector(backingScaleFactor)])
+		scale = [[NSScreen mainScreen] backingScaleFactor];
+	
 	NSShadow *shadow = [[self.class alloc] init];
-	shadow.shadowBlurRadius = radius;
-	shadow.shadowOffset = offset;
+	shadow.shadowBlurRadius = radius * scale;
+	shadow.shadowOffset = CGSizeMake(offset.width * scale, offset.height * scale);
 	shadow.shadowColor = color;
 	
 	return shadow;

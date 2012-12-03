@@ -199,7 +199,7 @@ NSImage *TUIGraphicsContextGetImage(CGContextRef ctx)
 	CGSize size = CGSizeMake(CGImageGetWidth(CGImage), CGImageGetHeight(CGImage));
 	NSImage *image = [[NSImage alloc] initWithCGImage:CGImage size:size];
 	CGImageRelease(CGImage);
-    
+	
 	return image;
 }
 
@@ -208,7 +208,7 @@ void TUIGraphicsBeginImageContextWithOptions(CGSize size, BOOL opaque, CGFloat s
 	if (scale == 0.0) {
 		scale = [NSScreen instancesRespondToSelector:@selector(backingScaleFactor)] ? [[NSScreen mainScreen] backingScaleFactor] : 1.0;
 	}
-    
+	
 	size.width *= scale;
 	size.height *= scale;
 	if(size.width < 1) size.width = 1;
@@ -235,7 +235,7 @@ NSImage *TUIGraphicsGetImageForView(TUIView *view)
 	[view.layer renderInContext:TUIGraphicsGetCurrentContext()];
 	NSImage *image = TUIGraphicsGetImageFromCurrentImageContext();
 	TUIGraphicsEndImageContext();
-    
+	
 	return image;
 }
 
@@ -269,4 +269,24 @@ NSData* TUIGraphicsDrawAsPDF(CGRect *optionalMediaBox, void(^draw)(CGContextRef)
 	CGContextRelease(ctx);
 	CGDataConsumerRelease(dataConsumer);
 	return data;
+}
+
+CGImageRef TUIGenerateNoiseImage(CGSize size, CGFloat factor) {
+	NSUInteger bits = fabs(size.width) * fabs(size.height);
+	char *rgba = (char *)malloc(bits);
+	srand(124);
+	
+	for(int i = 0; i < bits; ++i)
+		rgba[i] = (rand() % 256) * factor;
+	
+	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceGray();
+	CGContextRef bitmapContext = CGBitmapContextCreate(rgba, fabs(size.width), fabs(size.height),
+													   8, fabs(size.width), colorSpace, kCGImageAlphaNone);
+	CGImageRef image = CGBitmapContextCreateImage(bitmapContext);
+	
+	CFRelease(bitmapContext);
+	CGColorSpaceRelease(colorSpace);
+	free(rgba);
+	
+	return image;
 }

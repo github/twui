@@ -52,20 +52,19 @@
 	tuiScrollViewContainer.rootView = scrollExample;
 	
 	[self showTableViewExampleWindow:nil];
-    
 }
 
 /**
  * @brief Show the table view example
  */
--(IBAction)showTableViewExampleWindow:(id)sender {
+- (IBAction)showTableViewExampleWindow:(id)sender {
 	[tableViewWindow makeKeyAndOrderFront:sender];
 }
 
 /**
  * @brief Show the scroll view example
  */
--(IBAction)showScrollViewExampleWindow:(id)sender {
+- (IBAction)showScrollViewExampleWindow:(id)sender {
 	[scrollViewWindow makeKeyAndOrderFront:sender];
 }
 

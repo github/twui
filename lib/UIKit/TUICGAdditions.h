@@ -71,3 +71,5 @@ extern NSImage *TUIGraphicsDrawAsImage(CGSize size, void(^draw)(void));
  @returns NSData encapsulating the PDF drawing, suitable for writing to a file or the pasteboard
  */
 extern NSData *TUIGraphicsDrawAsPDF(CGRect *optionalMediaBox, void(^draw)(CGContextRef));
+
+extern CGImageRef TUIGenerateNoiseImage(CGSize size, CGFloat factor) CF_RETURNS_RETAINED;

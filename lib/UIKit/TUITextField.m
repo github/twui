@@ -77,7 +77,7 @@ doClear:
 
 - (TUIButton *)clearButton
 {
-	TUIButton *b = [TUIButton button];
+	TUIButton *b = [TUIButton buttonWithType:TUIButtonTypeCustom];
 	[b setImage:[NSImage imageNamed:@"clear-button.png"] forState:TUIControlStateNormal];
 	[b addTarget:self action:@selector(clear:) forControlEvents:TUIControlEventMouseUpInside];
 	return b;

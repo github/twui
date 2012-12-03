@@ -119,8 +119,6 @@
 			children = (
 				484C207D15F445EB00B3104E /* ExampleAppDelegate.h */,
 				484C207E15F445EB00B3104E /* ExampleAppDelegate.m */,
-				484C207F15F445EB00B3104E /* ExampleScrollView.h */,
-				484C208015F445EB00B3104E /* ExampleScrollView.m */,
 				484C208115F445EB00B3104E /* ExampleSectionHeaderView.h */,
 				484C208215F445EB00B3104E /* ExampleSectionHeaderView.m */,
 				484C208315F445EB00B3104E /* ExampleTabBar.h */,
@@ -131,6 +129,8 @@
 				500088B1165362E60067ED42 /* ExampleTableViewController.m */,
 				484C208715F445EB00B3104E /* ExampleView.h */,
 				484C208815F445EB00B3104E /* ExampleView.m */,
+				484C207F15F445EB00B3104E /* ExampleScrollView.h */,
+				484C208015F445EB00B3104E /* ExampleScrollView.m */,
 				484C207915F445EB00B3104E /* MainMenu.xib */,
 				484C209915F4463000B3104E /* Supporting Files */,
 			);

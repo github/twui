@@ -811,7 +811,7 @@ TUIViewDrawRect TUITextViewStandardFrame(void)
 		// black outline
 		NSRect blackOutlineFrame = NSMakeRect(0.0, 1.0, bounds.size.width, bounds.size.height-2.0);
 		NSGradient *gradient = nil;
-		if([NSApp isActive]) {
+		if(![NSApp isActive]) {
 			gradient = [[NSGradient alloc] initWithStartingColor:[NSColor colorWithDeviceWhite:0.6 alpha:1.0] endingColor:[NSColor colorWithDeviceWhite:0.7 alpha:1.0]];
 		} else {
 			gradient = [[NSGradient alloc] initWithStartingColor:[NSColor colorWithDeviceWhite:0.55 alpha:1.0] endingColor:[NSColor colorWithDeviceWhite:0.558 alpha:1.0]];

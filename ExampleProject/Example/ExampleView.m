@@ -21,22 +21,16 @@
 
 @implementation ExampleView
 
-- (id)initWithFrame:(CGRect)frame
-{
+- (id)initWithFrame:(CGRect)frame {
 	if((self = [super initWithFrame:frame])) {
-		self.backgroundColor = [NSColor colorWithCalibratedWhite:0.9 alpha:1.0];
-		
 		CGRect b = self.bounds;
 		b.origin.y += TAB_HEIGHT;
 		b.size.height -= TAB_HEIGHT;
 		
-		ExampleTableViewController *tableViewController = [[ExampleTableViewController alloc] initWithNibName:nil bundle:nil];
+		ExampleTableViewController *tableViewController = [[ExampleTableViewController alloc] initWithStyle:TUITableViewStylePlain];
 		_navigationController = [[TUINavigationController alloc] initWithRootViewController:tableViewController];
-		[self addSubview:_navigationController.view];
-		[_navigationController.view addLayoutConstraint:[TUILayoutConstraint constraintWithAttribute:TUILayoutConstraintAttributeWidth relativeTo:@"superview" attribute:TUILayoutConstraintAttributeWidth]];
-		[_navigationController.view addLayoutConstraint:[TUILayoutConstraint constraintWithAttribute:TUILayoutConstraintAttributeHeight relativeTo:@"superview" attribute:TUILayoutConstraintAttributeHeight offset:-TAB_HEIGHT]];
-		[_navigationController.view addLayoutConstraint:[TUILayoutConstraint constraintWithAttribute:TUILayoutConstraintAttributeMinX relativeTo:@"superview" attribute:TUILayoutConstraintAttributeMinX]];
-		[_navigationController.view addLayoutConstraint:[TUILayoutConstraint constraintWithAttribute:TUILayoutConstraintAttributeMinY relativeTo:@"superview" attribute:TUILayoutConstraintAttributeMinY offset:TAB_HEIGHT]];
+		self.navigationController.view.backgroundColor = [NSColor colorWithCalibratedWhite:0.95f alpha:1.0f];
+		[self addSubview:self.navigationController.view];
 		
 		/*
 		 Note by default scroll views (and therefore table views) don't
@@ -105,14 +99,18 @@
 	return self;
 }
 
-
-- (void)tabBar:(ExampleTabBar *)tabBar didSelectTab:(NSInteger)index
-{
-	NSLog(@"selected tab %ld", index);
-	if(index == [[tabBar tabViews] count] - 1){
-	  NSLog(@"popping nav controller...");
-	  [self.navigationController popViewControllerAnimated:YES];
+- (void)tabBar:(ExampleTabBar *)tabBar didSelectTab:(NSInteger)index {
+	NSLog(@"Selected tab %ld.", index);
+	
+	if(index == [[tabBar tabViews] count] - 1) {
+		NSLog(@"Popping view controller.");
+		[self.navigationController popViewControllerAnimated:YES];
 	}
+}
+
+- (void)layoutSubviews {
+	self.navigationController.view.frame = CGRectMake(0, TAB_HEIGHT, self.bounds.size.width,
+													  self.bounds.size.height - TAB_HEIGHT);
 }
 
 @end
