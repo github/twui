@@ -98,6 +98,11 @@ typedef enum TUIControlState : NSUInteger {
 // opts to cancel it - only when the user cancels the tracking.
 - (void)endTrackingWithEvent:(NSEvent *)event;
 
+// When control tracking ends, this method is called to allow
+// the control to clean up. It is NOT called when the control
+// opts to cancel it - only when the user cancels the tracking.
+- (void)cancelTrackingWithEvent:(NSEvent *)event;
+
 @end
 
 @interface TUIControl (TargetAction)

@@ -22,6 +22,26 @@
 
 @implementation TUIView (Event)
 
+- (BOOL)acceptsTouchEvents {
+	return _viewFlags.acceptsTouchEvents;
+}
+
+- (void)setAcceptsTouchEvents:(BOOL)acceptsTouchEvents {
+	_viewFlags.acceptsTouchEvents = acceptsTouchEvents;
+}
+
+- (BOOL)wantsRestingTouches {
+	return _viewFlags.wantsRestingTouches;
+}
+
+- (void)setWantsRestingTouches:(BOOL)wantsRestingTouches {
+	_viewFlags.wantsRestingTouches = wantsRestingTouches;
+}
+
+- (NSSet *)touchesMatchingPhase:(NSTouchPhase)phase forEvent:(NSEvent *)event {
+	return [event touchesMatchingPhase:phase inView:self.nsView];
+}
+
 - (TUITextRenderer *)_textRendererForEvent:(NSEvent *)event
 {
 	CGPoint p = [self localPointForEvent:event];

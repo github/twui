@@ -16,6 +16,18 @@
 
 @interface TUIView (Event)
 
+// Allows a TUIView to recieve touchesBegan/Moved/Ended/Cancelled events.
+// Defaults to NO.
+@property (nonatomic, assign) BOOL acceptsTouchEvents;
+
+// Allows a TUIView that can receive touch events to receive resting touches.
+// Defaults to NO.
+@property (nonatomic, assign) BOOL wantsRestingTouches;
+
+// Returns the set of touches for this TUIView provided by the NSEvent.
+// Note that you should not use -[NSEvent touchesMatchingPhase:inView:]
+- (NSSet *)touchesMatchingPhase:(NSTouchPhase)phase forEvent:(NSEvent *)event;
+
 - (BOOL)didDrag; // valid when called from mouseUp: will determine if a drag happened in this event sequence
 
 - (void)viewWillStartLiveResize; // call super to propogate to subviews

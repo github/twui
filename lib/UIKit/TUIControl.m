@@ -208,7 +208,7 @@
 		_controlFlags.tracking = 0;
 		[self _stateDidChange];
 
-		[self endTrackingWithEvent:nil];
+		[self cancelTrackingWithEvent:nil];
 		[self setNeedsDisplay];
 	}
 }
@@ -219,7 +219,18 @@
 		_controlFlags.tracking = 0;
 		[self _stateDidChange];
 
-		[self endTrackingWithEvent:nil];
+		[self cancelTrackingWithEvent:nil];
+		[self setNeedsDisplay];
+	}
+}
+
+- (void)windowDidResignKey {
+	if(!_controlFlags.disabled && _controlFlags.tracking) {
+		[self _stateWillChange];
+		_controlFlags.tracking = 0;
+		[self _stateDidChange];
+		
+		[self cancelTrackingWithEvent:nil];
 		[self setNeedsDisplay];
 	}
 }
@@ -234,6 +245,10 @@
 }
 
 - (void)endTrackingWithEvent:(NSEvent *)event {
+	return;
+}
+
+- (void)cancelTrackingWithEvent:(NSEvent *)event {
 	return;
 }
 

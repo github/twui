@@ -116,6 +116,8 @@ extern CGRect(^TUIViewCenteredLayout)(TUIView*);
 		unsigned int clearsContextBeforeDrawing:1;
 		unsigned int drawInBackground:1;
 		unsigned int needsDisplayWhenWindowsKeyednessChanges:1;
+		unsigned int acceptsTouchEvents:1;
+		unsigned int wantsRestingTouches:1;
 		
 		unsigned int delegateMouseEntered:1;
 		unsigned int delegateMouseExited:1;

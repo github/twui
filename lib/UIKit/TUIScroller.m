@@ -141,7 +141,7 @@ static NSTimeInterval const TUIScrollerDisplayDuration = 0.75f;
 }
 
 - (void)_hideKnob {
-	if (_scrollerFlags.hover || _scrollerFlags.active || self.scrollView.dragging || self.scrollView.decelerating) {
+	if (_scrollerFlags.hover || _scrollerFlags.active || self.scrollView.tracking || self.scrollView.decelerating) {
 		[self _refreshKnobTimer];
 		return;
 	}

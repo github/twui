@@ -19,6 +19,7 @@
 @interface ExampleTab : TUIControl
 
 @property (nonatomic, assign) CGFloat originalPosition;
+@property (nonatomic, strong) NSTimer *flashTimer;
 
 @end
 
@@ -47,19 +48,11 @@
 - (BOOL)continueTrackingWithEvent:(NSEvent *)event {
 	
 	// Offset the tab's x origin by whatever we dragged by.
-	// Animating it makes it fun if the drag goes pretty far.
-	CGFloat currentPosition = [self convertPoint:[event locationInWindow] fromView:nil].x;
-	[TUIView animateWithDuration:0.1 animations:^{
-		
-		// Setting an ease-in-out animation curve slows down
-		// the animation at the start and finish, but speeds it up
-		// during the middle. Just for that "don't slide me!" fun.
-		[TUIView setAnimationCurve:TUIViewAnimationCurveEaseInOut];
-		
-		CGRect draggedRect = self.frame;
-		draggedRect.origin.x += roundf(currentPosition - self.originalPosition);
-		self.frame = draggedRect;
-	}];
+	CGFloat currentPosition = [self convertPoint:event.locationInWindow fromView:nil].x;
+	
+	CGRect draggedRect = self.frame;
+	draggedRect.origin.x += roundf(currentPosition - self.originalPosition);
+	self.frame = draggedRect;
 	
 	return YES;
 }
@@ -70,25 +63,77 @@
 	// By nature, the event *must* be inside the tab's bounds, otherwise the
 	// tracking process will not be invoked. If we were dragged, we were NOT
 	// pressed, so don't call the delegate.
-	CGFloat currentPosition = [self convertPoint:[event locationInWindow] fromView:nil].x;
+	CGFloat currentPosition = [self convertPoint:event.locationInWindow fromView:nil].x;
 	if(self.originalPosition == currentPosition)
-		[[self tabBar].delegate tabBar:[self tabBar] didSelectTab:self.tag];
+		[self.tabBar.delegate tabBar:self.tabBar didSelectTab:self.tag];
 	
 	// Since tracking is done, move the tab back. This whole ordeal lets us
 	// "stretch" our tabs around.
-	float originalPoint = self.tag * (self.tabBar.bounds.size.width / self.tabBar.tabViews.count);
-	[TUIView animateWithDuration:0.2 animations:^{
+	CGFloat originalPoint = self.tag * (self.tabBar.bounds.size.width / self.tabBar.tabViews.count);
+	[TUIView animateWithDuration:0.25f animations:^{
 		CGRect draggedRect = self.frame;
 		draggedRect.origin.x = roundf(originalPoint);
 		self.frame = draggedRect;
 	}];
 	
 	// Rather than a simple -setNeedsDisplay, let's fade it back out.
-	[TUIView animateWithDuration:0.3 animations:^{
+	[TUIView animateWithDuration:0.25f animations:^{
 		
 		// -redraw forces a .contents update immediately based on drawRect,
 		// and it happens inside an animation block, so CoreAnimation gives
 		// us a cross-fade for free.
+		[self redraw];
+	}];
+}
+
+// End control tracking when cancelled for any reason.
+- (void)cancelTrackingWithEvent:(NSEvent *)event {
+	[self endTrackingWithEvent:event];
+}
+
+// When the tab is tapped with two fingers, let it pulse, otherwise
+// do nothing. To let it pulse, use the selected property and toggle it.
+- (void)touchesBeganWithEvent:(NSEvent *)event {
+	if([self touchesMatchingPhase:NSTouchPhaseTouching forEvent:event].count != 2)
+		return;
+	
+	// Using -redraw within an animation block lets us crossfade
+	// the tab selection. When we finish this animation, queue
+	// the pulsing with a timer set repeat the -flash method.
+	[TUIView animateWithDuration:0.25f animations:^{
+		self.selected = YES;
+		[self redraw];
+	} completion:^(BOOL finished) {
+		if(finished) {
+			self.flashTimer = [NSTimer scheduledTimerWithTimeInterval:0.25f
+															   target:self selector:@selector(flash)
+															 userInfo:nil repeats:YES];
+		}
+	}];
+}
+
+// If the touches have ended, invalidate the timer and animate
+// back to the standard state, setting .selected as NO.
+- (void)touchesEndedWithEvent:(NSEvent *)event {
+	[self.flashTimer invalidate];
+	self.flashTimer = nil;
+	
+	[TUIView animateWithDuration:0.25f animations:^{
+		self.selected = NO;
+		[self redraw];
+	}];
+}
+
+// End touch tracking when cancelled for any reason.
+- (void)touchesCancelledWithEvent:(NSEvent *)event {
+	[self touchesEndedWithEvent:event];
+}
+
+// This method, called from a timer, should pulse the tab by
+// flipping the .selected property value, and animating the change.
+- (void)flash {
+	[TUIView animateWithDuration:0.25f animations:^{
+		self.selected = !self.selected;
 		[self redraw];
 	}];
 }
@@ -103,49 +148,58 @@
 
 @implementation ExampleTabBar
 
-@synthesize delegate;
-@synthesize tabViews;
-
-- (id)initWithNumberOfTabs:(NSInteger)nTabs
-{
+- (id)initWithNumberOfTabs:(NSUInteger)count {
 	if((self = [super initWithFrame:CGRectZero])) {
-		NSMutableArray *_tabViews = [NSMutableArray arrayWithCapacity:nTabs];
-		for(int i = 0; i < nTabs; ++i) {
-			ExampleTab *t = [[ExampleTab alloc] initWithFrame:CGRectZero];
-			t.tag = i;
-			t.layout = ^(TUIView *v) { // the layout of an individual tab is a function of the superview bounds, the number of tabs, and the current tab index
-				CGRect b = v.superview.bounds; // reference the passed-in 'v' rather than 't' to avoid a retain cycle
-				float width = (b.size.width / nTabs);
-				float x = i * width;
-				return CGRectMake(roundf(x), 0, roundf(width), b.size.height);
+		NSMutableArray *tabs = [NSMutableArray arrayWithCapacity:count];
+		
+		for(int i = 0; i < count; ++i) {
+			ExampleTab *tab = [[ExampleTab alloc] initWithFrame:CGRectZero];
+			tab.acceptsTouchEvents = YES;
+			tab.wantsRestingTouches = YES;
+			tab.tag = i;
+			
+			// The layout of an individual tab is a function of the superview bounds,
+			// the number of tabs, and the current tab index.
+			// Reference the passed-in 'view' rather than 'tab' to avoid a retain cycle.
+			tab.layout = ^(TUIView *view) {
+				CGRect rect = view.superview.bounds;
+				CGFloat width = (rect.size.width / count);
+				return CGRectMake(roundf(i * width), 0, roundf(width), CGRectGetHeight(rect));
 			};
-			[self addSubview:t];
-			[_tabViews addObject:t];
+			
+			[self addSubview:tab];
+			[tabs addObject:tab];
 		}
 		
-		tabViews = [[NSArray alloc] initWithArray:_tabViews];
+		_tabViews = [[NSArray alloc] initWithArray:tabs];
 	}
 	return self;
 }
 
 
-- (void)drawRect:(CGRect)rect
-{
-	// draw tab bar background
-	
-	CGRect b = self.bounds;
+- (void)drawRect:(CGRect)rect {
 	CGContextRef ctx = TUIGraphicsGetCurrentContext();
 	
-	// gray gradient
-	CGFloat colorA[] = { 0.85, 0.85, 0.85, 1.0 };
-	CGFloat colorB[] = { 0.71, 0.71, 0.71, 1.0 };
-	CGContextDrawLinearGradientBetweenPoints(ctx, CGPointMake(0, b.size.height), colorA, CGPointMake(0, 0), colorB);
+	// Drawing the bar gradient using CGContextRef functions.
+	CGFloat colorA[] = { 0.85f, 0.85f, 0.85f, 1.0f };
+	CGFloat colorB[] = { 0.71f, 0.71f, 0.71f, 1.0f };
+	CGContextDrawLinearGradientBetweenPoints(ctx, CGPointMake(0, CGRectGetHeight(self.bounds)),
+											 colorA, CGPointMake(0, 0), colorB);
 	
-	// top emboss
-	CGContextSetRGBFillColor(ctx, 1, 1, 1, 0.5);
-	CGContextFillRect(ctx, CGRectMake(0, b.size.height-2, b.size.width, 1));
-	CGContextSetRGBFillColor(ctx, 0, 0, 0, 0.3);
-	CGContextFillRect(ctx, CGRectMake(0, b.size.height-1, b.size.width, 1));
+	// Drawing the separator etch using Cocoa Graphics objects.
+	[[NSColor colorWithCalibratedWhite:1.0f alpha:0.5f] set];
+	[[NSBezierPath bezierPathWithRect:CGRectMake(0, CGRectGetHeight(self.bounds) - 2, CGRectGetWidth(self.bounds), 1)] fill];
+	[[NSColor colorWithCalibratedWhite:0.0f alpha:0.25f] set];
+	[[NSBezierPath bezierPathWithRect:CGRectMake(0, CGRectGetHeight(self.bounds) - 1, CGRectGetWidth(self.bounds), 1)] fill];
+}
+
+- (BOOL)isHighlightingTab:(TUIView *)tab {
+	if(![self.tabViews containsObject:tab])
+		return NO;
+	
+	if([(ExampleTab *)tab state] & (TUIControlStateHighlighted | TUIControlStateSelected))
+		return YES;
+	else return NO;
 }
 
 @end

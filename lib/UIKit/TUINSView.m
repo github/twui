@@ -79,6 +79,11 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 - (void)recalculateNSViewClipping;
 - (void)recalculateNSViewOrdering;
 
+// The last TUIView that was forwarded a touch event.
+// You can expect that if this is not nil, there is a current
+// internal touch -> view forwarding chain running.
+@property (nonatomic, strong) TUIView *lastTouchView;
+
 /*
  * A layer used to mask the rendering of NSView-owned layers added to the
  * receiver.
@@ -118,8 +123,7 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 @synthesize rootView = _rootView;
 @synthesize maskLayer = _maskLayer;
 
-- (id)initWithCoder:(NSCoder *)coder
-{
+- (id)initWithCoder:(NSCoder *)coder {
 	self = [super initWithCoder:coder];
 	if (self == nil)
 		return nil;
@@ -128,8 +132,7 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	return self;
 }
 
-- (id)initWithFrame:(NSRect)frameRect
-{
+- (id)initWithFrame:(NSRect)frameRect {
 	self = [super initWithFrame:frameRect];
 	if (self == nil)
 		return nil;
@@ -138,8 +141,7 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	return self;
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	
 	_rootView.hostView = nil;
@@ -153,33 +155,28 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	
 }
 
-- (void)resetCursorRects
-{
+- (void)resetCursorRects {
 	NSRect f = [self frame];
 	f.origin = NSZeroPoint;
 	[self addCursorRect:f cursor:[NSCursor arrowCursor]];
 }
 
-- (void)tui_setOpaque:(BOOL)o
-{
+- (void)tui_setOpaque:(BOOL)o {
 	opaque = o;
 }
 
-- (BOOL)isOpaque
-{
+- (BOOL)isOpaque {
 	return opaque;
 }
 
-- (BOOL)mouseDownCanMoveWindow
-{
+- (BOOL)mouseDownCanMoveWindow {
 	return NO;
 }
 
-- (void)updateTrackingAreas
-{
+- (void)updateTrackingAreas {
 	[super updateTrackingAreas];
 	
-	if(_trackingArea) {
+	if (_trackingArea) {
 		[self removeTrackingArea:_trackingArea];
 	}
 	
@@ -189,30 +186,26 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	[self addTrackingArea:_trackingArea];
 }
 
-- (void)viewWillStartLiveResize
-{
+- (void)viewWillStartLiveResize {
 	[super viewWillStartLiveResize];
 	inLiveResize = YES;
 	[_rootView viewWillStartLiveResize];
 }
 
-- (BOOL)inLiveResize
-{
+- (BOOL)inLiveResize {
 	return inLiveResize;
 }
 
-- (void)viewDidEndLiveResize
-{
+- (void)viewDidEndLiveResize {
 	[super viewDidEndLiveResize];
 	inLiveResize = NO;
 	[_rootView viewDidEndLiveResize]; // will send to all subviews
 	
-	if([[self window] respondsToSelector:@selector(ensureWindowRectIsOnScreen)])
+	if ([[self window] respondsToSelector:@selector(ensureWindowRectIsOnScreen)])
 		[[self window] performSelector:@selector(ensureWindowRectIsOnScreen)];
 }
 
-- (void)setRootView:(TUIView *)v
-{
+- (void)setRootView:(TUIView *)v {
 	v.autoresizingMask = TUIViewAutoresizingFlexibleSize;
 
 	TUINSView *originalNSView = v.ancestorTUINSView;
@@ -242,10 +235,9 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	[v didMoveFromTUINSView:originalNSView];
 }
 
-- (void)setNextResponder:(NSResponder *)r
-{
+- (void)setNextResponder:(NSResponder *)r {
 	NSResponder *nextResponder = [self nextResponder];
-	if([nextResponder isKindOfClass:[NSViewController class]]) {
+	if ([nextResponder isKindOfClass:[NSViewController class]]) {
 		// keep view controller in chain
 		[nextResponder setNextResponder:r];
 	} else {
@@ -254,21 +246,21 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 }
 
 - (void)viewWillMoveToWindow:(NSWindow *)newWindow {
-	if(self.window != nil) {
+	if (self.window != nil) {
 		[[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowDidBecomeKeyNotification object:self.window];
 		[[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowDidResignKeyNotification object:self.window];
 		[[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowDidChangeScreenProfileNotification object:self.window];
 	}
 	
 	CALayer *hostLayer = self.layer;
-	if(newWindow != nil && _rootView.layer.superlayer != hostLayer) {
+	if (newWindow != nil && _rootView.layer.superlayer != hostLayer) {
 		_rootView.layer.frame = hostLayer.bounds;
 		[hostLayer insertSublayer:_rootView.layer atIndex:0];
 	}
 	
 	[self.rootView willMoveToWindow:(TUINSWindow *) newWindow];
 	
-	if(newWindow == nil) {
+	if (newWindow == nil) {
 		[_rootView removeFromSuperview];
 		// since the layer retains the layoutManger, we need to set it to nil to
 		// make sure TUINSView will be deallocated
@@ -278,13 +270,12 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	}
 }
 
-- (void)viewDidMoveToWindow
-{
+- (void)viewDidMoveToWindow {
 	[self _updateLayerScaleFactor];
 	
 	[self.rootView didMoveToWindow];
 	
-	if(self.window != nil) {
+	if (self.window != nil) {
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidResignKey:) name:NSWindowDidResignKeyNotification object:self.window];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidBecomeKey:) name:NSWindowDidBecomeKeyNotification object:self.window];
 		
@@ -295,14 +286,14 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 }
 
 - (void)_updateLayerScaleFactor {
-	if([self window] != nil) {
+	if ([self window] != nil) {
 		CGFloat scale = 1.0f;
-		if([[self window] respondsToSelector:@selector(backingScaleFactor)]) {
+		if ([[self window] respondsToSelector:@selector(backingScaleFactor)]) {
 			scale = [[self window] backingScaleFactor];
 		}
 		
-		if([self.layer respondsToSelector:@selector(setContentsScale:)]) {
-			if(fabs(self.layer.contentsScale - scale) > 0.1f) {
+		if ([self.layer respondsToSelector:@selector(setContentsScale:)]) {
+			if (fabs(self.layer.contentsScale - scale) > 0.1f) {
 				self.layer.contentsScale = scale;
 			}
 		}
@@ -311,78 +302,68 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	}
 }
 
-- (void)screenProfileOrBackingPropertiesDidChange:(NSNotification *)notification
-{
+- (void)screenProfileOrBackingPropertiesDidChange:(NSNotification *)notification {
 	[self performSelector:@selector(_updateLayerScaleFactor) withObject:nil afterDelay:0.0]; // the window's backingScaleFactor doesn't update until after this notification fires (10.8) - so delay it a bit.
 }
 
-- (TUIView *)viewForLocalPoint:(NSPoint)p
-{
+- (TUIView *)viewForLocalPoint:(NSPoint)p {
 	return [_rootView hitTest:p withEvent:nil];
 }
 
-- (NSPoint)localPointForLocationInWindow:(NSPoint)locationInWindow
-{
+- (NSPoint)localPointForLocationInWindow:(NSPoint)locationInWindow {
 	return [self convertPoint:locationInWindow fromView:nil];
 }
 
-- (TUIView *)viewForLocationInWindow:(NSPoint)locationInWindow
-{
+- (TUIView *)viewForLocationInWindow:(NSPoint)locationInWindow {
 	return [self viewForLocalPoint:[self localPointForLocationInWindow:locationInWindow]];
 }
 
-- (TUIView *)viewForEvent:(NSEvent *)event
-{
+- (TUIView *)viewForEvent:(NSEvent *)event {
 	return [self viewForLocationInWindow:[event locationInWindow]];
 }
 
-- (void)windowDidResignKey:(NSNotification *)notification
-{
+- (void)windowDidResignKey:(NSNotification *)notification {
 	[TUITooltipWindow endTooltip];
 	
-	if(![self isWindowKey]) {
+	if (![self isWindowKey]) {
 		[self.rootView windowDidResignKey];
 	}
 }
 
-- (void)windowDidBecomeKey:(NSNotification *)notification
-{
+- (void)windowDidBecomeKey:(NSNotification *)notification {
 	[self.rootView windowDidBecomeKey];
 }
 
-- (BOOL)isWindowKey
-{
-	if([self.window isKeyWindow]) return YES;
+- (BOOL)isWindowKey {
+	if ([self.window isKeyWindow]) return YES;
 	
 	NSWindow *keyWindow = [NSApp keyWindow];
-	if(keyWindow == nil) return NO;
+	if (keyWindow == nil) return NO;
 	
 	return keyWindow == [self.window attachedSheet];
 }
 
-- (void)viewWillMoveToSuperview:(NSView *)newSuperview
-{
+- (void)viewWillMoveToSuperview:(NSView *)newSuperview {
 	[super viewWillMoveToSuperview:newSuperview];
 	
-	if(newSuperview == nil) {
+	if (newSuperview == nil) {
 		[TUITooltipWindow endTooltip];
 	}
 }
 
-- (void)_updateHoverView:(TUIView *)_newHoverView withEvent:(NSEvent *)event
-{
-	if(_hyperFocusView) {
-		if(![_newHoverView isDescendantOfView:_hyperFocusView]) {
+- (void)_updateHoverView:(TUIView *)_newHoverView withEvent:(NSEvent *)event {
+	if (_hyperFocusView) {
+		if (![_newHoverView isDescendantOfView:_hyperFocusView]) {
 			_newHoverView = nil; // don't allow hover
 		}
 	}
 	
-	if(_newHoverView != _hoverView) {
+	if (_newHoverView != _hoverView) {
 		[_hoverView mouseExited:event];
 		[_newHoverView mouseEntered:event];
 		_hoverView = _newHoverView;
 		
-		if([[self window] isKeyWindow]) {
+		if ([[self window] isKeyWindow]) {
 			[TUITooltipWindow updateTooltip:_hoverView.toolTip delay:_hoverView.toolTipDelay];
 		} else {
 			[TUITooltipWindow updateTooltip:nil delay:_hoverView.toolTipDelay];
@@ -392,12 +373,11 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	}
 }
 
-- (void)_updateHoverViewWithEvent:(NSEvent *)event
-{
+- (void)_updateHoverViewWithEvent:(NSEvent *)event {
 	TUIView *_newHoverView = [self viewForEvent:event];
 	
-	if(![[self window] isKeyWindow]) {
-		if(![_newHoverView acceptsFirstMouse:event]) {
+	if (![[self window] isKeyWindow]) {
+		if (![_newHoverView acceptsFirstMouse:event]) {
 			// in background, don't do hover for things that don't accept first mouse
 			_newHoverView = nil;
 		}
@@ -406,23 +386,20 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	[self _updateHoverView:_newHoverView withEvent:event];
 }
 
-- (void)invalidateHover
-{
+- (void)invalidateHover {
 	[self _updateHoverView:nil withEvent:nil];
 }
 
-- (void)invalidateHoverForView:(TUIView *)v
-{
-	if([_hoverView isDescendantOfView:v]) {
+- (void)invalidateHoverForView:(TUIView *)v {
+	if ([_hoverView isDescendantOfView:v]) {
 		[self invalidateHover];
 	}
 }
 
-- (void)mouseDown:(NSEvent *)event
-{
-	if(_hyperFocusView) {
+- (void)mouseDown:(NSEvent *)event {
+	if (_hyperFocusView) {
 		TUIView *v = [self viewForEvent:event];
-		if([v isDescendantOfView:_hyperFocusView]) {
+		if ([v isDescendantOfView:_hyperFocusView]) {
 			// activate it normally
 			[self endHyperFocus:NO]; // not cancelled
 			goto normal;
@@ -441,8 +418,7 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	[TUITooltipWindow endTooltip];
 }
 
-- (void)mouseUp:(NSEvent *)event
-{
+- (void)mouseUp:(NSEvent *)event {
 	TUIView *lastTrackingView = self.trackingView;
 
 	self.trackingView = nil;
@@ -452,13 +428,11 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	[self _updateHoverViewWithEvent:event];
 }
 
-- (void)mouseDragged:(NSEvent *)event
-{
+- (void)mouseDragged:(NSEvent *)event {
 	[self.trackingView mouseDragged:event];
 }
 
-- (void)mouseMoved:(NSEvent *)event
-{
+- (void)mouseMoved:(NSEvent *)event {
 	[self _updateHoverViewWithEvent:event];
 }
 
@@ -470,16 +444,14 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
   [self _updateHoverViewWithEvent:event];
 }
 
-- (void)rightMouseDown:(NSEvent *)event
-{
+- (void)rightMouseDown:(NSEvent *)event {
 	self.trackingView = [self viewForEvent:event];
 	[self.trackingView rightMouseDown:event];
 	[TUITooltipWindow endTooltip];
 	[super rightMouseDown:event]; // we need to send this up the responder chain so that -menuForEvent: will get called for two-finger taps
 }
 
-- (void)rightMouseUp:(NSEvent *)event
-{
+- (void)rightMouseUp:(NSEvent *)event {
 	TUIView *lastTrackingView = self.trackingView;
 	
 	self.trackingView = nil;
@@ -487,89 +459,166 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	[lastTrackingView rightMouseUp:event]; // after trackingView is set to nil, will call mouseUp:fromSubview:
 }
 
-- (void)scrollWheel:(NSEvent *)event
-{
+- (void)scrollWheel:(NSEvent *)event {
 	[[self viewForEvent:event] scrollWheel:event];
 	[self _updateHoverView:nil withEvent:event]; // don't pop in while scrolling
 }
 
-- (void)beginGestureWithEvent:(NSEvent *)event
-{
+#pragma mark - Internal Touch Forwarding Chain
+// FIXME: Filter out resting NSTouches from NSEvent if needed.
+// TODO: Cache touch-accepting TUIViews instead of live checking.
+
+- (void)touchesBeganWithEvent:(NSEvent *)event {
+	
+	// If we're already delivering an event, or there was no view, don't process it.
+	if (!deliveringEvent) {
+		
+		// Get the view for which the touch began at if there is one,
+		// and check whether the view can actually receive touch events.
+		// If it can, register it for future touch forwarding as well.
+		// If it can't, check the view heirarchy for the next view
+		// that accepts touch events, and register that instead.
+		for(TUIView *touchView = [self viewForEvent:event];; touchView = touchView.superview) {
+			
+			// If the view does not exist, we've reached the top of
+			// the heirarchy, and still have not found a view willing
+			// to accept touches, so simply return early. If not,
+			// check if it's willing to accept touch events, and has
+			// successfully implemented -touchesBeganWithEvent:.
+			if (touchView == nil) {
+				return;
+			} else if (touchView->_viewFlags.acceptsTouchEvents &&
+					  [touchView respondsToSelector:@selector(touchesBeganWithEvent:)]) {
+				self.lastTouchView = touchView;
+				break;
+			}
+		}
+		
+		// Check if the touch is resting, and whether the registered view
+		// allows receipt of resting touches, or if the touch isn't resting.
+		BOOL resting = [[[event touchesMatchingPhase:NSTouchPhaseAny inView:self] anyObject] isResting];
+		BOOL allowRestingTouchIfPossible = !resting || (resting && self.lastTouchView->_viewFlags.wantsRestingTouches);
+		
+		// If a resting touch was detected, and the view supports it,
+		// or there was no resting touch detected, forward the event.
+		// Block the internal event forwarding chain while doing this.
+		if (allowRestingTouchIfPossible) {
+			deliveringEvent = YES;
+			[self.lastTouchView touchesBeganWithEvent:event];
+			deliveringEvent = NO;
+		}
+	}
+}
+
+- (void)touchesMovedWithEvent:(NSEvent *)event {
+	
+	// Since this is a continuation of a previously forwarded touch
+	// set, use the previously registered touch view.
+	// Block the internal event forwarding chain while doing this.
+	if (!deliveringEvent && self.lastTouchView) {
+		deliveringEvent = YES;
+		[self.lastTouchView touchesMovedWithEvent:event];
+		deliveringEvent = NO;
+	}
+}
+
+- (void)touchesEndedWithEvent:(NSEvent *)event {
+	
+	// Since this is a continuation of a previously forwarded touch
+	// set, use the previously registered touch view and end it.
+	// Block the internal event forwarding chain while doing this.
+	if (!deliveringEvent && self.lastTouchView) {
+		deliveringEvent = YES;
+		[self.lastTouchView touchesEndedWithEvent:event];
+		deliveringEvent = NO;
+	}
+	
+	// End the current touch forwarding chain.
+	self.lastTouchView = nil;
+}
+
+- (void)touchesCancelledWithEvent:(NSEvent *)event {
+	
+	// Since this is a continuation of a previously forwarded touch
+	// set, use the previously registered touch view and end it.
+	// Block the internal event forwarding chain while doing this.
+	if (!deliveringEvent && self.lastTouchView) {
+		deliveringEvent = YES;
+		[self.lastTouchView touchesCancelledWithEvent:event];
+		deliveringEvent = NO;
+	}
+	
+	// End the current touch forwarding chain.
+	self.lastTouchView = nil;
+}
+
+#pragma mark -
+
+- (void)beginGestureWithEvent:(NSEvent *)event {
 	[[self viewForEvent:event] beginGestureWithEvent:event];
 }
 
-- (void)endGestureWithEvent:(NSEvent *)event
-{
+- (void)endGestureWithEvent:(NSEvent *)event {
 	[[self viewForEvent:event] endGestureWithEvent:event];
 }
 
-- (void)magnifyWithEvent:(NSEvent *)event
-{
-	if(!deliveringEvent) {
+- (void)magnifyWithEvent:(NSEvent *)event {
+	if (!deliveringEvent) {
 		deliveringEvent = YES;
 		[[self viewForEvent:event] magnifyWithEvent:event];	
 		deliveringEvent = NO;
 	}
 }
 
-- (void)rotateWithEvent:(NSEvent *)event
-{
-	if(!deliveringEvent) {
+- (void)rotateWithEvent:(NSEvent *)event {
+	if (!deliveringEvent) {
 		deliveringEvent = YES;
 		[[self viewForEvent:event] rotateWithEvent:event];
 		deliveringEvent = NO;
 	}
 }
 
-- (void)swipeWithEvent:(NSEvent *)event
-{
-	if(!deliveringEvent) {
+- (void)swipeWithEvent:(NSEvent *)event {
+	if (!deliveringEvent) {
 		deliveringEvent = YES;
 		[[self viewForEvent:event] swipeWithEvent:event];
 		deliveringEvent = NO;
 	}
 }
 
-- (void)keyDown:(NSEvent *)event
-{
+- (void)keyDown:(NSEvent *)event {
 	BOOL consumed = NO;
 	// TUIView uses -performKeyAction: in -keyDown: to do its key equivalents. If none of our TUIViews consumed the key down as a key action, we want to give our view controller a chance to handle the key down as a key equivalent.
-	if([[self nextResponder] isKindOfClass:[NSViewController class]]) {
+	if ([[self nextResponder] isKindOfClass:[NSViewController class]]) {
 		consumed = [[self nextResponder] performKeyEquivalent:event];
 	}
 	
-	if(!consumed) {
+	if (!consumed) {
 		[super keyDown:event];
 	}
 }
 
-- (BOOL)performKeyEquivalent:(NSEvent *)event
-{
+- (BOOL)performKeyEquivalent:(NSEvent *)event {
 	return [_rootView performKeyEquivalent:event];
 }
 
-- (void)setEverythingNeedsDisplay
-{
+- (void)setEverythingNeedsDisplay {
 	[_rootView setEverythingNeedsDisplay];
 }
 
-- (BOOL)isTrackingSubviewOfView:(TUIView *)v
-{
+- (BOOL)isTrackingSubviewOfView:(TUIView *)v {
 	return [self.trackingView isDescendantOfView:v];
 }
 
-- (BOOL)isHoveringSubviewOfView:(TUIView *)v
-{
+- (BOOL)isHoveringSubviewOfView:(TUIView *)v {
 	return [_hoverView isDescendantOfView:v];
 }
 
-- (BOOL)isHoveringView:(TUIView *)v
-{
+- (BOOL)isHoveringView:(TUIView *)v {
 	return _hoverView == v;
 }
 
-- (BOOL)acceptsFirstMouse:(NSEvent *)event
-{
+- (BOOL)acceptsFirstMouse:(NSEvent *)event {
 	return [[self viewForEvent:event] acceptsFirstMouse:event];
 }
 
@@ -582,37 +631,34 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
  - The NSApplication object’s delegate.
  */
 
-- (NSResponder *)firstResponderForSelector:(SEL)action
-{
-	if(!action)
+- (NSResponder *)firstResponderForSelector:(SEL)action {
+	if (!action)
 		return nil;
 	
 	NSResponder *f = [[self window] firstResponder];
 //	NSLog(@"starting search at %@", f);
 	do {
-		if([f respondsToSelector:action])
+		if ([f respondsToSelector:action])
 			return f;
 	} while((f = [f nextResponder]));
 	
 	return nil;
 }
 
-- (void)_patchMenu:(NSMenu *)menu
-{
+- (void)_patchMenu:(NSMenu *)menu {
 	for(NSMenuItem *item in [menu itemArray]) {
-		if(![item target]) {
+		if (![item target]) {
 			// would normally travel the responder chain starting too high up, patch it to target what it would target if it hit the true responder chain
 			[item setTarget:[self firstResponderForSelector:[item action]]];
 		}
 		
-		if([item submenu])
+		if ([item submenu])
 			[self _patchMenu:[item submenu]]; // recurse
 	}
 }
 
 // the problem is for context menus the responder chain search starts with the NSView... we want it to start deeper, so we can patch up targets of a copy of the menu here
-- (NSMenu *)menuWithPatchedItems:(NSMenu *)menu
-{
+- (NSMenu *)menuWithPatchedItems:(NSMenu *)menu {
 	NSData *d = [NSKeyedArchiver archivedDataWithRootObject:menu]; // this is bad - doesn't persist 'target'?
 	menu = [NSKeyedUnarchiver unarchiveObjectWithData:d];
 	
@@ -621,12 +667,11 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	return menu;
 }
 
-- (NSMenu *)menuForEvent:(NSEvent *)event
-{
+- (NSMenu *)menuForEvent:(NSEvent *)event {
 	TUIView *v = [self viewForEvent:event];
 	do {
 		NSMenu *m = [v menuForEvent:event];
-		if(m)
+		if (m)
 			return m; // not patched
 		v = v.superview;
 	} while(v);
@@ -657,6 +702,9 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	// set up masking on the AppKit host view, and make ourselves the layout
 	// manager, so that we'll know when new sublayers are added
 	self.appKitHostView.layer.layoutManager = self;
+	
+	[self setAcceptsTouchEvents:YES];
+	[self setWantsRestingTouches:YES];
 
 	#if ENABLE_NSVIEW_CLIPPING
 	self.appKitHostView.layer.mask = self.maskLayer;

@@ -61,12 +61,13 @@
 			// let's just teach the tabs how to draw themselves right here - no need to subclass anything
 			tabView.drawRect = ^(TUIView *v, CGRect rect) {
 				CGRect b = v.bounds;
+				ExampleTabBar *bar = (ExampleTabBar *)v.superview;
 				CGContextRef ctx = TUIGraphicsGetCurrentContext();
 				
 				NSImage *image = [NSImage imageNamed:@"clock"];
 				CGRect imageRect = ABIntegralRectWithSizeCenteredInRect([image size], b);
 
-				if([v.nsView isTrackingSubviewOfView:v]) { // simple way to check if the mouse is currently down inside of 'v'.  See the other methods in TUINSView for more.
+				if([bar isHighlightingTab:v]) {
 					
 					// first draw a slight white emboss below
 					CGContextSaveGState(ctx);
