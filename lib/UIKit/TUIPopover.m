@@ -581,4 +581,8 @@ CGFloat const TUIPopoverBackgroundViewArrowWidth = 35.0;
     [NSGraphicsContext restoreGraphicsState];
 }
 
+- (void)dealloc {
+	_nsView.rootView = nil;
+}
+
 @end
