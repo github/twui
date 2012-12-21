@@ -15,177 +15,215 @@
  */
 
 #import "TUIControl.h"
-#import "TUIControl+Private.h"
 #import "TUIView+Accessibility.h"
 #import "TUINSView.h"
 
+#pragma mark - Target Action Container
+
+@interface TUIControlTargetAction : NSObject
+
+@property (nonatomic, unsafe_unretained) id target;
+@property (nonatomic, assign) SEL action;
+@property (nonatomic, copy) void(^block)(void);
+@property (nonatomic, assign) TUIControlEvents controlEvents;
+
+@end
+
+@implementation TUIControlTargetAction
+@end
+
+#pragma mark - 
+
+@interface TUIControl () {
+	struct {
+		unsigned int tracking:1;
+		unsigned int acceptsFirstMouse:1;
+		unsigned int disabled:1;
+		unsigned int selected:1;
+		unsigned int highlighted:1;
+		unsigned int hover:1;
+	} _controlFlags;
+}
+
+@property (nonatomic, strong) NSMutableArray *targetActions;
+
+@end
+
 @implementation TUIControl
 
-- (id)initWithFrame:(CGRect)rect
-{
-	self = [super initWithFrame:rect];
-	if(self == nil) {
-		return nil;
+#pragma mark - Object Lifecycle
+
+- (id)initWithFrame:(CGRect)rect {
+	if ((self = [super initWithFrame:rect])) {
+		self.periodicDelay = 0.075f;
+		self.targetActions = [NSMutableArray array];
+		self.accessibilityTraits |= TUIAccessibilityTraitButton;
+		
+		[[NSNotificationCenter defaultCenter] addObserver:self
+												 selector:@selector(controlTintUpdated:)
+													 name:NSControlTintDidChangeNotification
+												   object:nil];
 	}
-	
-	self.accessibilityTraits |= TUIAccessibilityTraitButton;
 	
 	return self;
 }
 
-
-- (BOOL)isEnabled
-{
-	return !_controlFlags.disabled;
+- (void)dealloc {
+	[[NSNotificationCenter defaultCenter] removeObserver:self
+													name:NSControlTintDidChangeNotification
+												  object:nil];
 }
 
-- (void)setEnabled:(BOOL)e
-{
-	[self _stateWillChange];
-	_controlFlags.disabled = !e;
-	[self _stateDidChange];
-	[self setNeedsDisplay];
+#pragma mark - Control State and Notifications
+
+- (void)controlTintUpdated:(NSNotification *)note {
+	[self systemControlTintChanged];
 }
 
-- (BOOL)isTracking
-{
-	return _controlFlags.tracking;
+- (void)systemControlTintChanged {
+	if (self.animateStateChange) {
+		[TUIView animateWithDuration:0.25f animations:^{
+			[self redraw];
+		}];
+	} else [self setNeedsDisplay];
 }
 
-- (TUIControlState)state
-{
-	// Start with the normal state, then OR in an implicit
-	// state that is based on other properties.
+- (BOOL)acceptsFirstMouse:(NSEvent *)event {
+	return self.acceptsFirstMouse;
+}
+
+- (TUIControlState)state {
 	TUIControlState actual = TUIControlStateNormal;
 	
-	if(_controlFlags.disabled)			actual |= TUIControlStateDisabled;
-	if(_controlFlags.selected)			actual |= TUIControlStateSelected;
-	if(_controlFlags.tracking)			actual |= TUIControlStateHighlighted;
-	if(_controlFlags.highlighted)		actual |= TUIControlStateHighlighted;
-	if(![self.nsView isWindowKey])		actual |= TUIControlStateNotKey;
+	if (_controlFlags.disabled)
+		actual |= TUIControlStateDisabled;
+	if (![self.nsView isWindowKey])
+		actual |= TUIControlStateNotKey;
+	if (_controlFlags.hover)
+		actual |= TUIControlStateHover;
+	if (_controlFlags.tracking || _controlFlags.highlighted)
+		actual |= TUIControlStateHighlighted;
+	if (_controlFlags.selected)
+		actual |= TUIControlStateSelected;
 	
 	return actual;
 }
 
-/**
- * @brief Determine if this control is in a selected state
- * 
- * Not all controls have a selected state and the meaning of "selected" is left
- * to individual control implementations to define.
- * 
- * @return selected or not
- * 
- * @note This is a convenience interface to the #state property.
- * @see #state
- */
--(BOOL)selected {
-  return _controlFlags.selected;
+#pragma mark - Properties
+
+- (BOOL)acceptsFirstMouse {
+	return _controlFlags.acceptsFirstMouse;
 }
 
-/**
- * @brief Specify whether this control is in a selected state
- * 
- * Not all controls have a selected state and the meaning of "selected" is left
- * to individual control implementations to define.
- * 
- * @param selected selected or not
- * 
- * @see #state
- */
--(void)setSelected:(BOOL)selected {
-	[self _stateWillChange];
-	_controlFlags.selected = selected;
-	[self _stateDidChange];
-	[self setNeedsDisplay];
+- (void)setAcceptsFirstMouse:(BOOL)s {
+	_controlFlags.acceptsFirstMouse = s;
 }
 
-- (BOOL)highlighted {
+- (BOOL)isEnabled {
+	return !_controlFlags.disabled;
+}
+
+- (void)setEnabled:(BOOL)e {
+	[self applyStateChangeAnimated:self.animateStateChange block:^{
+		_controlFlags.disabled = !e;
+	}];
+}
+
+- (BOOL)isTracking {
+	return _controlFlags.tracking;
+}
+
+- (void)setTracking:(BOOL)t {
+	_controlFlags.tracking = t;
+}
+
+- (BOOL)isSelected {
+	return _controlFlags.selected;
+}
+
+- (void)setSelected:(BOOL)selected {
+	[self applyStateChangeAnimated:self.animateStateChange block:^{
+		_controlFlags.selected = selected;
+	}];
+}
+
+- (BOOL)isHighlighted {
 	return _controlFlags.highlighted;
 }
 
 - (void)setHighlighted:(BOOL)highlighted {
-	[self _stateWillChange];
-	_controlFlags.highlighted = highlighted;
-	[self _stateDidChange];
+	[self applyStateChangeAnimated:self.animateStateChange block:^{
+		_controlFlags.highlighted = highlighted;
+	}];
+}
+
+#pragma mark - User Interaction
+
+- (void)mouseEntered:(NSEvent *)theEvent {
+	_controlFlags.hover = 1;
+	[self sendActionsForControlEvents:TUIControlEventMouseHoverBegan];
 	[self setNeedsDisplay];
 }
 
-- (BOOL)acceptsFirstMouse
-{
-	return _controlFlags.acceptsFirstMouse;
-}
-
-- (void)setAcceptsFirstMouse:(BOOL)s
-{
-	_controlFlags.acceptsFirstMouse = s;
-}
-
-- (BOOL)acceptsFirstMouse:(NSEvent *)event
-{
-	return self.acceptsFirstMouse;
+- (void)mouseExited:(NSEvent *)theEvent {
+	_controlFlags.hover = 0;
+	[self sendActionsForControlEvents:TUIControlEventMouseHoverEnded];
+	[self setNeedsDisplay];
 }
 
 - (void)mouseDown:(NSEvent *)event {
-	if(_controlFlags.disabled)
+	if (_controlFlags.disabled)
 		return;
 	[super mouseDown:event];
 	
 	BOOL track = [self beginTrackingWithEvent:event];
-	if(track && !_controlFlags.tracking) {
-		[self _stateWillChange];
-		_controlFlags.tracking = 1;
-		[self _stateDidChange];
-	} else if(!track) {
-		[self _stateWillChange];
-		_controlFlags.tracking = 0;
-		[self _stateDidChange];
-	}
+	[self applyStateChangeAnimated:self.animateStateChange block:^{
+		if (track && !_controlFlags.tracking)
+			_controlFlags.tracking = 1;
+		else if (!track)
+			_controlFlags.tracking = 0;
+	}];
 	
-	if(_controlFlags.tracking) {
+	if (_controlFlags.tracking) {
 		TUIControlEvents currentEvents = (([event clickCount] >= 2) ?
 										  TUIControlEventMouseDownRepeat :
 										  TUIControlEventMouseDown);
 		
 		[self sendActionsForControlEvents:currentEvents];
-		[self setNeedsDisplay];
 	}
 }
 
 - (void)mouseDragged:(NSEvent *)event {
-	if(_controlFlags.disabled)
+	if (_controlFlags.disabled)
 		return;
 	[super mouseDragged:event];
 	
-	if(_controlFlags.tracking) {
+	if (_controlFlags.tracking) {
 		BOOL track = [self continueTrackingWithEvent:event];
-		if(track) {
-			[self _stateWillChange];
-			_controlFlags.tracking = 1;
-			[self _stateDidChange];
-		} else {
-			[self _stateWillChange];
-			_controlFlags.tracking = 0;
-			[self _stateDidChange];
-		}
+		[self applyStateChangeAnimated:self.animateStateChange block:^{
+			if (track)
+				_controlFlags.tracking = 1;
+			else if (!track)
+				_controlFlags.tracking = 0;
+		}];
 		
-		if(_controlFlags.tracking) {
+		if (_controlFlags.tracking) {
 			TUIControlEvents currentEvents = (([self eventInside:event])?
 											  TUIControlEventMouseDragInside :
 											  TUIControlEventMouseDragOutside);
 			
 			[self sendActionsForControlEvents:currentEvents];
-			[self setNeedsDisplay];
 		}
 	}
 	
 }
 
 - (void)mouseUp:(NSEvent *)event {
-	if(_controlFlags.disabled)
+	if (_controlFlags.disabled)
 		return;
 	[super mouseUp:event];
 	
-	if(_controlFlags.tracking) {
+	if (_controlFlags.tracking) {
 		[self endTrackingWithEvent:event];
 		
 		TUIControlEvents currentEvents = (([self eventInside:event])?
@@ -193,38 +231,34 @@
 										  TUIControlEventMouseUpOutside);
 		
 		[self sendActionsForControlEvents:currentEvents];
-		[self setNeedsDisplay];
-		
-		[self _stateWillChange];
-		_controlFlags.tracking = 0;
-		[self _stateDidChange];
+		[self applyStateChangeAnimated:self.animateStateChange block:^{
+			_controlFlags.tracking = 0;
+		}];
 	}
 }
 
-// Support tracking cancelation.
 - (void)willMoveToSuperview:(TUIView *)newSuperview {
-	if(!_controlFlags.disabled && _controlFlags.tracking) {
-		[self _stateWillChange];
-		_controlFlags.tracking = 0;
-		[self _stateDidChange];
-
+	if (!_controlFlags.disabled && _controlFlags.tracking) {
+		[self applyStateChangeAnimated:self.animateStateChange block:^{
+			_controlFlags.tracking = 0;
+		}];
+		
 		[self endTrackingWithEvent:nil];
 		[self setNeedsDisplay];
 	}
 }
 
 - (void)willMoveToWindow:(TUINSWindow *)newWindow {
-	if(!_controlFlags.disabled && _controlFlags.tracking) {
-		[self _stateWillChange];
-		_controlFlags.tracking = 0;
-		[self _stateDidChange];
-
+	if (!_controlFlags.disabled && _controlFlags.tracking) {
+		[self applyStateChangeAnimated:self.animateStateChange block:^{
+			_controlFlags.tracking = 0;
+		}];
+		
 		[self endTrackingWithEvent:nil];
 		[self setNeedsDisplay];
 	}
 }
 
-// Override.
 - (BOOL)beginTrackingWithEvent:(NSEvent *)event {
 	return YES;
 }
@@ -234,7 +268,115 @@
 }
 
 - (void)endTrackingWithEvent:(NSEvent *)event {
+	// Implemented by subclasses.
+}
+
+#pragma mark - State Change Application
+
+- (void)applyStateChangeAnimated:(BOOL)animated block:(void (^)(void))block {
+	[self stateWillChange];
+	block();
+	[self stateDidChange];
+	
+	if (animated) {
+		[TUIView animateWithDuration:0.25f animations:^{
+			[self redraw];
+		}];
+	} else {
+		[self setNeedsDisplay];
+	}
+}
+
+// Override.
+- (void)stateWillChange {
 	return;
 }
+
+- (void)stateDidChange {
+	return;
+}
+
+#pragma mark - Target Action Interoptability
+
+- (void)addTarget:(id)target action:(SEL)action forControlEvents:(TUIControlEvents)controlEvents {
+	if (action != nil) {
+		TUIControlTargetAction *t = [[TUIControlTargetAction alloc] init];
+		t.target = target;
+		t.action = action;
+		t.controlEvents = controlEvents;
+		[self.targetActions addObject:t];
+	}
+}
+
+- (void)addActionForControlEvents:(TUIControlEvents)controlEvents block:(void(^)(void))block {
+	if (block != nil) {
+		TUIControlTargetAction *t = [[TUIControlTargetAction alloc] init];
+		t.block = block;
+		t.controlEvents = controlEvents;
+		[self.targetActions addObject:t];
+	}
+}
+
+- (void)removeTarget:(id)target action:(SEL)action forControlEvents:(TUIControlEvents)controlEvents {
+	NSMutableArray *targetActionsToRemove = [NSMutableArray array];
+	for (TUIControlTargetAction *t in self.targetActions) {
+		
+		BOOL actionMatches = (action == t.action);
+		BOOL targetMatches = [target isEqual:t.target];
+		BOOL controlMatches = (controlEvents == t.controlEvents);
+		
+		if ((action && targetMatches && actionMatches && controlMatches) ||
+		   (!action && targetMatches && controlMatches))
+			[targetActionsToRemove addObject:t];
+	}
+	
+	[self.targetActions removeObjectsInArray:targetActionsToRemove];
+}
+
+- (NSSet *)allTargets {
+	NSMutableSet *targets = [NSMutableSet set];
+	
+	for (TUIControlTargetAction *t in self.targetActions)
+		[targets addObject:t.target ?: [NSNull null]];
+	
+	return targets;
+}
+
+- (TUIControlEvents)allControlEvents {
+	TUIControlEvents e = 0;
+	
+	for (TUIControlTargetAction *t in self.targetActions)
+		e |= t.controlEvents;
+	
+	return e;
+}
+
+- (NSArray *)actionsForTarget:(id)target forControlEvent:(TUIControlEvents)controlEvent {
+	NSMutableArray *actions = [NSMutableArray array];
+	
+	for (TUIControlTargetAction *t in self.targetActions) {
+		if ([target isEqual:t.target] && controlEvent == t.controlEvents)
+			[actions addObject:NSStringFromSelector(t.action)];
+	}
+	
+	return (actions.count ? actions : nil);
+}
+
+- (void)sendAction:(SEL)action to:(id)target forEvent:(NSEvent *)event {
+	[NSApp sendAction:action to:target from:self];
+}
+
+- (void)sendActionsForControlEvents:(TUIControlEvents)controlEvents {
+	for (TUIControlTargetAction *t in self.targetActions) {
+		if (t.controlEvents == controlEvents) {
+			if (t.target && t.action)
+				[self sendAction:t.action to:t.target forEvent:nil];
+			else if (t.block)
+				t.block();
+		}
+	}
+}
+
+#pragma mark -
 
 @end

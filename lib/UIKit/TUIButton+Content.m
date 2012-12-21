@@ -15,7 +15,6 @@
  */
 
 #import "TUIButton.h"
-#import "TUIControl+Private.h"
 
 @interface TUIButtonContent : NSObject
 @property (nonatomic, strong) NSString *title;
@@ -56,42 +55,42 @@
 
 - (void)setTitle:(NSString *)title forState:(TUIControlState)state
 {
-	[self _stateWillChange];
+	[self stateWillChange];
 	[[self _contentForState:state] setTitle:title];
 	[self setNeedsDisplay];
-	[self _stateDidChange];
+	[self stateDidChange];
 }
 
 - (void)setTitleColor:(NSColor *)color forState:(TUIControlState)state
 {
-	[self _stateWillChange];
+	[self stateWillChange];
 	[[self _contentForState:state] setTitleColor:color];
 	[self setNeedsDisplay];
-	[self _stateDidChange];
+	[self stateDidChange];
 }
 
 - (void)setTitleShadowColor:(NSColor *)color forState:(TUIControlState)state
 {
-	[self _stateWillChange];
+	[self stateWillChange];
 	[[self _contentForState:state] setShadowColor:color];
 	[self setNeedsDisplay];
-	[self _stateDidChange];
+	[self stateDidChange];
 }
 
 - (void)setImage:(NSImage *)i forState:(TUIControlState)state
 {
-	[self _stateWillChange];
+	[self stateWillChange];
 	[[self _contentForState:state] setImage:i];
 	[self setNeedsDisplay];
-	[self _stateDidChange];
+	[self stateDidChange];
 }
 
 - (void)setBackgroundImage:(NSImage *)i forState:(TUIControlState)state
 {
-	[self _stateWillChange];
+	[self stateWillChange];
 	[[self _contentForState:state] setBackgroundImage:i];
 	[self setNeedsDisplay];
-	[self _stateDidChange];
+	[self stateDidChange];
 }
 
 - (NSString *)titleForState:(TUIControlState)state
