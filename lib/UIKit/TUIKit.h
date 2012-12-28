@@ -27,7 +27,6 @@
 #import "NSScrollView+TUIExtensions.h"
 #import "NSShadow+TUIExtensions.h"
 #import "NSView+TUIExtensions.h"
-
 #import "TUIActivityIndicatorView.h"
 #import "TUIAttributedString.h"
 #import "TUIBridgedScrollView.h"
@@ -48,6 +47,7 @@
 #import "TUIResponder.h"
 #import "TUIScrollView.h"
 #import "TUIScrollView+TUIBridgedScrollView.h"
+#import "TUISlider.h"
 #import "TUIStretchableImage.h"
 #import "TUIStringDrawing.h"
 #import "TUITableView+Additions.h"

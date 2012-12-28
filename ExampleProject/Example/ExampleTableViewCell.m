@@ -42,6 +42,9 @@
 		_textRenderer.shadowColor = [NSColor whiteColor];
 		_textRenderer.shadowOffset = CGSizeMake(0, 1);
 		
+		self.slider = [[TUISlider alloc] initWithFrame:CGRectMake(0, 0, 150, self.bounds.size.height)];
+		[self addSubview:self.slider];
+		
 		// Add the text renderer to the view so events get routed to it
 		// properly. Text selection, dictionary popup, etc should just work.
 		// You can add more than one.
@@ -86,11 +89,13 @@
 	CGFloat textFieldLeft = CGRectGetWidth(self.bounds) - textFieldSize.width - 16;
 	self.textFieldContainer.frame = CGRectMake(textFieldLeft, 14, textFieldSize.width, textFieldSize.height);
 	
+	self.slider.frame = CGRectMake(0, 0, self.slider.bounds.size.width, self.bounds.size.height);
+	
 	// Set the text renderer's frame. Take indentation into account.
 	CGFloat indentation = 10.0f;
 	CGRect textRect = self.bounds;
-	textRect.origin.x += indentation;
-	textRect.size.width -= (self.textFieldContainer.frame.size.width + 16) + (indentation * 2);
+	textRect.origin.x += indentation + self.slider.bounds.size.width;
+	textRect.size.width -= (self.textFieldContainer.frame.size.width + 16) + (indentation * 2) + self.slider.bounds.size.width;
 	_textRenderer.frame = textRect;
 }
 

@@ -56,6 +56,8 @@
 - (id)initWithFrame:(CGRect)rect {
 	if ((self = [super initWithFrame:rect])) {
 		self.periodicDelay = 0.075f;
+		self.controlSize = TUIControlSizeRegular;
+		
 		self.targetActions = [NSMutableArray array];
 		self.accessibilityTraits |= TUIAccessibilityTraitButton;
 		
