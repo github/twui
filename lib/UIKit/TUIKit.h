@@ -27,7 +27,6 @@
 #import "NSScrollView+TUIExtensions.h"
 #import "NSShadow+TUIExtensions.h"
 #import "NSView+TUIExtensions.h"
-
 #import "TUIActivityIndicatorView.h"
 #import "TUIAttributedString.h"
 #import "TUIBridgedScrollView.h"

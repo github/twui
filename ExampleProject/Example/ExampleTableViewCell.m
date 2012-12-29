@@ -51,6 +51,21 @@
 		// be set before it can be drawn, we do that in drawRect: below.
 		self.textRenderers = @[_textRenderer];
 		
+		self.button = [TUIButton buttonWithType:TUIButtonTypeTextured];
+		self.button.menuType = TUIButtonMenuTypePullDown;
+		self.button.synchronizeMenuTitle = NO;
+		self.button.menu = [NSMenu new];
+		[self.button.menu addItemWithTitle:@"Email" action:nil keyEquivalent:@""];
+		[self.button.menu addItemWithTitle:@"Chat" action:nil keyEquivalent:@""];
+		[self.button.menu addItemWithTitle:@"Save" action:nil keyEquivalent:@""];
+		[self.button.menu addItemWithTitle:@"Copy" action:nil keyEquivalent:@""];
+		[[self.button.menu itemAtIndex:0] setImage:[NSImage imageNamed:NSImageNameStatusAvailable]];
+		[[self.button.menu itemAtIndex:1] setImage:[NSImage imageNamed:NSImageNameStatusPartiallyAvailable]];
+		[[self.button.menu itemAtIndex:2] setImage:[NSImage imageNamed:NSImageNameStatusUnavailable]];
+		[[self.button.menu itemAtIndex:3] setImage:[NSImage imageNamed:NSImageNameStatusNone]];
+		[self.button setImage:[NSImage imageNamed:NSImageNameActionTemplate] forState:TUIControlStateNormal];
+		[self addSubview:self.button];
+		
 		// Add in a standard Cocoa text field. We have to enclose this within
 		// a TUIViewNSViewContainer, and we MUST adjust only the frame of that
 		// container, and not the text field's itself.
@@ -80,18 +95,21 @@
 // it's a must to insert a super call before doing your own thing.
 - (void)layoutSubviews {
 	[super layoutSubviews];
+	CGFloat padding = 10.0f;
 	
 	// Set the text field container's frame (NOT THE TEXT FIELD).
 	CGSize textFieldSize = self.textFieldContainer.bounds.size;
-	CGFloat textFieldLeft = CGRectGetWidth(self.bounds) - textFieldSize.width - 16;
+	CGFloat textFieldLeft = CGRectGetWidth(self.bounds) - textFieldSize.width - padding;
 	self.textFieldContainer.frame = CGRectMake(textFieldLeft, 14, textFieldSize.width, textFieldSize.height);
 	
-	// Set the text renderer's frame. Take indentation into account.
-	CGFloat indentation = 10.0f;
+	CGSize fittingSize = [self.button sizeThatFits:self.bounds.size];
+	self.button.frame = CGRectMake(5, 5, fittingSize.width, self.bounds.size.height - 5);
+	
+	// Set the text renderer's frame.
 	CGRect textRect = self.bounds;
-	textRect.origin.x += indentation;
-	textRect.size.width -= (self.textFieldContainer.frame.size.width + 16) + (indentation * 2);
-	_textRenderer.frame = textRect;
+	textRect.origin.x += (padding * 2) + fittingSize.width;
+	textRect.size.width -= self.textFieldContainer.frame.size.width + fittingSize.width + (padding * 4);
+	self.textRenderer.frame = textRect;
 }
 
 // Note that we only override the drawRect: to add in a call to

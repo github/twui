@@ -19,7 +19,7 @@
 
 @interface ExampleScrollView : TUIView
 {
-  TUIScrollView * _scrollView;
+	TUIScrollView * _scrollView;
 }
 
 @end

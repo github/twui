@@ -113,6 +113,27 @@ typedef enum TUIControlState : NSUInteger {
 	TUIControlStateReserved			= 0xFF000000
 } TUIControlState;
 
+// These constants specify the position of a button’s image relative to
+// its title. These constants are to be used in controls which contain
+// both an image and a title, to specify relative location.
+//
+// TUIControlImagePositionNone		- The image is not displayed.
+// TUIControlImagePositionOnly		- The image is displayed, but not the title.
+// TUIControlImagePositionLeft		- The image is to the left of the title.
+// TUIControlImagePositionRight		- The image is to the right of the title.
+// TUIControlImagePositionBelow		- The image is below the title.
+// TUIControlImagePositionAbove		- The image is above the title.
+// TUIControlImagePositionOverlap	- The image overlaps with the title.
+typedef enum TUIControlImagePosition : NSUInteger {
+	TUIControlImagePositionNone		= 0,
+	TUIControlImagePositionOnly		= 1,
+	TUIControlImagePositionLeft		= 10,
+	TUIControlImagePositionRight	= 11,
+	TUIControlImagePositionBelow	= 100,
+	TUIControlImagePositionAbove	= 101,
+	TUIControlImagePositionOverlap	= 1000
+} TUIControlImagePosition;
+
 // TUIControl is the base class for control objects such as
 // buttons and sliders that convey user intent to the application.
 // You cannot use the TUIControl class directly to instantiate
@@ -212,7 +233,7 @@ typedef enum TUIControlState : NSUInteger {
 // up the responder chain. The action may optionally include
 // the sender and the event as parameters, in that order.
 // Ex: - (void)method:(id)sender event:(NSEvent *)event;
-// 
+//
 // The action cannot be NULL. You may also choose to submit a block
 // as an action for a control event mask. You may add any
 // number of blocks as well.

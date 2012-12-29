@@ -199,7 +199,7 @@ NSImage *TUIGraphicsContextGetImage(CGContextRef ctx)
 	CGSize size = CGSizeMake(CGImageGetWidth(CGImage), CGImageGetHeight(CGImage));
 	NSImage *image = [[NSImage alloc] initWithCGImage:CGImage size:size];
 	CGImageRelease(CGImage);
-    
+	
 	return image;
 }
 
@@ -208,7 +208,7 @@ void TUIGraphicsBeginImageContextWithOptions(CGSize size, BOOL opaque, CGFloat s
 	if (scale == 0.0) {
 		scale = [NSScreen instancesRespondToSelector:@selector(backingScaleFactor)] ? [[NSScreen mainScreen] backingScaleFactor] : 1.0;
 	}
-    
+	
 	size.width *= scale;
 	size.height *= scale;
 	if(size.width < 1) size.width = 1;
@@ -235,7 +235,7 @@ NSImage *TUIGraphicsGetImageForView(TUIView *view)
 	[view.layer renderInContext:TUIGraphicsGetCurrentContext()];
 	NSImage *image = TUIGraphicsGetImageFromCurrentImageContext();
 	TUIGraphicsEndImageContext();
-    
+	
 	return image;
 }
 

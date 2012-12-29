@@ -32,7 +32,7 @@
 @implementation TUIControlTargetAction
 @end
 
-#pragma mark - 
+#pragma mark -
 
 @interface TUIControl () {
 	struct {
@@ -326,7 +326,7 @@
 		BOOL controlMatches = (controlEvents == t.controlEvents);
 		
 		if ((action && targetMatches && actionMatches && controlMatches) ||
-		   (!action && targetMatches && controlMatches))
+			(!action && targetMatches && controlMatches))
 			[targetActionsToRemove addObject:t];
 	}
 	
