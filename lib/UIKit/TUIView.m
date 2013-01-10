@@ -526,8 +526,10 @@ static void TUISetCurrentContextScaleFactor(CGFloat s)
 	_currentTextRenderer = nil;
 	
 	for(TUITextRenderer *renderer in _textRenderers) {
-		renderer.view = nil;
-		[renderer setNextResponder:nil];
+		if (renderer.view == self) {
+			renderer.view = nil;
+			[renderer setNextResponder:nil];
+		}
 	}
 	
 	_textRenderers = renderers;
