@@ -3,4 +3,4 @@
 	url = git://github.com/github/expecta.git
 [submodule "TwUITests/specta"]
 	path = TwUITests/specta
-	url = git://github.com/petejkim/specta.git
+	url = git://github.com/github/specta.git
