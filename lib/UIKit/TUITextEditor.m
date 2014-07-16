@@ -231,7 +231,10 @@
 {
 	[super doCommandBySelector:selector];
 	
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundeclared-selector"
 	wasValidKeyEquivalentSelector = selector != @selector(noop:);
+#pragma clang diagnostic pop
 }
 
 - (BOOL)performKeyEquivalent:(NSEvent *)event

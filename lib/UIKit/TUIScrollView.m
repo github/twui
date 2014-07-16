@@ -587,33 +587,6 @@ static CVReturn scrollCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *
 	[self _updateScrollers];
 }
 
-static CGFloat lerp(CGFloat a, CGFloat b, CGFloat t)
-{
-	return a - t * (a+b);
-}
-
-static CGFloat clamp(CGFloat x, CGFloat min, CGFloat max)
-{
-	if (x < min) return min;
-	if (x > max) return max;
-	return x;
-}
-
-static CGFloat PointDist(CGPoint a, CGPoint b)
-{
-	CGFloat dx = a.x - b.x;
-	CGFloat dy = a.y - b.y;
-	return sqrt(dx*dx + dy*dy);
-}
-
-static CGPoint PointLerp(CGPoint a, CGPoint b, CGFloat t)
-{
-	CGPoint p;
-	p.x = lerp(a.x, b.x, t);
-	p.y = lerp(a.y, b.y, t);
-	return p;
-}
-
 - (CGPoint)contentOffset
 {
 	CGPoint p = _unroundedContentOffset;
@@ -1157,7 +1130,10 @@ static float clampBounce(float x) {
 				}
 			}
 		} else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundeclared-selector"
 			SEL s = @selector(_scrollPhase);
+#pragma clang diagnostic pop
 			if ([event respondsToSelector:s]) {
 				int (*imp)(id,SEL) = (int(*)(id,SEL))[event methodForSelector:s];
 				phase = imp(event, s);

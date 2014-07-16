@@ -350,13 +350,6 @@ typedef struct {
 	return [_visibleItems allValues];
 }
 
-static NSInteger SortCells(TUITableViewCell *a, TUITableViewCell *b, void *ctx)
-{
-	if(a.frame.origin.y > b.frame.origin.y)
-		return NSOrderedAscending;
-	return NSOrderedDescending;
-}
-
 - (NSArray *)sortedVisibleCells
 {
 	NSArray *v = [self visibleCells];

@@ -206,9 +206,6 @@ static NSComparisonResult compareNSViewOrdering (NSView *viewA, NSView *viewB, v
 	[super viewDidEndLiveResize];
 	inLiveResize = NO;
 	[_rootView viewDidEndLiveResize]; // will send to all subviews
-	
-	if([[self window] respondsToSelector:@selector(ensureWindowRectIsOnScreen)])
-		[[self window] performSelector:@selector(ensureWindowRectIsOnScreen)];
 }
 
 - (void)setRootView:(TUIView *)v

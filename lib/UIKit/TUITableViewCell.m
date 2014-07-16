@@ -18,6 +18,7 @@
 #import "TUINSWindow.h"
 #import "TUITableView+Cell.h"
 #import "TUICGAdditions.h"
+#import "TUITextRenderer+Event.h"
 
 #define TUITableViewCellEtchTopColor		[NSColor colorWithCalibratedWhite:1.00f alpha:0.80f]
 #define TUITableViewCellEtchBottomColor		[NSColor colorWithCalibratedWhite:0.00f alpha:0.20f]
