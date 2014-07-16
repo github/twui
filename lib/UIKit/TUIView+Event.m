@@ -110,11 +110,8 @@
 	
 	if(_viewFlags.moveWindowByDragging) {
 		startDrag = [self localPointForEvent:event];
-		NSWindow *window = [self nsWindow];
 		
 		if(!_viewFlags.didStartMovingByDragging) {
-			if([window respondsToSelector:@selector(windowWillStartLiveDrag)])
-				[window performSelector:@selector(windowWillStartLiveDrag)];
 			_viewFlags.didStartMovingByDragging = 1;
 		}
 		
