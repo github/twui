@@ -1130,7 +1130,10 @@ static float clampBounce(float x) {
 				}
 			}
 		} else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundeclared-selector"
 			SEL s = @selector(_scrollPhase);
+#pragma clang diagnostic pop
 			if ([event respondsToSelector:s]) {
 				int (*imp)(id,SEL) = (int(*)(id,SEL))[event methodForSelector:s];
 				phase = imp(event, s);
