@@ -1027,8 +1027,10 @@ static float clampBounce(float x) {
 	}
 	
 	if (_scrollViewFlags.bounceEnabled) {
+		[self willChangeValueForKey:@"dragging"];
 		_throw.throwing = 0;
 		_scrollViewFlags.gestureBegan = 1; // this won't happen if window isn't key on 10.6, lame
+		[self didChangeValueForKey:@"dragging"];
 	}
 	
 }
@@ -1091,8 +1093,10 @@ static float clampBounce(float x) {
 	}
 	
 	if (_scrollViewFlags.bounceEnabled) {
+		[self willChangeValueForKey:@"dragging"];
 		_scrollViewFlags.gestureBegan = 0;
 		[self _startThrow];
+		[self didChangeValueForKey:@"dragging"];
 		
 		if ([self.class requiresElasticSrolling]) {
 			_scrollViewFlags.ignoreNextScrollPhaseNormal_10_7 = 1;

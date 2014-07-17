@@ -12,27 +12,38 @@
 
 @implementation ExampleTableViewController
 
-- (void)loadView {
-	self.view = [[TUIView alloc] initWithFrame:CGRectMake(0, 0, 300, 300)];
-}
-
 - (void)viewDidLoad {
-	self.tableView = [[TUITableView alloc] initWithFrame:self.view.frame];
-	self.tableView.alwaysBounceVertical = YES;
-	self.tableView.dataSource = self;
-	self.tableView.delegate = self;
-	[self.tableView reloadData];
-	self.tableView.maintainContentOffsetAfterReload = YES;
-	self.tableView.autoresizingMask = TUIViewAutoresizingFlexibleSize;
+	self.view.autoresizingMask = TUIViewAutoresizingFlexibleSize;
+	self.view.maintainContentOffsetAfterReload = YES;
+	self.view.alwaysBounceVertical = YES;
 	
-	TUILabel *footerLabel = [[TUILabel alloc] initWithFrame:CGRectMake(0, 0, _tableView.frame.size.width, 44)];
+	TUILabel *headerLabel = [[TUILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 44)];
+	headerLabel.alignment = TUITextAlignmentCenter;
+	headerLabel.backgroundColor = [NSColor clearColor];
+	headerLabel.font = [NSFont fontWithName:@"HelveticaNeue-Bold" size:15];
+	headerLabel.text = @"Example Header View";
+	self.view.headerView = headerLabel;
+	
+	TUILabel *footerLabel = [[TUILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 44)];
 	footerLabel.alignment = TUITextAlignmentCenter;
 	footerLabel.backgroundColor = [NSColor clearColor];
 	footerLabel.font = [NSFont fontWithName:@"HelveticaNeue-Bold" size:15];
 	footerLabel.text = @"Example Footer View";
-	self.tableView.footerView = footerLabel;
+	self.view.footerView = footerLabel;
 	
-	[self.view addSubview:self.tableView];
+	TUIRefreshControl *refreshControl = [[TUIRefreshControl alloc] initInTableView:self.view];
+	refreshControl.tintColor = [NSColor grayColor];
+	
+	__block __unsafe_unretained TUIRefreshControl *weakRefresh = refreshControl;
+	[refreshControl addActionForControlEvents:TUIControlEventValueChanged block:^{
+		double delayInSeconds = 3.0;
+		TUIRefreshControl *strongRefresh = weakRefresh;
+		
+		dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * NSEC_PER_SEC);
+		dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+			[strongRefresh endRefreshing];
+		});
+	}];
 }
 
 - (NSInteger)numberOfSectionsInTableView:(TUITableView *)tableView {
@@ -104,7 +115,7 @@
 		[self.navigationController pushViewController:pushed animated:YES];
 	}
 	
-	if(event.type == NSRightMouseUp){
+	if(event.type == NSRightMouseUp) {
 		// show context menu
 	}
 }
@@ -117,19 +128,19 @@
 	return YES;
 }
 
--(BOOL)tableView:(TUITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
+- (BOOL)tableView:(TUITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
 	// return YES to enable row reordering by dragging; don't implement this method or return
 	// NO to disable
 	return YES;
 }
 
--(void)tableView:(TUITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
+- (void)tableView:(TUITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
 	// update the model to reflect the changed index paths; since this example isn't backed by
 	// a "real" model, after dropping a cell the table will revert to it's previous state
 	NSLog(@"Move dragged row: %@ => %@", fromIndexPath, toIndexPath);
 }
 
--(NSIndexPath *)tableView:(TUITableView *)tableView targetIndexPathForMoveFromRowAtIndexPath:(NSIndexPath *)fromPath toProposedIndexPath:(NSIndexPath *)proposedPath {
+- (NSIndexPath *)tableView:(TUITableView *)tableView targetIndexPathForMoveFromRowAtIndexPath:(NSIndexPath *)fromPath toProposedIndexPath:(NSIndexPath *)proposedPath {
 	// optionally revise the drag-to-reorder drop target index path by returning a different index path
 	// than proposedPath.  if proposedPath is suitable, return that.  if this method is not implemented,
 	// proposedPath is used by default.
